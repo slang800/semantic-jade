@@ -66,5 +66,4 @@ module.exports =
 
 	# Transform coffeescript to javascript.
 	coffeescript: (str) ->
-		str = str.replace(/\\n/g, "\n")
 		"\\n" + require("coffee-script").compile(str).replace(/\\/g, "\\\\").replace(/\n/g, "\\n")
