@@ -1,8 +1,3 @@
-#!
-# * Jade - filters
-# * Copyright(c) 2010 TJ Holowaychuk <tj@vision-media.ca>
-# * MIT Licensed
-# 
 module.exports =
 
 	# Wrap text with CDATA block.
@@ -62,6 +57,12 @@ module.exports =
 						throw new Error("Cannot find markdown library, install markdown, discount, or marked.")
 		str = str.replace(/\\n/g, "\n")
 		md.parse(str).replace(/\n/g, "\\n").replace /'/g, "&#39;"
+
+	# Transform github flavored markdown to html.
+	ghm: (str, options) ->
+		# support markdown / discount
+		ghm = require("ghm")
+		"\\n" + ghm.parse(str.replace(/\\n/g, "\n"), options.project).replace(/\n/g, "\\n")
 
 
 	# Transform coffeescript to javascript.
