@@ -30,6 +30,7 @@ class Parser
 		@options = options
 		@contexts = [this]
 
+
 	###
 	Push `parser` onto the context stack,
 	or pop and return a `Parser`.
@@ -388,36 +389,37 @@ class Parser
 	parseInclude: ->
 		path = require("path")
 		fs = require("fs")
-		dirname = path.dirname
-		basename = path.basename
-		join = path.join
-		path = @expect("include").val.trim()
-		dir = dirname(@filename)
-		throw new Error("the \"filename\" option is required to use includes")  unless @filename
-		str = ""
+
+		throw new Error("the \"filename\" option is required to use includes") unless @filename
+		dir = path.dirname(@filename)
+
+		include_filename = @expect("include").val.trim()
+		extname = path.extname(include_filename)
+
+		if extname is '' # no extension defaults to jade
+			extname = ".jade"
+			include_filename += ".jade"
+
+		include_filepath = path.join(dir, include_filename)
+		str = fs.readFileSync(include_filepath, "utf8")
 		
-		# no extension
-		unless ~basename(path).indexOf(".")
-			path += ".jade"
-		else unless ".jade" is path.substr(-5) # non-jade
-			path = join(dir, path)
-			str = fs.readFileSync(path, "utf8")
+		if ".jade" isnt extname # non-jade
+			#check file extension to determine if any filters need to be applied
 			return new nodes.Literal(str)
-		path = join(dir, path)
-		str = fs.readFileSync(path, "utf8")
-		parser = new Parser(str, path, @options)
+
+		parser = new Parser(str, include_filepath, @options)
 		parser.blocks = utils.merge({}, @blocks)
 		parser.mixins = @mixins
 		@context parser
 		ast = parser.parse()
 		@context()
-		ast.filename = path
-		ast.includeBlock().push @block()  if "indent" is @peek().type
-		ast
-
+		ast.filename = include_filepath
+		ast.includeBlock().push @block() if "indent" is @peek().type
+		return ast
+ 
 	
 	###
-	call ident block
+	call indent block
 	###
 	parseCall: ->
 		tok = @expect("call")
