@@ -312,20 +312,6 @@ class Parser
 
 	
 	###
-	tag ':' attrs? block
-	###
-	parseASTFilter: ->
-		block = undefined
-		tok = @expect("tag")
-		attrs = @accept("attrs")
-		@expect ":"
-		block = @block()
-		node = new nodes.Filter(tok.val, block, attrs and attrs.attrs)
-		node.line = @line()
-		node
-
-	
-	###
 	each block
 	###
 	parseEach: ->
