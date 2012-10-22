@@ -26,6 +26,7 @@ class Lexer
 		@indentRe = null
 		@pipeless = false
 
+
 	###
 	Construct a token with the given `type` and `val`.
 	
@@ -49,9 +50,25 @@ class Lexer
 	consume: (len) ->
 		@input = @input.substr(len)
 
-	
+
+	###
+	Scan with the given `regexp`.
+	Return the matches to the regular expression (the captures)
+
+	@param {RegExp} regexp
+	@return {Array or null}
+	@api private
+	###
+	capture: (regexp) ->
+		captures = regexp.exec(@input)
+		unless captures is null
+			@consume captures[0].length
+		return captures
+
+
 	###
 	Scan for `type` with the given `regexp`.
+	Return a token
 	
 	@param {String} type
 	@param {RegExp} regexp
@@ -59,12 +76,11 @@ class Lexer
 	@api private
 	###
 	scan: (regexp, type) ->
-		captures = undefined
-		if captures = regexp.exec(@input)
-			@consume captures[0].length
+		captures = @capture(regexp)
+		unless captures is null
 			@tok type, captures[1]
 
-	
+
 	###
 	Defer the given `tok`.
 	
@@ -74,7 +90,7 @@ class Lexer
 	defer: (tok) ->
 		@deferredTokens.push tok
 
-	
+
 	###
 	Lookahead `n` tokens.
 	
@@ -114,24 +130,16 @@ class Lexer
 			++i
 		pos
 
-	
-	###
-	Stashed token.
-	###
+
 	stashed: ->
 		@stash.length and @stash.shift()
 
-	
-	###
-	Deferred token.
-	###
+
 	deferred: ->
 		@deferredTokens.length and @deferredTokens.shift()
 
 	
-	###
-	end-of-source.
-	###
+	#end-of-source
 	eos: ->
 		return if @input.length
 		if @indentStack.length
@@ -141,46 +149,30 @@ class Lexer
 			@tok "eos"
 
 	
-	###
-	Blank line.
-	###
+	#Blank line
 	blank: ->
-		captures = undefined
 		if captures = /^\n *\n/.exec(@input)
 			@consume captures[0].length - 1
 			return @tok("text", "") if @pipeless
 			@next()
 
-	
-	###
-	Comment.
-	###
+
 	comment: ->
-		captures = undefined
-		if captures = /^ *\/\/(-)?([^\n]*)/.exec(@input)
-			@consume captures[0].length
+		captures = @capture /^ *\/\/(-)?([^\n]*)/
+		unless captures is null
 			tok = @tok("comment", captures[2])
 			tok.buffer = "-" isnt captures[1]
 			tok
 
 	
-	###
-	Interpolated tag.
-	###
+	#Interpolated tag
 	interpolation: ->
-		captures = undefined
-		if captures = /^#\{(.*?)\}/.exec(@input)
-			@consume captures[0].length
-			@tok "interpolation", captures[1]
+		@scan /^#\{(.*?)\}/, "interpolation"
 
-	
-	###
-	Tag.
-	###
+
 	tag: ->
-		captures = undefined
-		if captures = /^(\w[\-:\w]*)(\/?)/.exec(@input)
-			@consume captures[0].length
+		captures = @capture /^(\w[\-:\w]*)(\/?)/
+		unless captures is null
 			tok = undefined
 			name = captures[1]
 			if ":" is name[name.length - 1]
@@ -193,56 +185,36 @@ class Lexer
 			tok.selfClosing = !!captures[2]
 			tok
 
-	
-	###
-	Filter.
-	###
+
 	filter: ->
 		@scan /^:(\w+)/, "filter"
 
-	
-	###
-	Doctype.
-	###
+
 	doctype: ->
 		@scan /^(?:!!!|doctype) *([^\n]+)?/, "doctype"
 
-	
-	###
-	Id.
-	###
+
 	id: ->
 		@scan /^#([\w-]+)/, "id"
 
 	
-	###
-	Class.
-	###
+	#Class
 	className: ->
 		@scan /^\.([\w-]+)/, "class"
 
-	
-	###
-	Text.
-	###
+
 	text: ->
 		@scan /^(?:\| ?| ?)?([^\n]+)/, "text"
 
-	
-	###
-	Extends.
-	###
+
 	extends: ->
 		@scan /^extends? +([^\n]+)/, "extends"
 
 	
-	###
-	Block prepend.
-	###
+	#Block prepend
 	prepend: ->
-		captures = undefined
-		if captures = /^prepend +([^\n]+)/.exec(@input)
-			@consume captures[0].length
+		captures = @capture /^prepend +([^\n]+)/
+		unless captures is null
 			mode = "prepend"
 			name = captures[1]
 			tok = @tok("block", name)
@@ -250,88 +222,59 @@ class Lexer
 			tok
 
 	
-	###
-	Block append.
-	###
+	#Block append
 	append: ->
-		captures = undefined
-		if captures = /^append +([^\n]+)/.exec(@input)
-			@consume captures[0].length
+		captures = @capture /^append +([^\n]+)/
+		unless captures is null
 			mode = "append"
 			name = captures[1]
 			tok = @tok("block", name)
 			tok.mode = mode
 			tok
 
-	
-	###
-	Block.
-	###
+
 	block: ->
-		captures = undefined
-		if captures = /^block\b *(?:(prepend|append) +)?([^\n]*)/.exec(@input)
-			@consume captures[0].length
+		captures = @capture /^block\b *(?:(prepend|append) +)?([^\n]*)/
+		unless captures is null
 			mode = captures[1] or "replace"
 			name = captures[2]
 			tok = @tok("block", name)
 			tok.mode = mode
 			tok
 
-	
-	###
-	Yield.
-	###
+
 	yield: ->
 		@scan /^yield */, "yield"
 
-	
-	###
-	Include.
-	###
+
 	include: ->
 		@scan /^include +([^\n]+)/, "include"
 
-	
-	###
-	Case.
-	###
+
 	case: ->
 		@scan /^case +([^\n]+)/, "case"
 
-	
-	###
-	When.
-	###
+
 	when: ->
 		@scan /^when +([^:\n]+)/, "when"
 
-	
-	###
-	Default.
-	###
+
 	default: ->
 		@scan /^default */, "default"
 
-	
-	###
-	Assignment.
-	###
+
 	assignment: ->
-		captures = undefined
-		if captures = /^(\w+) += *([^;\n]+)( *;? *)/.exec(@input)
-			@consume captures[0].length
+		captures = @capture /^(\w+) += *([^;\n]+)( *;? *)/
+		unless captures is null
 			name = captures[1]
 			val = captures[2]
 			@tok "code", "var " + name + " = (" + val + ");"
 
 	
-	###
-	Call mixin.
-	###
+	#Call mixin
 	call: ->
-		captures = undefined
-		if captures = /^\+([\-\w]+)/.exec(@input)
-			@consume captures[0].length
+		captures = @capture /^\+([\-\w]+)/
+		unless captures is null
 			tok = @tok("call", captures[1])
 			
 			# Check for args (not attributes)
@@ -341,26 +284,18 @@ class Lexer
 					tok.args = captures[1]
 			tok
 
-	
-	###
-	Mixin.
-	###
+
 	mixin: ->
-		captures = undefined
-		if captures = /^mixin +([\-\w]+)(?: *\((.*)\))?/.exec(@input)
-			@consume captures[0].length
+		captures = @capture /^mixin +([\-\w]+)(?: *\((.*)\))?/
+		unless captures is null
 			tok = @tok("mixin", captures[1])
 			tok.args = captures[2]
 			tok
 
-	
-	###
-	Conditional.
-	###
+
 	conditional: ->
-		captures = undefined
-		if captures = /^(if|unless|else if|else)\b([^\n]*)/.exec(@input)
-			@consume captures[0].length
+		captures = @capture /^(if|unless|else if|else)\b([^\n]*)/
+		unless captures is null
 			type = captures[1]
 			js = captures[2]
 			switch type
@@ -374,37 +309,25 @@ class Lexer
 					js = "else"
 			@tok "code", js
 
-	
-	###
-	While.
-	###
+
 	while: ->
-		captures = undefined
-		if captures = /^while +([^\n]+)/.exec(@input)
-			@consume captures[0].length
+		captures = @capture /^while +([^\n]+)/
+		unless captures is null
 			@tok "code", "while (" + captures[1] + ")"
 
-	
-	###
-	Each.
-	###
+
 	each: ->
-		captures = undefined
-		if captures = /^(?:- *)?(?:each|for) +(\w+)(?: *, *(\w+))? * in *([^\n]+)/.exec(@input)
-			@consume captures[0].length
+		captures = @capture /^(?:- *)?(?:each|for) +(\w+)(?: *, *(\w+))? * in *([^\n]+)/
+		unless captures is null
 			tok = @tok("each", captures[1])
 			tok.key = captures[2] or "$index"
 			tok.code = captures[3]
 			tok
 
-	
-	###
-	Code.
-	###
+
 	code: ->
-		captures = undefined
-		if captures = /^(!?=|-)([^\n]+)/.exec(@input)
-			@consume captures[0].length
+		captures = @capture /^(!?=|-)([^\n]+)/
+		unless captures is null
 			flags = captures[1]
 			captures[1] = captures[2]
 			tok = @tok("code", captures[1])
@@ -412,10 +335,7 @@ class Lexer
 			tok.buffer = flags.charAt(0) is "=" or flags.charAt(1) is "="
 			tok
 
-	
-	###
-	Attributes.
-	###
+
 	attrs: ->
 		if "(" is @input.charAt(0)
 
@@ -436,6 +356,7 @@ class Lexer
 
 			state = ->
 				states[states.length - 1]
+
 			interpolate = (attr) ->
 				attr.replace /(\\)?#\{([^}]+)\}/g, (match, escape, expr) ->
 					return (
@@ -524,11 +445,8 @@ class Lexer
 
 
 	
-	###
-	Indent | Outdent | Newline.
-	###
+	#Indent | Outdent | Newline
 	indent: ->
-		captures = undefined
 		re = undefined
 		
 		# established regexp
@@ -577,10 +495,7 @@ class Lexer
 			tok
 
 	
-	###
-	Pipe-less text consumed only when
-	pipeless is true;
-	###
+	#Pipe-less text consumed only when `pipeless` is true
 	pipelessText: ->
 		if @pipeless
 			return if "\n" is @input[0]
@@ -591,9 +506,7 @@ class Lexer
 			@tok "text", str
 
 	
-	###
-	':'
-	###
+	#':'
 	colon: ->
 		@scan /^: */, ":"
 
@@ -616,7 +529,37 @@ class Lexer
 	@api private
 	###
 	next: ->
-		@deferred() or @blank() or @eos() or @pipelessText() or this["yield"]() or @doctype() or @interpolation() or this["case"]() or @when() or this["default"]() or this["extends"]() or @append() or @prepend() or @block() or @include() or @mixin() or @call() or @conditional() or @each() or this["while"]() or @assignment() or @tag() or @filter() or @code() or @id() or @className() or @attrs() or @indent() or @comment() or @colon() or @text()
+		@deferred() or
+		@blank() or
+		@eos() or
+		@pipelessText() or
+		@yield() or
+		@doctype() or
+		@interpolation() or
+		@case() or
+		@when() or
+		@default() or
+		@extends() or
+		@append() or
+		@prepend() or
+		@block() or
+		@include() or
+		@mixin() or
+		@call() or
+		@conditional() or
+		@each() or
+		@while() or
+		@assignment() or
+		@tag() or
+		@filter() or
+		@code() or
+		@id() or
+		@className() or
+		@attrs() or
+		@indent() or
+		@comment() or
+		@colon() or
+		@text()
 
 
 exports = module.exports = Lexer
