@@ -5,35 +5,32 @@
 # 
 utils = require("./utils")
 
-###
-Initialize `Lexer` with the given `str`.
 
-Options:
-
-- `colons` allow colons for attr delimiters
-
-@param {String} str
-@param {Object} options
-@api private
-###
-Lexer = module.exports = Lexer = (str, options) ->
-	options = options or {}
-	@input = str.replace(/\r\n|\r/g, "\n")
-	@colons = options.colons
-	@deferredTokens = []
-	@lastIndents = 0
-	@lineno = 1
-	@stash = []
-	@indentStack = []
-	@indentRe = null
-	@pipeless = false
-
-
-###
-Lexer prototype.
-###
-Lexer:: =
+class Lexer
 	
+	###
+	Initialize `Lexer` with the given `str`.
+
+	Options:
+
+	- `colons` allow colons for attr delimiters
+
+	@param {String} str
+	@param {Object} options
+	@api private
+	###
+	constructor: (str, options) ->
+		options = options or {}
+		@input = str.replace(/\r\n|\r/g, "\n")
+		@colons = options.colons
+		@deferredTokens = []
+		@lastIndents = 0
+		@lineno = 1
+		@stash = []
+		@indentStack = []
+		@indentRe = null
+		@pipeless = false
+
 	###
 	Construct a token with the given `type` and `val`.
 	
@@ -446,10 +443,10 @@ Lexer:: =
 			state = ->
 				states[states.length - 1]
 			interpolate = (attr) ->
-				attr.replace /(\\)?#\{([^}]+)\}/g, (random_underscore_var, escape, expr) ->
+				attr.replace /(\\)?#\{([^}]+)\}/g, (match, escape, expr) ->
 					return (
 						if escape
-							random_underscore_var
+							match
 						else
 							quote + " + (" + expr + ") + " + quote
 					)
@@ -628,3 +625,6 @@ Lexer:: =
 	###
 	next: ->
 		@deferred() or @blank() or @eos() or @pipelessText() or this["yield"]() or @doctype() or @interpolation() or this["case"]() or @when() or this["default"]() or this["extends"]() or @append() or @prepend() or @block() or @include() or @mixin() or @call() or @conditional() or @each() or this["while"]() or @assignment() or @tag() or @filter() or @code() or @id() or @className() or @attrs() or @indent() or @comment() or @colon() or @text()
+
+
+exports = module.exports = Lexer
