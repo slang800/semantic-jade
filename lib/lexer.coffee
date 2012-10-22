@@ -54,11 +54,12 @@ class Lexer
 	@return {Array or null}
 	@api private
 	###
-	capture: (regexp) ->
+	capture: (regexp, callback) ->
 		captures = regexp.exec(@input)
 		unless captures is null
 			@consume captures[0].length
-		return captures
+			return callback(captures)
+		return null
 
 
 	###
@@ -71,9 +72,11 @@ class Lexer
 	@api private
 	###
 	scan: (regexp, type) ->
-		captures = @capture(regexp)
-		unless captures is null
-			@tok type, captures[1]
+		@capture(
+			regexp,
+			(captures) =>
+				@tok type, captures[1]
+		)
 
 
 	###
@@ -112,17 +115,14 @@ class Lexer
 		nstart = 0
 		nend = 0
 		pos = 0
-		i = 0
-		len = str.length
 
-		while i < len
-			if start is str.charAt(i)
+		for char, i in str.split ''
+			if start is char
 				++nstart
-			else if end is str.charAt(i)
+			else if end is char
 				if ++nend is nstart
 					pos = i
 					break
-			++i
 		pos
 
 
@@ -153,11 +153,13 @@ class Lexer
 
 
 	comment: ->
-		captures = @capture /^ *\/\/(-)?([^\n]*)/
-		unless captures is null
-			tok = @tok("comment", captures[2])
-			tok.buffer = "-" isnt captures[1]
-			tok
+		@capture(
+			/^ *\/\/(-)?([^\n]*)/,
+			(captures) =>
+				tok = @tok("comment", captures[2])
+				tok.buffer = "-" isnt captures[1]
+				tok
+		)
 
 	
 	#Interpolated tag
@@ -166,19 +168,21 @@ class Lexer
 
 
 	tag: ->
-		captures = @capture /^(\w[\-:\w]*)(\/?)/
-		unless captures is null
-			tok = undefined
-			name = captures[1]
-			if ":" is name[name.length - 1]
-				name = name.slice(0, -1)
-				tok = @tok("tag", name)
-				@defer @tok(":")
-				@input = @input.substr(1) while " " is @input[0]
-			else
-				tok = @tok("tag", name)
-			tok.selfClosing = !!captures[2]
-			tok
+		@capture(
+			/^(\w[\-:\w]*)(\/?)/,
+			(captures) =>
+				tok = undefined
+				name = captures[1]
+				if ":" is name[name.length - 1]
+					name = name.slice(0, -1)
+					tok = @tok("tag", name)
+					@defer @tok(":")
+					@input = @input.substr(1) while " " is @input[0]
+				else
+					tok = @tok("tag", name)
+				tok.selfClosing = !!captures[2]
+				tok
+		)
 
 
 	filter: ->
@@ -208,34 +212,40 @@ class Lexer
 	
 	#Block prepend
 	prepend: ->
-		captures = @capture /^prepend +([^\n]+)/
-		unless captures is null
-			mode = "prepend"
-			name = captures[1]
-			tok = @tok("block", name)
-			tok.mode = mode
-			tok
+		@capture(
+			/^prepend +([^\n]+)/,
+			(captures) =>
+				mode = "prepend"
+				name = captures[1]
+				tok = @tok("block", name)
+				tok.mode = mode
+				tok
+		)
 
 	
 	#Block append
 	append: ->
-		captures = @capture /^append +([^\n]+)/
-		unless captures is null
-			mode = "append"
-			name = captures[1]
-			tok = @tok("block", name)
-			tok.mode = mode
-			tok
+		@capture(
+			/^append +([^\n]+)/,
+			(captures) =>
+				mode = "append"
+				name = captures[1]
+				tok = @tok("block", name)
+				tok.mode = mode
+				tok
+		)
 
 
 	block: ->
-		captures = @capture /^block\b *(?:(prepend|append) +)?([^\n]*)/
-		unless captures is null
-			mode = captures[1] or "replace"
-			name = captures[2]
-			tok = @tok("block", name)
-			tok.mode = mode
-			tok
+		@capture(
+			/^block\b *(?:(prepend|append) +)?([^\n]*)/,
+			(captures) =>
+				mode = captures[1] or "replace"
+				name = captures[2]
+				tok = @tok("block", name)
+				tok.mode = mode
+				tok
+		)
 
 
 	yield: ->
@@ -259,76 +269,89 @@ class Lexer
 
 
 	assignment: ->
-		captures = @capture /^(\w+) += *([^;\n]+)( *;? *)/
-		unless captures is null
-			name = captures[1]
-			val = captures[2]
-			@tok "code", "var " + name + " = (" + val + ");"
-
+		@capture(
+			/^(\w+) += *([^;\n]+)( *;? *)/,
+			(captures) =>
+				name = captures[1]
+				val = captures[2]
+				@tok "code", "var " + name + " = (" + val + ");"
+		)
 	
 	#Call mixin
 	call: ->
-		captures = @capture /^\+([\-\w]+)/
-		unless captures is null
-			tok = @tok("call", captures[1])
-			
-			# Check for args (not attributes)
-			if captures = /^ *\((.*?)\)/.exec(@input)
-				unless /^ *[\-\w]+ *=/.test(captures[1])
-					@consume captures[0].length
-					tok.args = captures[1]
-			tok
+		@capture(
+			/^\+([\-\w]+)/,
+			(captures) =>
+				tok = @tok("call", captures[1])
+				
+				# Check for args (not attributes)
+				if captures = /^ *\((.*?)\)/.exec(@input)
+					unless /^ *[\-\w]+ *=/.test(captures[1])
+						@consume captures[0].length
+						tok.args = captures[1]
+				tok
+		)
 
 
 	mixin: ->
-		captures = @capture /^mixin +([\-\w]+)(?: *\((.*)\))?/
-		unless captures is null
-			tok = @tok("mixin", captures[1])
-			tok.args = captures[2]
-			tok
+		@capture(
+			/^mixin +([\-\w]+)(?: *\((.*)\))?/,
+			(captures) =>
+				tok = @tok("mixin", captures[1])
+				tok.args = captures[2]
+				tok
+		)
 
 
 	conditional: ->
-		captures = @capture /^(if|unless|else if|else)\b([^\n]*)/
-		unless captures is null
-			type = captures[1]
-			js = captures[2]
-			switch type
-				when "if"
-					js = "if (" + js + ")"
-				when "unless"
-					js = "if (!(" + js + "))"
-				when "else if"
-					js = "else if (" + js + ")"
-				when "else"
-					js = "else"
-			@tok "code", js
+		@capture(
+			/^(if|unless|else if|else)\b([^\n]*)/,
+			(captures) =>
+				type = captures[1]
+				js = captures[2]
+				switch type
+					when "if"
+						js = "if (" + js + ")"
+					when "unless"
+						js = "if (!(" + js + "))"
+					when "else if"
+						js = "else if (" + js + ")"
+					when "else"
+						js = "else"
+				@tok "code", js
+		)
 
 
 	while: ->
-		captures = @capture /^while +([^\n]+)/
-		unless captures is null
-			@tok "code", "while (" + captures[1] + ")"
+		@capture(
+			/^while +([^\n]+)/,
+			(captures) =>
+				@tok "code", "while (" + captures[1] + ")"
+		)
 
 
 	each: ->
-		captures = @capture /^(?:- *)?(?:each|for) +(\w+)(?: *, *(\w+))? * in *([^\n]+)/
-		unless captures is null
-			tok = @tok("each", captures[1])
-			tok.key = captures[2] or "$index"
-			tok.code = captures[3]
-			tok
+		@capture(
+			/^(?:- *)?(?:each|for) +(\w+)(?: *, *(\w+))? * in *([^\n]+)/,
+			(captures) =>
+				tok = @tok("each", captures[1])
+				tok.key = captures[2] or "$index"
+				tok.code = captures[3]
+				tok
+		)
 
 
 	code: ->
-		captures = @capture /^(!?=|-)([^\n]+)/
-		unless captures is null
-			flags = captures[1]
-			captures[1] = captures[2]
-			tok = @tok("code", captures[1])
-			tok.escape = flags.charAt(0) is "="
-			tok.buffer = flags.charAt(0) is "=" or flags.charAt(1) is "="
-			tok
+		@capture(
+			/^(!?=|-)([^\n]+)/,
+			(captures) =>
+				flags = captures[1]
+				captures[1] = captures[2]
+				tok = @tok("code", captures[1])
+				tok.escape = flags.charAt(0) is "="
+				tok.buffer = flags.charAt(0) is "=" or flags.charAt(1) is "="
+				tok
+		)
 
 
 	attrs: ->
@@ -462,6 +485,7 @@ class Lexer
 			
 			# established
 			@indentRe = re if captures and captures[1].length
+
 		if captures
 			tok = undefined
 			indents = captures[1].length
