@@ -51,7 +51,7 @@ class Parser
 	@api private
 	###
 	skip: (n) ->
-		@advance()  while n--
+		@advance() while n--
 
 	
 	###
@@ -132,7 +132,7 @@ class Parser
 	@api private
 	###
 	accept: (type) ->
-		@advance()  if @peek().type is type
+		@advance() if @peek().type is type
 
 	
 	###
@@ -256,7 +256,7 @@ class Parser
 		block = undefined
 		i = 1
 		node.line = @line()
-		++i  while @lookahead(i) and "newline" is @lookahead(i).type
+		++i while @lookahead(i) and "newline" is @lookahead(i).type
 		block = "indent" is @lookahead(i).type
 		if block
 			@skip i - 1
@@ -326,7 +326,7 @@ class Parser
 		dirname = path.dirname
 		basename = path.basename
 		join = path.join
-		throw new Error("the \"filename\" option is required to extend templates")  unless @filename
+		throw new Error("the \"filename\" option is required to extend templates") unless @filename
 		path = @expect("extends").val.trim()
 		dir = dirname(@filename)
 		path = join(dir, path + ".jade")
@@ -405,7 +405,7 @@ class Parser
 		args = tok.args
 		mixin = new nodes.Mixin(name, args, new nodes.Block, true)
 		@tag mixin
-		mixin.block = null  if mixin.block.isEmpty()
+		mixin.block = null if mixin.block.isEmpty()
 		mixin
 
 	
@@ -486,8 +486,8 @@ class Parser
 		
 		# ast-filter look-ahead
 		i = 2
-		++i  if "attrs" is @lookahead(i).type
-		return @parseASTFilter()  if "indent" is @lookahead(++i).type  if ":" is @lookahead(i).type
+		++i if "attrs" is @lookahead(i).type
+		return @parseASTFilter() if "indent" is @lookahead(++i).type if ":" is @lookahead(i).type
 		tok = @advance()
 		tag = new nodes.Tag(tok.val)
 		tag.selfClosing = tok.selfClosing
@@ -536,7 +536,7 @@ class Parser
 				tag.block.push @parseExpr()
 		
 		# newline*
-		@advance()  while "newline" is @peek().type
+		@advance() while "newline" is @peek().type
 		
 		#script special-case (for non-js scripts?)
 		#if 'script' is tag.name
