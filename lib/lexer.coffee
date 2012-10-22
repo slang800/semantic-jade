@@ -11,10 +11,6 @@ class Lexer
 	###
 	Initialize `Lexer` with the given `str`.
 
-	Options:
-
-	- `colons` allow colons for attr delimiters
-
 	@param {String} str
 	@param {Object} options
 	@api private
@@ -22,7 +18,6 @@ class Lexer
 	constructor: (str, options) ->
 		options = options or {}
 		@input = str.replace(/\r\n|\r/g, "\n")
-		@colons = options.colons
 		@deferredTokens = []
 		@lastIndents = 0
 		@lineno = 1
@@ -428,7 +423,6 @@ class Lexer
 			str = @input.substr(1, index - 1)
 			tok = @tok("attrs")
 			len = str.length
-			colons = @colons
 			states = ["key"]
 			escapedAttr = undefined
 			key = ""
@@ -453,9 +447,7 @@ class Lexer
 
 			parse = (c) ->
 				real = c
-				
-				# TODO: remove when people fix ":"
-				c = "=" if colons and ":" is c
+
 				switch c
 					when ",", "\n"
 						switch state()
