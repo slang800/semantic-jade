@@ -141,7 +141,7 @@ Lexer:: =
 	end-of-source.
 	###
 	eos: ->
-		return  if @input.length
+		return if @input.length
 		if @indentStack.length
 			@indentStack.shift()
 			@tok "outdent"
@@ -156,7 +156,7 @@ Lexer:: =
 		captures = undefined
 		if captures = /^\n *\n/.exec(@input)
 			@consume captures[0].length - 1
-			return @tok("text", "")  if @pipeless
+			return @tok("text", "") if @pipeless
 			@next()
 
 	
@@ -195,7 +195,7 @@ Lexer:: =
 				name = name.slice(0, -1)
 				tok = @tok("tag", name)
 				@defer @tok(":")
-				@input = @input.substr(1)  while " " is @input[0]
+				@input = @input.substr(1) while " " is @input[0]
 			else
 				tok = @tok("tag", name)
 			tok.selfClosing = !!captures[2]
@@ -442,7 +442,6 @@ Lexer:: =
 			@consume index + 1
 			tok.attrs = {}
 			tok.escaped = {}
-			i = 0
 
 			state = ->
 				states[states.length - 1]
@@ -469,7 +468,7 @@ Lexer:: =
 								states.push "key"
 								val = val.trim()
 								key = key.trim()
-								return  if "" is key
+								return if "" is key
 								key = key.replace(/^['"]|['"]$/g, "").replace("!", "")
 								tok.escaped[key] = escapedAttr
 								tok.attrs[key] = (if "" is val then true else interpolate(val))
@@ -484,22 +483,22 @@ Lexer:: =
 								escapedAttr = "!" isnt p
 								states.push "val"
 					when "("
-						states.push "expr"  if "val" is state() or "expr" is state()
+						states.push "expr" if "val" is state() or "expr" is state()
 						val += c
 					when ")"
-						states.pop()  if "expr" is state() or "val" is state()
+						states.pop() if "expr" is state() or "val" is state()
 						val += c
 					when "{"
-						states.push "object"  if "val" is state()
+						states.push "object" if "val" is state()
 						val += c
 					when "}"
-						states.pop()  if "object" is state()
+						states.pop() if "object" is state()
 						val += c
 					when "["
-						states.push "array"  if "val" is state()
+						states.push "array" if "val" is state()
 						val += c
 					when "]"
-						states.pop()  if "array" is state()
+						states.pop() if "array" is state()
 						val += c
 					when "\"", "'"
 						switch state()
@@ -508,7 +507,7 @@ Lexer:: =
 							when "key char"
 								states.pop()
 							when "string"
-								states.pop()  if c is quote
+								states.pop() if c is quote
 								val += c
 							else
 								states.push "string"
@@ -524,10 +523,11 @@ Lexer:: =
 				p = c
 
 
-			while i < len
-				parse str.charAt(i)
-				++i
+			for char in str.split ''
+				parse char
+
 			parse ","
+
 			if "/" is @input.charAt(0)
 				@consume 1
 				tok.selfClosing = true
@@ -559,16 +559,16 @@ Lexer:: =
 				captures = re.exec(@input)
 			
 			# established
-			@indentRe = re  if captures and captures[1].length
+			@indentRe = re if captures and captures[1].length
 		if captures
 			tok = undefined
 			indents = captures[1].length
 			++@lineno
 			@consume indents + 1
-			throw new Error("Invalid indentation, you can use tabs or spaces but not both")  if " " is @input[0] or "\t" is @input[0]
+			throw new Error("Invalid indentation, you can use tabs or spaces but not both") if " " is @input[0] or "\t" is @input[0]
 			
 			# blank line
-			return @tok("newline")  if "\n" is @input[0]
+			return @tok("newline") if "\n" is @input[0]
 			
 			# outdent
 			if @indentStack.length and indents < @indentStack[0]
@@ -594,9 +594,9 @@ Lexer:: =
 	###
 	pipelessText: ->
 		if @pipeless
-			return  if "\n" is @input[0]
+			return if "\n" is @input[0]
 			i = @input.indexOf("\n")
-			i = @input.length  if -1 is i
+			i = @input.length if -1 is i
 			str = @input.substr(0, i)
 			@consume str.length
 			@tok "text", str
