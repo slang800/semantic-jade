@@ -424,40 +424,43 @@ Lexer:: =
 	###
 	Attributes.
 	###
-	attrs: `function() {
-		if ('(' == this.input.charAt(0)) {
-			var index = this.indexOfDelimiters('(', ')')
-				, str = this.input.substr(1, index-1)
-				, tok = this.tok('attrs')
-				, len = str.length
-				, colons = this.colons
-				, states = ['key']
-				, escapedAttr
-				, key = ''
-				, val = ''
-				, quote
-				, c
-				, p;
+	attrs: ->
+		if "(" is @input.charAt(0)
 
-			function state(){
-				return states[states.length - 1];
-			}
+			index = @indexOfDelimiters("(", ")")
+			str = @input.substr(1, index - 1)
+			tok = @tok("attrs")
+			len = str.length
+			colons = @colons
+			states = ["key"]
+			escapedAttr = undefined
+			key = ""
+			val = ""
+			quote = undefined
+			c = undefined
+			p = undefined
+			@consume index + 1
+			tok.attrs = {}
+			tok.escaped = {}
+			i = 0
 
-			function interpolate(attr) {
-				return attr.replace(/(\\)?#\{([^}]+)\}/g, function(_, escape, expr){
-					return escape ? _ : quote + " + (" + expr + ") + " + quote;
-				});
-			}
+			state = ->
+				states[states.length - 1]
+			interpolate = (attr) ->
+				attr.replace /(\\)?#\{([^}]+)\}/g, (random_underscore_var, escape, expr) ->
+					return (
+						if escape
+							random_underscore_var
+						else
+							quote + " + (" + expr + ") + " + quote
+					)
 
-			this.consume(index + 1);
-			tok.attrs = {};
-			tok.escaped = {};
-
-			function parse(c) {
-				var real = c;
-				// TODO: remove when people fix ":"
-				if (colons && ':' == c) c = '=';
-				switch (c) {
+			parse = (c) ->
+				real = c
+				
+				# TODO: remove when people fix ":"
+				c = "=" if colons and ":" is c
+				`switch (c) {
 					case ',':
 					case '\n':
 						switch (state()) {
@@ -491,7 +494,7 @@ Lexer:: =
 								val += real;
 								break;
 							default:
-								escapedAttr = '!' != p;
+								escapedAttr = ('!' != p);
 								states.push('val');
 						}
 						break;
@@ -549,24 +552,19 @@ Lexer:: =
 							default:
 								val += c;
 						}
-				}
-				p = c;
-			}
+				}`
+				p = c
 
-			for (var i = 0; i < len; ++i) {
-				parse(str.charAt(i));
-			}
 
-			parse(',');
+			while i < len
+				parse str.charAt(i)
+				++i
+			parse ","
+			if "/" is @input.charAt(0)
+				@consume 1
+				tok.selfClosing = true
+			tok
 
-			if ('/' == this.input.charAt(0)) {
-				this.consume(1);
-				tok.selfClosing = true;
-			}
-
-			return tok;
-		}
-	}`
 
 	
 	###
