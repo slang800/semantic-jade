@@ -460,99 +460,67 @@ Lexer:: =
 				
 				# TODO: remove when people fix ":"
 				c = "=" if colons and ":" is c
-				`switch (c) {
-					case ',':
-					case '\n':
-						switch (state()) {
-							case 'expr':
-							case 'array':
-							case 'string':
-							case 'object':
-								val += c;
-								break;
-							default:
-								states.push('key');
-								val = val.trim();
-								key = key.trim();
-								if ('' === key) return;
-								key = key.replace(/^['"]|['"]$/g, '').replace('!', '');
-								tok.escaped[key] = escapedAttr;
-								tok.attrs[key] = '' === val ? true : interpolate(val);
-								key = val = '';
-						}
-						break;
-					case '=':
-						switch (state()) {
-							case 'key char':
-								key += real;
-								break;
-							case 'val':
-							case 'expr':
-							case 'array':
-							case 'string':
-							case 'object':
-								val += real;
-								break;
-							default:
-								escapedAttr = ('!' != p);
-								states.push('val');
-						}
-						break;
-					case '(':
-						if ('val' == state() || 'expr' == state()) states.push('expr');
-						val += c;
-						break;
-					case ')':
-						if ('expr' == state() || 'val' == state()) states.pop();
-						val += c;
-						break;
-					case '{':
-						if ('val' == state()) states.push('object');
-						val += c;
-						break;
-					case '}':
-						if ('object' == state()) states.pop();
-						val += c;
-						break;
-					case '[':
-						if ('val' == state()) states.push('array');
-						val += c;
-						break;
-					case ']':
-						if ('array' == state()) states.pop();
-						val += c;
-						break;
-					case '"':
-					case "'":
-						switch (state()) {
-							case 'key':
-								states.push('key char');
-								break;
-							case 'key char':
-								states.pop();
-								break;
-							case 'string':
-								if (c == quote) states.pop();
-								val += c;
-								break;
-							default:
-								states.push('string');
-								val += c;
-								quote = c;
-						}
-						break;
-					case '':
-						break;
-					default:
-						switch (state()) {
-							case 'key':
-							case 'key char':
-								key += c;
-								break;
-							default:
-								val += c;
-						}
-				}`
+				switch c
+					when ",", "\n"
+						switch state()
+							when "expr", "array", "string", "object"
+								val += c
+							else
+								states.push "key"
+								val = val.trim()
+								key = key.trim()
+								return  if "" is key
+								key = key.replace(/^['"]|['"]$/g, "").replace("!", "")
+								tok.escaped[key] = escapedAttr
+								tok.attrs[key] = (if "" is val then true else interpolate(val))
+								key = val = ""
+					when "="
+						switch state()
+							when "key char"
+								key += real
+							when "val", "expr", "array", "string", "object"
+								val += real
+							else
+								escapedAttr = "!" isnt p
+								states.push "val"
+					when "("
+						states.push "expr"  if "val" is state() or "expr" is state()
+						val += c
+					when ")"
+						states.pop()  if "expr" is state() or "val" is state()
+						val += c
+					when "{"
+						states.push "object"  if "val" is state()
+						val += c
+					when "}"
+						states.pop()  if "object" is state()
+						val += c
+					when "["
+						states.push "array"  if "val" is state()
+						val += c
+					when "]"
+						states.pop()  if "array" is state()
+						val += c
+					when "\"", "'"
+						switch state()
+							when "key"
+								states.push "key char"
+							when "key char"
+								states.pop()
+							when "string"
+								states.pop()  if c is quote
+								val += c
+							else
+								states.push "string"
+								val += c
+								quote = c
+					when ""
+					else
+						switch state()
+							when "key", "key char"
+								key += c
+							else
+								val += c
 				p = c
 
 
