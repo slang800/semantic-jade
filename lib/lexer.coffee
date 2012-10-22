@@ -1,8 +1,3 @@
-#!
-# * Jade - Lexer
-# * Copyright(c) 2010 TJ Holowaychuk <tj@vision-media.ca>
-# * MIT Licensed
-# 
 utils = require("./utils")
 
 
