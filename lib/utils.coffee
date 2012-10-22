@@ -8,7 +8,11 @@ Convert interpolation in the given string to JavaScript.
 interpolate = exports.interpolate = (str) ->
 	str.replace /(_SLASH_)?([#!]){(.*?)}/g, (str, escape, flag, code) ->
 		code = code.replace(/\\'/g, "'").replace(/_SLASH_/g, "\\")
-		(if escape then str.slice(7) else "' + " + ((if "!" is flag then "" else "escape")) + "((interp = " + code + ") == null ? '' : interp) + '")
+		
+		if escape
+			return str.slice(7)
+		else
+			return "' + #{if "!" is flag then "" else "escape"}((interp = #{code}) == null ? '' : interp) + '"
 
 
 
