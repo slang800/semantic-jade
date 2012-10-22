@@ -11,7 +11,7 @@ Lexer = require("./lexer")
 nodes = require("./nodes")
 utils = require("./utils")
 
-# Parser prototype.
+
 class Parser
 	###
 	Initialize `Parser` with the given input `str` and `filename`.
