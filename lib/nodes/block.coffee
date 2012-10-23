@@ -45,7 +45,7 @@ class Block extends Node
 	@api public
 	###
 	isEmpty: ->
-		0 is @nodes.length
+		@nodes.length is 0
 
 
 	###

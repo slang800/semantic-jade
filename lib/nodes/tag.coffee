@@ -52,22 +52,19 @@ class Tag extends Attrs
 			# Recurse if the node is a block
 			return node.nodes.every(isInline) if node.isBlock
 			node.isText or (node.isInline and node.isInline())
+
 		nodes = @block.nodes
 		
 		# Empty tag
 		return true unless nodes.length
 		
 		# Text-only or inline-only tag
-		return isInline(nodes[0]) if 1 is nodes.length
+		return isInline(nodes[0]) if nodes.length is 1
 		
 		# Multi-line inline-only tag
 		if @block.nodes.every(isInline)
-			i = 1
-			len = nodes.length
-
-			while i < len
+			for i in [1..nodes.length]
 				return false if nodes[i - 1].isText and nodes[i].isText
-				++i
 			return true
 		
 		# Mixed tag

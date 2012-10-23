@@ -15,6 +15,6 @@ class Code extends Node
 		@val = val
 		@buffer = buffer
 		@escape = escape
-		@debug = false  if val.match(/^ *else/)
+		@debug = false if val.match(/^ *else/)
 
 module.exports = Code
