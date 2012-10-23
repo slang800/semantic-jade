@@ -48,9 +48,12 @@ class Lexer
 
 	###
 	Scan with the given `regexp`.
-	Return the matches to the regular expression (the captures)
+	Pass the matches from the regular expression to the `callback`.
+	The `callback` should return a tok
+
 
 	@param {RegExp} regexp
+	@param {Function} callback
 	@return {Array or null}
 	@api private
 	###
