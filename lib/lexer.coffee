@@ -2,13 +2,11 @@ utils = require("./utils")
 
 
 class Lexer
-	
-	###
-	Initialize `Lexer` with the given `str`.
-
-	@param {String} str
-	@param {Object} options
-	@api private
+	###*
+	 * Initialize `Lexer` with the given `str`
+	 * @param {String} str
+	 * @param {Object} options
+	 * @private
 	###
 	constructor: (str, options) ->
 		options = options or {}
@@ -21,14 +19,11 @@ class Lexer
 		@indentRe = null
 		@pipeless = false
 
-
-	###
-	Construct a token with the given `type` and `val`.
-	
-	@param {String} type
-	@param {String} val
-	@return {Object}
-	@api private
+	###*
+	 * Construct a token with the given `type` and `val`
+	 * @param {String} type
+	 * @param {String} val
+	 * @private
 	###
 	tok: (type, val) ->
 		type: type
@@ -40,22 +35,19 @@ class Lexer
 	Consume the given `len` of input.
 	
 	@param {Number} len
-	@api private
+	@private
 	###
 	consume: (len) ->
 		@input = @input.substr(len)
 
 
-	###
-	Scan with the given `regexp`.
-	Pass the matches from the regular expression to the `callback`.
-	The `callback` should return a tok
-
-
-	@param {RegExp} regexp
-	@param {Function} callback
-	@return {Array or null}
-	@api private
+	###*
+	 * Scan with the given `regexp`. Pass the matches from the regular
+       expression to the `callback`. The `callback` should return a tok
+	 * @param {RegExp} regexp
+	 * @param {Function} callback
+	 * @return {Array or null}
+	 * @private
 	###
 	capture: (regexp, callback) ->
 		captures = regexp.exec(@input)
@@ -72,7 +64,7 @@ class Lexer
 	@param {String} type
 	@param {RegExp} regexp
 	@return {Object}
-	@api private
+	@private
 	###
 	scan: (regexp, type) ->
 		@capture(
@@ -86,7 +78,7 @@ class Lexer
 	Defer the given `tok`.
 	
 	@param {Object} tok
-	@api private
+	@private
 	###
 	defer: (tok) ->
 		@deferredTokens.push tok
@@ -97,7 +89,7 @@ class Lexer
 	
 	@param {Number} n
 	@return {Object}
-	@api private
+	@private
 	###
 	lookahead: (n) ->
 		fetch = n - @stash.length
@@ -111,7 +103,7 @@ class Lexer
 	@param {String} start
 	@param {String} end
 	@return {Number}
-	@api private
+	@private
 	###
 	indexOfDelimiters: (start, end) ->
 		str = @input
@@ -201,8 +193,7 @@ class Lexer
 	id: ->
 		@scan /^#([\w-]+)/, "id"
 
-	
-	#Class
+
 	className: ->
 		@scan /^\.([\w-]+)/, "class"
 
@@ -540,7 +531,7 @@ class Lexer
 	previously stashed by lookahead.
 	
 	@return {Object}
-	@api private
+	@private
 	###
 	advance: ->
 		@stashed() or @next()
@@ -550,7 +541,7 @@ class Lexer
 	Return the next token object.
 	
 	@return {Object}
-	@api private
+	@private
 	###
 	next: ->
 		@deferred() or
