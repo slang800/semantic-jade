@@ -252,27 +252,10 @@ class Lexer
 		@scan /^include +([^\n]+)/, "include"
 
 
-	case: ->
-		@scan /^case +([^\n]+)/, "case"
-
-
-	when: ->
-		@scan /^when +([^:\n]+)/, "when"
-
-
 	default: ->
 		@scan /^default */, "default"
 
 
-	assignment: ->
-		@capture(
-			/^(\w+) += *([^;\n]+)( *;? *)/,
-			(captures) =>
-				name = captures[1]
-				val = captures[2]
-				@tok "code", "var " + name + " = (" + val + ");"
-		)
-	
 	#Call mixin
 	call: ->
 		@capture(
@@ -295,44 +278,6 @@ class Lexer
 			(captures) =>
 				tok = @tok("mixin", captures[1])
 				tok.args = captures[2]
-				tok
-		)
-
-
-	conditional: ->
-		@capture(
-			/^(if|unless|else if|else)\b([^\n]*)/,
-			(captures) =>
-				type = captures[1]
-				js = captures[2]
-				switch type
-					when "if"
-						js = "if (" + js + ")"
-					when "unless"
-						js = "if (!(" + js + "))"
-					when "else if"
-						js = "else if (" + js + ")"
-					when "else"
-						js = "else"
-				@tok "code", js
-		)
-
-
-	while: ->
-		@capture(
-			/^while +([^\n]+)/,
-			(captures) =>
-				@tok "code", "while (" + captures[1] + ")"
-		)
-
-
-	each: ->
-		@capture(
-			/^(?:- *)?(?:each|for) +(\w+)(?: *, *(\w+))? * in *([^\n]+)/,
-			(captures) =>
-				tok = @tok("each", captures[1])
-				tok.key = captures[2] or "$index"
-				tok.code = captures[3]
 				tok
 		)
 
@@ -458,7 +403,6 @@ class Lexer
 			tok
 
 
-	
 	#Indent | Outdent | Newline
 	indent: ->
 		re = undefined
@@ -509,7 +453,7 @@ class Lexer
 				tok = @tok("newline")
 			tok
 
-	
+
 	#Pipe-less text consumed only when `pipeless` is true
 	pipelessText: ->
 		if @pipeless
@@ -520,7 +464,7 @@ class Lexer
 			@consume str.length
 			@tok "text", str
 
-	
+
 	#':'
 	colon: ->
 		@scan /^: */, ":"
@@ -536,10 +480,10 @@ class Lexer
 	advance: ->
 		@stashed() or @next()
 
-	
+
 	###
 	Return the next token object.
-	
+
 	@return {Object}
 	@private
 	###
@@ -551,8 +495,6 @@ class Lexer
 		@yield() or
 		@doctype() or
 		@interpolation() or
-		@case() or
-		@when() or
 		@default() or
 		@extends() or
 		@append() or
@@ -561,10 +503,6 @@ class Lexer
 		@include() or
 		@mixin() or
 		@call() or
-		@conditional() or
-		@each() or
-		@while() or
-		@assignment() or
 		@tag() or
 		@filter() or
 		@code() or

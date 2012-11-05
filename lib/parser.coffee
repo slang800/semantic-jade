@@ -158,10 +158,6 @@ class Parser
 				@parseMixin()
 			when "block"
 				@parseBlock()
-			when "case"
-				@parseCase()
-			when "when"
-				@parseWhen()
 			when "default"
 				@parseDefault()
 			when "extends"
@@ -176,8 +172,6 @@ class Parser
 				@parseComment()
 			when "text"
 				@parseText()
-			when "each"
-				@parseEach()
 			when "code"
 				@parseCode()
 			when "call"
@@ -218,25 +212,6 @@ class Parser
 			new nodes.Block(@parseExpr())
 		else
 			@block()
-
-	
-	###
-	case
-	###
-	parseCase: ->
-		val = @expect("case").val
-		node = new nodes.Case(val)
-		node.line = @line()
-		node.block = @block()
-		node
-
-	
-	###
-	when
-	###
-	parseWhen: ->
-		val = @expect("when").val
-		new nodes.Case.When(val, @parseBlockExpansion())
 
 	
 	###
@@ -302,21 +277,7 @@ class Parser
 		node.line = @line()
 		node
 
-	
-	###
-	each block
-	###
-	parseEach: ->
-		tok = @expect("each")
-		node = new nodes.Each(tok.code, tok.val, tok.key)
-		node.line = @line()
-		node.block = @block()
-		if @peek().type is "code" and @peek().val is "else"
-			@advance()
-			node.alternative = @block()
-		node
 
-	
 	###
 	'extends' name
 	###

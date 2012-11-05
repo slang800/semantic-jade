@@ -108,34 +108,6 @@ class Compiler
 		this["visit#{name}"] node
 
 	###
-	Visit case `node`.
-
-	@param {Literal} node
-	@public
-	###
-	visitCase: (node) ->
-		i = @withinCase
-		@withinCase = true
-		@buf.push "switch (#{node.expr}){"
-		@visit node.block
-		@buf.push "}"
-		@withinCase = i
-
-	###
-	Visit when `node`.
-
-	@param {Literal} node
-	@public
-	###
-	visitWhen: (node) ->
-		if "default" is node.expr
-			@buf.push "default:"
-		else
-			@buf.push "case #{node.expr}:"
-		@visit node.block
-		@buf.push "  break;"
-
-	###
 	Visit literal `node`.
 
 	@param {Literal} node
@@ -371,27 +343,6 @@ class Compiler
 	# Buffer code
 
 	# Block support
-
-	###
-	Visit `each` block.
-
-	@param {Each} each
-	@public
-	###
-	visitEach: (each) ->
-		@buf.push "// iterate #{each.obj}\n;(function(){\n  if ('number' == typeof #{each.obj}.length) {\n"
-		@buf.push "  if (#{each.obj}.length) {" if each.alternative
-		@buf.push "    for (var #{each.key} = 0, $$l = #{each.obj}.length; #{each.key} < $$l; #{each.key}++) {\n      var #{each.val} = #{each.obj}[#{each.key}];\n"
-		@visit each.block
-		@buf.push "    }\n"
-		if each.alternative
-			@buf.push "  } else {"
-			@visit each.alternative
-			@buf.push "  }"
-		@buf.push "  } else {\n    for (var #{each.key} in #{each.obj}) {\n      var #{each.val} = #{each.obj}[#{each.key}];\n"
-		@visit each.block
-		@buf.push "   }\n  }\n}).call(this);\n"
-		#above line has 3 spaces???
 
 	###
 	Visit `attrs`.
