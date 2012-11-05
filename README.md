@@ -1,7 +1,7 @@
 
-# Jade
+# Semantic-Jade
 
-  The jade template engine for node.js
+  The semantic-jade template engine for node.js
 
 ## Synopsis
 
@@ -234,16 +234,16 @@
       Nothing too
       exciting.
 
-  Some tags are text-only by default, for example
-  _script_, _textarea_, and _style_ tags do not
-  contain nested HTML so Jade implies the trailing ".":
+  This is especially useful for tags like:
   
-    script
+    script.
       if (foo) {
         bar();
       }
 
-    style
+  and
+
+    style.
       body {
         padding: 50px;
         font: 14px Helvetica;
@@ -325,63 +325,6 @@
 
    Taking this further Jade provides some syntax for conditionals,
    iteration, switch statements etc. Let's look at those next!
-
-## Assignment
-
-  Jade's first-class assignment is simple, simply use the _=_
-  operator and Jade will _var_ it for you. The following are equivalent:
-  
-    - var user = { name: 'tobi' }
-    user = { name: 'tobi' }
-
-## Conditionals
-
-  Jade's first-class conditional syntax allows for optional
-  parenthesis, and you may now omit the leading _-_ otherwise
-  it's identical, still just regular javascript:
-  
-    user = { description: 'foo bar baz' }
-    #user
-      if user.description
-        h2 Description
-        p.description= user.description
-
-  Jade provides the negated version, _unless_ as well, the following
-  are equivalent:
-  
-    - if (!(user.isAnonymous))
-      p You're logged in as #{user.name}
-
-    unless user.isAnonymous
-      p You're logged in as #{user.name}
-
-## Iteration
-
-  JavaScript's _for_ loops don't look very declarative, so Jade
-  also provides its own _for_ loop construct, aliased as _each_:
-
-    for user in users
-      .user
-        h2= user.name
-        p user #{user.name} is #{user.age} year old
-
-   As mentioned _each_ is identical:
-   
-     each user in users
-       .user
-         h2= user.name
-
-   If necessary the index is available as well:
-   
-      for user, i in users
-        .user(class='user-#{i}')
-          h2= user.name
-
-   Remember, it's just JavaScript:
-   
-      ul#letters
-        for letter in ['a', 'b', 'c']
-          li= letter
 
 ## Mixins
 
