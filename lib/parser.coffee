@@ -215,14 +215,6 @@ class Parser
 
 	
 	###
-	default
-	###
-	parseDefault: ->
-		@expect "default"
-		new nodes.Case.When("default", @parseBlockExpansion())
-
-	
-	###
 	code
 	###
 	parseCode: ->

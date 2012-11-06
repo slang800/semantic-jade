@@ -252,10 +252,6 @@ class Lexer
 		@scan /^include +([^\n]+)/, "include"
 
 
-	default: ->
-		@scan /^default */, "default"
-
-
 	#Call mixin
 	call: ->
 		@capture(
