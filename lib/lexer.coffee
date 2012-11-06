@@ -491,7 +491,6 @@ class Lexer
 		@yield() or
 		@doctype() or
 		@interpolation() or
-		@default() or
 		@extends() or
 		@append() or
 		@prepend() or

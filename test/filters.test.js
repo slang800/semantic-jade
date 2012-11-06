@@ -2,6 +2,7 @@
 /**
  * Module dependencies.
  */
+require('coffee-script');
 
 var jade = require('../')
   , assert = require('assert')

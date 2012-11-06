@@ -2,6 +2,7 @@
 /**
  * Module dependencies.
  */
+require('coffee-script');
 
 var uubench = require('uubench')
   , jade = require('../');

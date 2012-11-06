@@ -158,8 +158,6 @@ class Parser
 				@parseMixin()
 			when "block"
 				@parseBlock()
-			when "default"
-				@parseDefault()
 			when "extends"
 				@parseExtends()
 			when "include"
