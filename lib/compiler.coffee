@@ -86,12 +86,13 @@ class Compiler
 	@public
 	###
 
-	# Massive hack to fix our context
-	# stack for - else[ if] etc
 	visit: (node) ->
 		debug = @debug
 		if debug
 			@buf.push "__jade.unshift({ lineno: #{node.line}, filename: #{((if node.filename then JSON.stringify(node.filename) else "__jade[0].filename"))} });"
+	
+		# Massive hack to fix our context
+		# stack for - else[ if] etc
 		if false is node.debug and @debug
 			@buf.pop()
 			@buf.pop()
@@ -139,16 +140,14 @@ class Compiler
 
 		# Pretty print multi-line text
 		@prettyIndent 1, true if pp and len > 1 and not escape and block.nodes[0].isText and block.nodes[1].isText
-		i = 0
 
-		while i < len
+		for i in [0...len]
 			# Pretty print text
 			@prettyIndent 1, false if pp and i > 0 and not escape and block.nodes[i].isText and block.nodes[i - 1].isText
 			@visit block.nodes[i]
 
 			# Multiple text nodes are separated by newlines
 			@buffer "\\n" if block.nodes[i + 1] and block.nodes[i].isText and block.nodes[i + 1].isText
-			++i
 
 	###
 	Visit `doctype`. Sets terse mode to `true` when html 5
@@ -182,6 +181,8 @@ class Compiler
 				@buf.push "#{name}.call({"
 				if block
 					@buf.push "block: function(){"
+					
+					# Render block with no indents, dynamically added when rendered
 					@parentIndents++
 					_indents = @indents
 					@indents = 0
@@ -213,7 +214,6 @@ class Compiler
 			@parentIndents--
 			@buf.push "};"
 
-	# Render block with no indents, dynamically added when rendered
 
 	###
 	Visit `tag` buffering tag markup, generating
@@ -230,12 +230,15 @@ class Compiler
 		unless @hasCompiledTag
 			@visitDoctype() if not @hasCompiledDoctype and 'html' is name
 			@hasCompiledTag = true
+		
+		# pretty print
 		@prettyIndent 0, true if pp and not tag.isInline()
 		if (~selfClosing.indexOf(name) or tag.selfClosing) and not @xml
 			@buffer "<#{name}"
 			@visitAttributes tag.attrs
 			(if @terse then @buffer('>') else @buffer("/>"))
 		else
+			# Optimize attributes buffering
 			if tag.attrs.length
 				@buffer "<#{name}"
 				@visitAttributes tag.attrs if tag.attrs.length
@@ -245,15 +248,11 @@ class Compiler
 			@visitCode tag.code if tag.code
 			@escape = "pre" is tag.name
 			@visit tag.block
+			
+			# pretty print
 			@prettyIndent 0, true if pp and not tag.isInline() and "pre" isnt tag.name and not tag.canInline()
 			@buffer "</#{name}>"
 		@indents--
-
-	# pretty print
-
-	# Optimize attributes buffering
-
-	# pretty print
 
 	###
 	Visit `filter`, throwing when the filter does not exist.
@@ -263,6 +262,8 @@ class Compiler
 	###
 	visitFilter: (filter) ->
 		fn = filters[filter.name]
+		
+		# unknown filter
 		unless fn
 			throw new Error("unknown filter \":#{filter.name}\"")
 
@@ -272,8 +273,6 @@ class Compiler
 		filter.attrs = filter.attrs or {}
 		filter.attrs.filename = @options.filename
 		@buffer utils.text(fn(text, filter.attrs))
-
-	# unknown filter
 
 	###
 	Visit `text` node.
@@ -324,6 +323,11 @@ class Compiler
 	@public
 	###
 	visitCode: (code) ->
+		# Wrap code blocks with {}.
+		# we only wrap unbuffered code blocks ATM
+		# since they are usually flow control
+
+		# Buffer code
 		if code.buffer
 			val = code.val.trimLeft()
 			@buf.push "var __val__ = #{val}"
@@ -332,18 +336,12 @@ class Compiler
 			@buf.push "buf.push(#{val});"
 		else
 			@buf.push code.val
+
+		# Block support
 		if code.block
 			@buf.push "{" unless code.buffer
 			@visit code.block
 			@buf.push "}" unless code.buffer
-
-	# Wrap code blocks with {}.
-	# we only wrap unbuffered code blocks ATM
-	# since they are usually flow control
-
-	# Buffer code
-
-	# Block support
 
 	###
 	Visit `attrs`.
@@ -360,7 +358,6 @@ class Compiler
 			@buffer runtime.attrs(buf, JSON.parse(val.escaped)), true
 		else
 			@buf.push "buf.push(attrs({ #{val.buf} }, #{val.escaped}));"
-
 
 	#Compile attributes
 	attrs: (attrs) ->

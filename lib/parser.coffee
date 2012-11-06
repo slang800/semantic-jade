@@ -487,12 +487,6 @@ class Parser
 		# newline*
 		@advance() while "newline" is @peek().type
 		
-		#script special-case (for non-js scripts?)
-		#if 'script' is tag.name
-		#	type = tag.getAttribute('type');
-		#	if not dot and type and 'text/javascript' isnt type.replace(/^['"]|['"]$/g, '')
-		#		tag.textOnly = false;
-		
 		# block?
 		if "indent" is @peek().type
 			if tag.textOnly
@@ -502,12 +496,9 @@ class Parser
 			else
 				block = @block()
 				if tag.block
-					i = 0
-					len = block.nodes.length
 
-					while i < len
-						tag.block.push block.nodes[i]
-						++i
+					for node in block.nodes
+						tag.block.push node
 				else
 					tag.block = block
 		tag

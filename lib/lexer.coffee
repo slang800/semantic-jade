@@ -174,7 +174,7 @@ class Lexer
 					name = name.slice(0, -1)
 					tok = @tok("tag", name)
 					@defer @tok(":")
-					@input = @input.substr(1) while " " is @input[0]
+					@input = @input.substr(1) while @input[0] is " "
 				else
 					tok = @tok("tag", name)
 				tok.selfClosing = !!captures[2]
