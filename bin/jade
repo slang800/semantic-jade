@@ -3,16 +3,17 @@
 ###
 Module dependencies.
 ###
-fs = require("fs")
-program = require("commander")
-path = require("path")
+sys = require 'sys'
+fs = require "fs"
+program = require "commander"
+path = require "path"
 basename = path.basename
 dirname = path.dirname
 resolve = path.resolve
 exists = fs.existsSync or path.existsSync
 join = path.join
-mkdirp = require("mkdirp")
-jade = require("../")
+mkdirp = require "mkdirp"
+jade = require "../"
 
 ###
 Compile from stdin.
@@ -68,7 +69,9 @@ options = {}
 
 # options
 program
-	.version(jade.version)
+	.version(
+		JSON.parse(fs.readFileSync(path.normalize(__dirname + '/../package.json'), "utf8")).version
+	)
 	.usage("[options] [dir|file ...]")
 	.option("-o, --obj <str>", "javascript options object")
 	.option("-O, --out <dir>", "output the compiled html to <dir>")
@@ -131,9 +134,9 @@ if files.length
 	if options.watch
 		files.forEach (file) ->
 			fs.watchFile file,
-				interval: 100
-			, (curr, prev) ->
-				renderFile file  if curr.mtime > prev.mtime
+				interval: 100,
+				(curr, prev) ->
+					renderFile file if curr.mtime > prev.mtime
 	process.on "exit", ->
 		console.log()
 # stdio
