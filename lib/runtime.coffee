@@ -27,7 +27,7 @@ resulting in a string.
 @return {Object} a
 @private
 ###
-exports.merge = merge = (a, b) ->
+exports.merge = (a, b) ->
 	ac = a["class"]
 	bc = b["class"]
 	if ac or bc
@@ -61,7 +61,7 @@ Render the given attributes object.
 @return {String}
 @private
 ###
-exports.attrs = attrs = (obj, escaped) ->
+exports.attrs = (obj, escaped) ->
 	buf = []
 	terse = obj.terse
 	delete obj.terse
@@ -92,18 +92,7 @@ exports.attrs = attrs = (obj, escaped) ->
 				buf.push(key + '="' + val + '"');
 			}`
 			++i
-	#		key = keys[i]
-	#		val = obj[key]
-	#		if typeof val is "boolean" or val is null
-	#			(if terse then buf.push(key) else buf.push(key + "=\"" + key + "\""))  if val
-	#		else if 0 is key.indexOf("data") and "string" isnt typeof val
-	#			buf.push key + "='" + JSON.stringify(val) + "'"
-	#		else if "class" is key and Array.isArray(val)
-	#			buf.push key + "=\"" + exports.escape(val.join(" ")) + "\""
-	#		else if escaped and escaped[key]
-	#			buf.push key + "=\"" + exports.escape(val) + "\""
-	#		else
-	#			buf.push key + "=\"" + val + "\""
+
 	buf.join " "
 
 
@@ -114,9 +103,18 @@ Escape the given string of `html`.
 @return {String}
 @private
 ###
-exports.escape = escape = (html) ->
+exports.escape = (html) ->
 	String(html).replace(/&(?!(\w+|\#\d+);)/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace /"/g, "&quot;"
 
+###
+Indent all lines in a given string
+
+@param {String} str
+@return {String}
+@private
+###
+exports.indent = (str) ->
+	'\t' + str.replace /\n/g, '\n\t'
 
 ###
 Re-throw the given `err` in context to the
@@ -127,7 +125,7 @@ the jade in `filename` at the given `lineno`.
 @param {String} lineno
 @private
 ###
-exports.rethrow = rethrow = (err, filename, lineno) ->
+exports.rethrow = (err, filename, lineno) ->
 	throw err  unless filename
 	context = 3
 	str = require("fs").readFileSync(filename, "utf8")

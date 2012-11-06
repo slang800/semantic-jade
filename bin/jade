@@ -3,7 +3,7 @@
 ###
 Module dependencies.
 ###
-sys = require 'sys'
+sys = require 'util'
 fs = require "fs"
 program = require "commander"
 path = require "path"

@@ -1,40 +1,33 @@
 #Module dependencies
-require "coffee-script"
-Parser = require("./parser")
-Lexer = require("./lexer")
-Compiler = require("./compiler")
-runtime = require("./runtime")
-
-# if node
-fs = require("fs")
-# end
+coffee = require "coffee-script"
+fs = require "fs"
 
 #Expose self closing tags
-exports.selfClosing = require("./self-closing")
+exports.selfClosing = require "./self-closing"
 
 #Default supported doctypes
-exports.doctypes = require("./doctypes")
+exports.doctypes = require "./doctypes"
 
 #Text filters
-exports.filters = require("./filters")
+exports.filters = require "./filters"
 
 #Utilities
-exports.utils = require("./utils")
+exports.utils = require "./utils"
 
 #Expose `Compiler`
-exports.Compiler = Compiler
+exports.Compiler = Compiler = require "./compiler"
 
 #Expose `Parser`
-exports.Parser = Parser
+exports.Parser = Parser = require "./parser"
 
 #Expose `Lexer`
-exports.Lexer = Lexer
+exports.Lexer = Lexer = require "./lexer"
 
 #Nodes
-exports.nodes = require("./nodes")
+exports.nodes = require "./nodes"
 
 #Jade runtime helpers
-exports.runtime = runtime
+exports.runtime = runtime = require "./runtime"
 
 #Template function cache
 exports.cache = {}
@@ -49,7 +42,6 @@ Parse the given `str` of jade and return a function body.
 ###
 parse = (str, options) ->
 	try
-		
 		# Parse
 		parser = new Parser(str, options.filename, options)
 		compiler = undefined
@@ -59,11 +51,21 @@ parse = (str, options) ->
 			compiler = new Compiler(parser.parse(), options)
 		else
 			compiler = new options.compiler(parser.parse(), options)
-		js = compiler.compile()
+		js = runtime.indent compiler.compile()
 		
 		# Debug compiler
 		console.error "\nCompiled Function:\n\n\u001b[90m%s\u001b[0m", js.replace(/^/g, "  ")  if options.debug
-		return "" + "var buf = [];\n" + ((if options.self then "var self = locals || {};\n" + js else "with (locals || {}) {\n" + js + "\n}\n")) + "return buf.join(\"\");"
+		return """
+		buf = []
+		_with = (object, block) -> block.call object
+		#{
+			if options.self
+				"self = locals || {}\n" + js + "\n"
+			else
+				"_with (locals || {}), ->\n" + js + "\n"
+		}
+		return buf.join(\"\")
+		"""
 	catch err
 		parser = parser.context()
 		runtime.rethrow err, parser.filename, parser.lexer.lineno
@@ -98,10 +100,20 @@ exports.compile = (str, options) ->
 	filename = (if options.filename then JSON.stringify(options.filename) else "undefined")
 	fn = undefined
 	str = stripBOM(String(str))
+	console.log parse(str, options)
 	if options.compileDebug isnt false
-		fn = ["var __jade = [{ lineno: 1, filename: " + filename + " }];", "try {", parse(str, options), "} catch (err) {", "  rethrow(err, __jade[0].filename, __jade[0].lineno);", "}"].join("\n")
+		fn = """
+		__jade = [{ lineno: 1, filename: #{filename} }]
+		try
+			#{coffee.compile(parse(str, options), {bare: true})}
+		catch err
+			rethrow(err, __jade[0].filename, __jade[0].lineno)
+		"""
 	else
-		fn = parse(str, options)
+		fn = '{' + coffee.compile(parse(str, options)) + '}'
+
+	console.log fn
+
 	fn = "attrs = attrs || jade.attrs; escape = escape || jade.escape; rethrow = rethrow || jade.rethrow; merge = merge || jade.merge;\n" + fn  if client
 	fn = new Function("locals, attrs, escape, rethrow, merge", fn)
 	return fn if client

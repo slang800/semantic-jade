@@ -29,8 +29,8 @@ class Compiler
 	 * @public
 	###
 	compile: ->
-		@buf = ["var interp;"]
-		@buf.push "var __indent = [];" if @pp
+		@buf = ["interp = undefined"]
+		@buf.push "__indent = []" if @pp
 		@lastBufferedIdx = -1
 		@visit @node
 		@buf.join "\n"
@@ -107,7 +107,7 @@ class Compiler
 	###
 	visitNode: (node) ->
 		name = node.constructor.name or node.constructor.toString().match(/function ([^(\s]+)()/)[1]
-		this["visit#{name}"] node
+		@["visit#{name}"] node
 
 	###
 	Visit literal `node`.
@@ -207,8 +207,8 @@ class Compiler
 				@buf.push "#{name}(#{args});"
 			@buf.push "__indent.pop();" if pp
 		else
-			@buf.push "var #{name} = function(#{args}){"
-			@buf.push "var block = this.block, attributes = this.attributes || {}, escaped = this.escaped || {};"
+			@buf.push "#{name} = function(#{args}){"
+			@buf.push "block = this.block, attributes = this.attributes || {}, escaped = this.escaped || {};"
 			@parentIndents++
 			@visit block
 			@parentIndents--
@@ -330,7 +330,7 @@ class Compiler
 		# Buffer code
 		if code.buffer
 			val = code.val.trimLeft()
-			@buf.push "var __val__ = #{val}"
+			@buf.push "__val__ = #{val}"
 			val = "null == __val__ ? \"\" : __val__"
 			val = "escape(#{val})" if code.escape
 			@buf.push "buf.push(#{val});"
@@ -354,7 +354,7 @@ class Compiler
 		if val.inherits
 			@buf.push "buf.push(attrs(merge({ #{val.buf} }, attributes), merge(#{val.escaped}, escaped, true)));"
 		else if val.constant
-			eval "var buf={#{val.buf}};"
+			eval "buf={#{val.buf}};"
 			@buffer runtime.attrs(buf, JSON.parse(val.escaped)), true
 		else
 			@buf.push "buf.push(attrs({ #{val.buf} }, #{val.escaped}));"
