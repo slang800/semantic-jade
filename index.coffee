@@ -1,0 +1,1 @@
+module.exports = process.env.JADE_COV ? require './lib'
