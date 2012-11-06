@@ -1,6 +1,6 @@
 #Module dependencies
 nodes = require("./nodes")
-filters = require("./filters")
+filters = require("./filters").filters
 doctypes = require("./doctypes")
 selfClosing = require("./self-closing")
 runtime = require("./runtime")
@@ -90,7 +90,8 @@ class Compiler
 	# stack for - else[ if] etc
 	visit: (node) ->
 		debug = @debug
-		@buf.push "__jade.unshift({ lineno: #{node.line}, filename: #{((if node.filename then JSON.stringify(node.filename) else "__jade[0].filename"))} });" if debug
+		if debug
+			@buf.push "__jade.unshift({ lineno: #{node.line}, filename: #{((if node.filename then JSON.stringify(node.filename) else "__jade[0].filename"))} });"
 		if false is node.debug and @debug
 			@buf.pop()
 			@buf.pop()

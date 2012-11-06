@@ -343,7 +343,6 @@ class Parser
 		str = fs.readFileSync(include_filepath, "utf8")
 		
 		if ".jade" isnt extname # non-jade
-			#check file extension to determine if any filters need to be applied
 			return new nodes.Literal(str)
 
 		parser = new Parser(str, include_filepath, @options)
@@ -525,4 +524,4 @@ class Parser
 		tag
 
 
-exports = module.exports = Parser
+module.exports = Parser

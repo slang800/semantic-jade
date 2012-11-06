@@ -1,4 +1,4 @@
-module.exports =
+module.exports.filters =
 
 	# Wrap text with CDATA block.
 	cdata: (str) ->
@@ -68,3 +68,16 @@ module.exports =
 	# Transform coffeescript to javascript.
 	coffeescript: (str) ->
 		"\\n" + require("coffee-script").compile(str).replace(/\\/g, "\\\\").replace(/\n/g, "\\n")
+
+###*
+ * key:value pairs matching file extensions to the correct types of filters.
+   multiple extensions may refer to the same filter.
+ * @type {Object}
+###
+module.exports.extensions =
+	scss: 'sass'
+	styl: 'stylus'
+	less: 'less'
+	md: 'markdown'
+	ghm: 'ghm'
+	coffee: 'coffeescript'

@@ -1,168 +1,143 @@
-#!/usr/bin/env node
+#!/usr/bin/env coffee
 
-/**
- * Module dependencies.
- */
+###
+Module dependencies.
+###
+fs = require("fs")
+program = require("commander")
+path = require("path")
+basename = path.basename
+dirname = path.dirname
+resolve = path.resolve
+exists = fs.existsSync or path.existsSync
+join = path.join
+mkdirp = require("mkdirp")
+jade = require("../")
 
-var fs = require('fs')
-  , program = require('commander')
-  , path = require('path')
-  , basename = path.basename
-  , dirname = path.dirname
-  , resolve = path.resolve
-  , exists = fs.existsSync || path.existsSync
-  , join = path.join
-  , mkdirp = require('mkdirp')
-  , jade = require('../');
+###
+Compile from stdin.
+###
+stdin = ->
+	buf = ""
+	process.stdin.setEncoding "utf8"
+	process.stdin.on "data", (chunk) ->
+		buf += chunk
 
-// jade options
+	process.stdin.on("end", ->
+		fn = jade.compile(buf, options)
+		output = (if options.client then fn.toString() else fn(options))
+		process.stdout.write output
+	).resume()
 
-var options = {};
+###
+Process the given path, compiling the jade files found.
+Always walk the subdirectories.
+###
+renderFile = (path) ->
+	re = /\.jade$/
+	fs.lstat path, (err, stat) ->
+		throw err  if err
+		
+		# Found jade file
+		if stat.isFile() and re.test(path)
+			fs.readFile path, "utf8", (err, str) ->
+				throw err  if err
+				options.filename = path
+				fn = jade.compile(str, options)
+				extname = (if options.client then ".js" else ".html")
+				path = path.replace(re, extname)
+				path = join(program.out, basename(path))  if program.out
+				dir = resolve(dirname(path))
+				mkdirp(dir, 0o0755, (err) ->
+					throw err  if err
+					output = (if options.client then fn.toString() else fn(options))
+					fs.writeFile path, output, (err) ->
+						throw err  if err
+						console.log "  \u001b[90mrendered \u001b[36m%s\u001b[0m", path
+				)
+		# Found directory
+		else if stat.isDirectory()
+			fs.readdir path, (err, files) ->
+				throw err  if err
+				files.map((filename) ->
+					path + "/" + filename
+				).forEach renderFile
 
-// options
+# jade options
+options = {}
 
+# options
 program
-  .version(jade.version)
-  .usage('[options] [dir|file ...]')
-  .option('-o, --obj <str>', 'javascript options object')
-  .option('-O, --out <dir>', 'output the compiled html to <dir>')
-  .option('-p, --path <path>', 'filename used to resolve includes')
-  .option('-P, --pretty', 'compile pretty html output')
-  .option('-c, --client', 'compile function for client-side runtime.js')
-  .option('-D, --no-debug', 'compile without debugging (smaller functions)')
-  .option('-w, --watch', 'watch files for changes and automatically re-render')
+	.version(jade.version)
+	.usage("[options] [dir|file ...]")
+	.option("-o, --obj <str>", "javascript options object")
+	.option("-O, --out <dir>", "output the compiled html to <dir>")
+	.option("-p, --path <path>", "filename used to resolve includes")
+	.option("-P, --pretty", "compile pretty html output")
+	.option("-c, --client", "compile function for client-side runtime.js")
+	.option("-D, --no-debug", "compile without debugging (smaller functions)")
+	.option "-w, --watch", "watch files for changes and automatically re-render"
 
-program.on('--help', function(){
-  console.log('  Examples:');
-  console.log('');
-  console.log('    # translate jade the templates dir');
-  console.log('    $ jade templates');
-  console.log('');
-  console.log('    # create {foo,bar}.html');
-  console.log('    $ jade {foo,bar}.jade');
-  console.log('');
-  console.log('    # jade over stdio');
-  console.log('    $ jade < my.jade > my.html');
-  console.log('');
-  console.log('    # jade over stdio');
-  console.log('    $ echo "h1 Jade!" | jade');
-  console.log('');
-  console.log('    # foo, bar dirs rendering to /tmp');
-  console.log('    $ jade foo bar --out /tmp ');
-  console.log('');
-});
+program.on "--help", ->
+	console.log """
+	Examples:
+	    # translate jade the templates dir
+	    $ jade templates
 
-program.parse(process.argv);
+	    # create {foo,bar}.html
+	    $ jade {foo,bar}.jade
 
-// options given, parse them
+	    # jade over stdio
+	    $ jade < my.jade > my.html
 
-if (program.obj) {
-  if (exists(program.obj)) {
-    options = JSON.parse(fs.readFileSync(program.obj));
-  } else {
-    options = eval('(' + program.obj + ')');
-  }
-}
+	    # jade over stdio
+	    $ echo \"h1 Jade!\" | jade
 
-// --filename
+	    # foo, bar dirs rendering to /tmp
+	    $ jade foo bar --out /tmp
+	"""
 
-if (program.path) options.filename = program.path;
+program.parse process.argv
 
-// --no-debug
+# options given, parse them
+if program.obj
+	if exists(program.obj)
+		options = JSON.parse(fs.readFileSync(program.obj))
+	else
+		options = eval_("(" + program.obj + ")")
 
-options.compileDebug = program.debug;
+# --filename
+options.filename = program.path if program.path
 
-// --client
+# --no-debug
+options.compileDebug = program.debug
 
-options.client = program.client;
+# --client
+options.client = program.client
 
-// --pretty
+# --pretty
+options.pretty = program.pretty
 
-options.pretty = program.pretty;
+# --watch
+options.watch = program.watch
 
-// --watch
+# left-over args are file paths
+files = program.args
 
-options.watch = program.watch;
+# compile files
+if files.length
+	console.log()
+	files.forEach renderFile
+	if options.watch
+		files.forEach (file) ->
+			fs.watchFile file,
+				interval: 100
+			, (curr, prev) ->
+				renderFile file  if curr.mtime > prev.mtime
+	process.on "exit", ->
+		console.log()
+# stdio
+else
+	stdin()
 
-// left-over args are file paths
 
-var files = program.args;
-
-// compile files
-
-if (files.length) {
-  console.log();
-  files.forEach(renderFile);
-  if (options.watch) {
-    files.forEach(function (file) {
-      fs.watchFile(file, {interval: 100}, function (curr, prev) {
-        if (curr.mtime > prev.mtime) renderFile(file);
-      });
-    });
-  }
-  process.on('exit', function () {
-    console.log();
-  });
-// stdio
-} else {
-  stdin();
-}
-
-/**
- * Compile from stdin.
- */
-
-function stdin() {
-  var buf = '';
-  process.stdin.setEncoding('utf8');
-  process.stdin.on('data', function(chunk){ buf += chunk; });
-  process.stdin.on('end', function(){
-    var fn = jade.compile(buf, options);
-    var output = options.client
-        ? fn.toString()
-        : fn(options);
-    process.stdout.write(output);
-  }).resume();
-}
-
-/**
- * Process the given path, compiling the jade files found.
- * Always walk the subdirectories.
- */
-
-function renderFile(path) {
-  var re = /\.jade$/;
-  fs.lstat(path, function(err, stat) {
-    if (err) throw err;
-    // Found jade file
-    if (stat.isFile() && re.test(path)) {
-      fs.readFile(path, 'utf8', function(err, str){
-        if (err) throw err;
-        options.filename = path;
-        var fn = jade.compile(str, options);
-        var extname = options.client ? '.js' : '.html';
-        path = path.replace(re, extname);
-        if (program.out) path = join(program.out, basename(path));
-        var dir = resolve(dirname(path));
-        mkdirp(dir, 0755, function(err){
-          if (err) throw err;
-          var output = options.client
-            ? fn.toString()
-            : fn(options);
-          fs.writeFile(path, output, function(err){
-            if (err) throw err;
-            console.log('  \033[90mrendered \033[36m%s\033[0m', path);
-          });
-        });
-      });
-    // Found directory
-    } else if (stat.isDirectory()) {
-      fs.readdir(path, function(err, files) {
-        if (err) throw err;
-        files.map(function(filename) {
-          return path + '/' + filename;
-        }).forEach(renderFile);
-      });
-    }
-  });
-}
