@@ -447,7 +447,6 @@ class Parser
 		# ast-filter look-ahead
 		i = 2
 		++i if "attrs" is @lookahead(i).type
-		return @parseASTFilter() if "indent" is @lookahead(++i).type if ":" is @lookahead(i).type
 		tok = @advance()
 		tag = new nodes.Tag(tok.val)
 		tag.selfClosing = tok.selfClosing
