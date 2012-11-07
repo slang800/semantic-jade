@@ -14,7 +14,15 @@ interpolate = exports.interpolate = (str) ->
 		else
 			return "' + #{if "!" is flag then "" else "escape"}((interp = #{code}) == null ? '' : interp) + '"
 
+###
+Indent all lines in a given string
 
+@param {String} str
+@return {String}
+@private
+###
+exports.indent = (str) ->
+	'\t' + str.replace /\n/g, '\n\t'
 
 ###
 Escape single quotes in `str`.

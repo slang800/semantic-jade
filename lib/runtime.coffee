@@ -1,10 +1,9 @@
-
 ###
 Lame Array.isArray() polyfill for now.
 ###
 unless Array.isArray
-  Array.isArray = (arr) ->
-    "[object Array]" is Object::toString.call(arr)
+	Array.isArray = (arr) ->
+		"[object Array]" is Object::toString.call(arr)
 
 ###
 Lame Object.keys() polyfill for now.
@@ -105,16 +104,6 @@ Escape the given string of `html`.
 ###
 exports.escape = (html) ->
 	String(html).replace(/&(?!(\w+|\#\d+);)/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace /"/g, "&quot;"
-
-###
-Indent all lines in a given string
-
-@param {String} str
-@return {String}
-@private
-###
-exports.indent = (str) ->
-	'\t' + str.replace /\n/g, '\n\t'
 
 ###
 Re-throw the given `err` in context to the

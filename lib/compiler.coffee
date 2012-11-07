@@ -1,10 +1,11 @@
 #Module dependencies
-nodes = require("./nodes")
-filters = require("./filters").filters
-doctypes = require("./doctypes")
-selfClosing = require("./self-closing")
-runtime = require("./runtime")
-utils = require("./utils")
+nodes = require './nodes'
+filters = require('./filters').filters
+doctypes = require './doctypes'
+selfClosing = require './self-closing'
+runtime = require './runtime'
+utils = require './utils'
+
 
 class Compiler
 	###*
@@ -14,7 +15,10 @@ class Compiler
 	 * @private
 	###
 	constructor: (node, options) ->
-		@options = options = options or {}
+		@options = options or {}
+
+		#char used for indentation of outputted HTML
+		@INDENT = options.indent or '	'
 		@node = node
 		@hasCompiledDoctype = false
 		@hasCompiledTag = false
@@ -29,24 +33,24 @@ class Compiler
 	 * @public
 	###
 	compile: ->
-		@buf = ["interp = undefined"]
-		@buf.push "__indent = []" if @pp
+		@buf = ['interp = undefined']
+		@buf.push '__indent = []' if @pp
 		@lastBufferedIdx = -1
 		@visit @node
 		@buf.join "\n"
 
 	###*
 	 * Sets the default doctype `name`. Sets terse mode to `true` when html 5
-       is used, causing self-closing tags to end with ">" vs "/>", and boolean
+       is used, causing self-closing tags to end with '>' vs "/>", and boolean
        attributes are not mirrored.
 	 * @param {String} name [description]
 	 * @public
 	###
 	setDoctype: (name) ->
-		name = (name and name.toLowerCase()) or "default"
-		@doctype = doctypes[name] or "<!DOCTYPE #{name}>"
-		@terse = @doctype.toLowerCase() is "<!doctype html>"
-		@xml = 0 is @doctype.indexOf("<?xml")
+		name = (name and name.toLowerCase()) or 'default'
+		@doctype = doctypes[name] or '<!DOCTYPE #{name}>'
+		@terse = @doctype.toLowerCase() is '<!doctype html>'
+		@xml = 0 is @doctype.indexOf('<?xml')
 
 	###*
 	 * Buffer the given `str` optionally escaped.
@@ -59,9 +63,9 @@ class Compiler
 		str = utils.escape(str) if esc
 		if @lastBufferedIdx is @buf.length
 			@lastBuffered += str
-			@buf[@lastBufferedIdx - 1] = "buf.push('#{@lastBuffered}');"
+			@buf[@lastBufferedIdx - 1] = "buf.push('#{@lastBuffered}')"
 		else
-			@buf.push "buf.push('#{str}');"
+			@buf.push "buf.push('#{str}')"
 			@lastBuffered = str
 			@lastBufferedIdx = @buf.length
 
@@ -76,8 +80,8 @@ class Compiler
 	prettyIndent: (offset, newline) ->
 		offset = offset or 0
 		newline = (if newline then '\\n' else '')
-		@buffer newline + Array(@indents + offset).join('  ')
-		@buf.push 'buf.push.apply(buf, __indent);' if @parentIndents
+		@buffer newline + Array(@indents + offset).join(@INDENT)
+		@buf.push 'buf.push.apply(buf, __indent)' if @parentIndents
 
 	###
 	Visit `node`.
@@ -88,8 +92,19 @@ class Compiler
 
 	visit: (node) ->
 		debug = @debug
+		console.log node.block.nodes
 		if debug
-			@buf.push "__jade.unshift({ lineno: #{node.line}, filename: #{((if node.filename then JSON.stringify(node.filename) else "__jade[0].filename"))} });"
+			@buf.push """
+			__jade.unshift(
+				lineno:#{node.line}
+				filename:#{
+					if node.filename
+						JSON.stringify(node.filename)
+					else
+						'__jade[0].filename'
+				}
+			)
+			"""
 	
 		# Massive hack to fix our context
 		# stack for - else[ if] etc
@@ -97,7 +112,7 @@ class Compiler
 			@buf.pop()
 			@buf.pop()
 		@visitNode node
-		@buf.push "__jade.shift();" if debug
+		@buf.push '__jade.shift()' if debug
 
 	###
 	Visit `node`.
@@ -131,9 +146,9 @@ class Compiler
 
 		# Block keyword has a special meaning in mixins
 		if @parentIndents and block.mode
-			@buf.push "__indent.push('#{Array(@indents + 1).join("  ")}');" if pp
-			@buf.push "block && block();"
-			@buf.push "__indent.pop();" if pp
+			@buf.push "__indent.push('#{Array(@indents + 1).join(@INDENT)}')" if pp
+			@buf.push 'block && block()'
+			@buf.push '__indent.pop()' if pp
 			return
 		
 		len = block.nodes.length
@@ -151,14 +166,14 @@ class Compiler
 
 	###
 	Visit `doctype`. Sets terse mode to `true` when html 5
-	is used, causing self-closing tags to end with ">" vs "/>",
+	is used, causing self-closing tags to end with '>' vs "/>",
 	and boolean attributes are not mirrored.
 
 	@param {Doctype} doctype
 	@public
 	###
 	visitDoctype: (doctype) ->
-		@setDoctype doctype.val or "default" if doctype and (doctype.val or not @doctype)
+		@setDoctype doctype.val or 'default' if doctype and (doctype.val or not @doctype)
 		@buffer @doctype if @doctype
 		@hasCompiledDoctype = true
 
@@ -170,17 +185,18 @@ class Compiler
 	@public
 	###
 	visitMixin: (mixin) ->
-		name = "#{mixin.name.replace(/-/g, "_")}_mixin"
-		args = mixin.args or ""
+		name = mixin.name
+		args = mixin.args or ''
 		block = mixin.block
 		attrs = mixin.attrs
 		pp = @pp
 		if mixin.call
-			@buf.push "__indent.push('#{Array(@indents + 1).join("  ")}');" if pp
+			@buf.push "__indent.push('#{Array(@indents + 1).join(@INDENT)}');" if pp
 			if block or attrs.length
-				@buf.push "#{name}.call({"
+				@buf.push "#{name}.call"
+				@parentIndents++
 				if block
-					@buf.push "block: function(){"
+					@buf.push 'block: () ->'
 					
 					# Render block with no indents, dynamically added when rendered
 					@parentIndents++
@@ -189,30 +205,32 @@ class Compiler
 					@visit mixin.block
 					@indents = _indents
 					@parentIndents--
-					if attrs.length
-						@buf.push "},"
-					else
-						@buf.push "}"
 				if attrs.length
 					val = @attrs(attrs)
 					if val.inherits
-						@buf.push "attributes: merge({#{val.buf}}, attributes), escaped: merge(#{val.escaped}, escaped, true)"
+						@buf.push """
+						attributes: merge {#{val.buf}}, attributes
+						escaped: merge #{val.escaped}, escaped, true
+						"""
 					else
-						@buf.push "attributes: {#{val.buf}}, escaped: #{val.escaped}"
+						@buf.push """
+						attributes: {#{val.buf}}
+						escaped: #{val.escaped}
+						"""
+
+				@parentIndents--
 				if args
-					@buf.push "}, #{args});"
-				else
-					@buf.push "});"
+					@buf.push ", #{args}"
+
 			else
 				@buf.push "#{name}(#{args});"
-			@buf.push "__indent.pop();" if pp
+			@buf.push '__indent.pop();' if pp
 		else
-			@buf.push "#{name} = function(#{args}){"
-			@buf.push "block = this.block, attributes = this.attributes || {}, escaped = this.escaped || {};"
+			@buf.push "#{name} = (#{args}) ->"
+			@buf.push 'block = @block, attributes = @attributes || {}, escaped = @escaped || {};'
 			@parentIndents++
 			@visit block
 			@parentIndents--
-			@buf.push "};"
 
 
 	###
@@ -242,15 +260,15 @@ class Compiler
 			if tag.attrs.length
 				@buffer "<#{name}"
 				@visitAttributes tag.attrs if tag.attrs.length
-				@buffer ">"
+				@buffer '>'
 			else
 				@buffer "<#{name}>"
-			@visitCode tag.code if tag.code
-			@escape = "pre" is tag.name
+			@user tag.code if tag.code
+			@escape = 'pre' is tag.name
 			@visit tag.block
 			
 			# pretty print
-			@prettyIndent 0, true if pp and not tag.isInline() and "pre" isnt tag.name and not tag.canInline()
+			@prettyIndent 0, true if pp and not tag.isInline() and 'pre' isnt tag.name and not tag.canInline()
 			@buffer "</#{name}>"
 		@indents--
 
@@ -260,19 +278,19 @@ class Compiler
 	@param {Filter} filter
 	@public
 	###
-	visitFilter: (filter) ->
-		fn = filters[filter.name]
-		
-		# unknown filter
-		unless fn
-			throw new Error("unknown filter \":#{filter.name}\"")
+	#visitFilter: (filter) ->
+	#	fn = filters[filter.name]
 
-		text = filter.block.nodes.map((node) ->
-			node.val
-		).join("\n")
-		filter.attrs = filter.attrs or {}
-		filter.attrs.filename = @options.filename
-		@buffer utils.text(fn(text, filter.attrs))
+		# unknown filter
+	#	unless fn
+	#		throw new Error("unknown filter \":#{filter.name}\"")
+
+	#	text = filter.block.nodes.map((node) ->
+	#		node.val
+	#	).join("\n")
+	#	filter.attrs = filter.attrs or {}
+	#	filter.attrs.filename = @options.filename
+	#	@buffer utils.text(fn(text, filter.attrs))
 
 	###
 	Visit `text` node.
@@ -305,14 +323,16 @@ class Compiler
 	###
 	visitBlockComment: (comment) ->
 		return unless comment.buffer
+
+		# detect IE 'if' filters
 		if 0 is comment.val.trim().indexOf("if")
 			@buffer "<!--[#{comment.val.trim()}]>"
 			@visit comment.block
-			@buffer "<![endif]-->"
+			@buffer '<![endif]-->'
 		else
 			@buffer "<!--#{comment.val}"
 			@visit comment.block
-			@buffer "-->"
+			@buffer '-->'
 
 	###
 	Visit `code`, respecting buffer / escape flags.
@@ -323,25 +343,22 @@ class Compiler
 	@public
 	###
 	visitCode: (code) ->
-		# Wrap code blocks with {}.
-		# we only wrap unbuffered code blocks ATM
-		# since they are usually flow control
-
 		# Buffer code
+		console.log code
 		if code.buffer
 			val = code.val.trimLeft()
 			@buf.push "__val__ = #{val}"
-			val = "null == __val__ ? \"\" : __val__"
+			val = 'null == __val__ ? \"\" : __val__'
 			val = "escape(#{val})" if code.escape
-			@buf.push "buf.push(#{val});"
+			@buf.push "buf.push(#{val})"
 		else
 			@buf.push code.val
 
 		# Block support
 		if code.block
-			@buf.push "{" unless code.buffer
+			@parentIndents++
 			@visit code.block
-			@buf.push "}" unless code.buffer
+			@parentIndents--
 
 	###
 	Visit `attrs`.

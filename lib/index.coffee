@@ -12,7 +12,7 @@ exports.doctypes = require "./doctypes"
 exports.filters = require "./filters"
 
 #Utilities
-exports.utils = require "./utils"
+exports.utils = utils = require "./utils"
 
 #Expose `Compiler`
 exports.Compiler = Compiler = require "./compiler"
@@ -51,7 +51,7 @@ parse = (str, options) ->
 			compiler = new Compiler(parser.parse(), options)
 		else
 			compiler = new options.compiler(parser.parse(), options)
-		js = runtime.indent compiler.compile()
+		js = utils.indent compiler.compile()
 		
 		# Debug compiler
 		console.error "\nCompiled Function:\n\n\u001b[90m%s\u001b[0m", js.replace(/^/g, "  ")  if options.debug
@@ -98,24 +98,35 @@ exports.compile = (str, options) ->
 	options = options or {}
 	client = options.client
 	filename = (if options.filename then JSON.stringify(options.filename) else "undefined")
-	fn = undefined
+
 	str = stripBOM(String(str))
-	console.log parse(str, options)
 	if options.compileDebug isnt false
 		fn = """
 		__jade = [{ lineno: 1, filename: #{filename} }]
 		try
-			#{coffee.compile(parse(str, options), {bare: true})}
+		#{utils.indent parse(str, options)}
 		catch err
 			rethrow(err, __jade[0].filename, __jade[0].lineno)
 		"""
 	else
-		fn = '{' + coffee.compile(parse(str, options)) + '}'
+		fn = parse(str, options)
 
 	console.log fn
 
-	fn = "attrs = attrs || jade.attrs; escape = escape || jade.escape; rethrow = rethrow || jade.rethrow; merge = merge || jade.merge;\n" + fn  if client
-	fn = new Function("locals, attrs, escape, rethrow, merge", fn)
+	fn = coffee.compile fn, {bare: true}
+
+	if client
+		fn = """
+		attrs = attrs || jade.attrs
+		escape = escape || jade.escape
+		rethrow = rethrow || jade.rethrow
+		merge = merge || jade.merge
+		#{fn}
+		"""
+
+	console.log fn
+
+	fn = new Function('locals, attrs, escape, rethrow, merge', fn)
 	return fn if client
 	(locals) ->
 		fn locals, runtime.attrs, runtime.escape, runtime.rethrow, runtime.merge
@@ -142,7 +153,7 @@ exports.render = (str, options, fn) ->
 		options = {}
 	
 	# cache requires .filename
-	return fn(new Error("the \"filename\" option is required for caching"))  if options.cache and not options.filename
+	return fn(new Error('the "filename" option is required for caching'))  if options.cache and not options.filename
 	try
 		path = options.filename
 		tmpl = (if options.cache then exports.cache[path] or (exports.cache[path] = exports.compile(str, options)) else exports.compile(str, options))

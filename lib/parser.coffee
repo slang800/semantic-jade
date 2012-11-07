@@ -95,8 +95,8 @@ class Parser
 		block = new nodes.Block
 		parser = undefined
 		block.line = @line()
-		until "eos" is @peek().type
-			if "newline" is @peek().type
+		until 'eos' is @peek().type
+			if 'newline' is @peek().type
 				@advance()
 			else
 				block.push @parseExpr()
@@ -122,7 +122,7 @@ class Parser
 		if @peek().type is type
 			@advance()
 		else
-			throw new Error("expected \"" + type + "\", but got \"" + @peek().type + "\"")
+			throw new Error('expected \"' + type + '\", but got \"' + @peek().type + '\"')
 
 	
 	###
@@ -168,9 +168,9 @@ class Parser
 				@parseFilter()
 			when "comment"
 				@parseComment()
-			when "text"
+			when 'text'
 				@parseText()
-			when "code"
+			when 'code'
 				@parseCode()
 			when "call"
 				@parseCall()
@@ -194,7 +194,7 @@ class Parser
 	Text
 	###
 	parseText: ->
-		tok = @expect("text")
+		tok = @expect('text')
 		node = new nodes.Text(tok.val)
 		node.line = @line()
 		node
@@ -205,7 +205,7 @@ class Parser
 	| block
 	###
 	parseBlockExpansion: ->
-		if ":" is @peek().type
+		if ':' is @peek().type
 			@advance()
 			new nodes.Block(@parseExpr())
 		else
@@ -216,13 +216,13 @@ class Parser
 	code
 	###
 	parseCode: ->
-		tok = @expect("code")
+		tok = @expect('code')
 		node = new nodes.Code(tok.val, tok.buffer, tok.escape)
 		block = undefined
 		i = 1
 		node.line = @line()
-		++i while @lookahead(i) and "newline" is @lookahead(i).type
-		block = "indent" is @lookahead(i).type
+		++i while @lookahead(i) and 'newline' is @lookahead(i).type
+		block = 'indent' is @lookahead(i).type
 		if block
 			@skip i - 1
 			node.block = @block()
@@ -233,9 +233,9 @@ class Parser
 	comment
 	###
 	parseComment: ->
-		tok = @expect("comment")
+		tok = @expect('comment')
 		node = undefined
-		if "indent" is @peek().type
+		if 'indent' is @peek().type
 			node = new nodes.BlockComment(tok.val, @block(), tok.buffer)
 		else
 			node = new nodes.Comment(tok.val, tok.buffer)
@@ -247,7 +247,7 @@ class Parser
 	doctype
 	###
 	parseDoctype: ->
-		tok = @expect("doctype")
+		tok = @expect('doctype')
 		node = new nodes.Doctype(tok.val)
 		node.line = @line()
 		node
@@ -258,8 +258,8 @@ class Parser
 	###
 	parseFilter: ->
 		block = undefined
-		tok = @expect("filter")
-		attrs = @accept("attrs")
+		tok = @expect('filter')
+		attrs = @accept('attrs')
 		@lexer.pipeless = true
 		block = @parseTextBlock()
 		@lexer.pipeless = false
@@ -272,40 +272,40 @@ class Parser
 	'extends' name
 	###
 	parseExtends: ->
-		path = require("path")
-		fs = require("fs")
+		path = require('path')
+		fs = require('fs')
 		dirname = path.dirname
 		basename = path.basename
 		join = path.join
-		throw new Error("the \"filename\" option is required to extend templates") unless @filename
-		path = @expect("extends").val.trim()
+		throw new Error('the \"filename\" option is required to extend templates') unless @filename
+		path = @expect('extends').val.trim()
 		dir = dirname(@filename)
-		path = join(dir, path + ".jade")
-		str = fs.readFileSync(path, "utf8")
+		path = join(dir, path + '.jade')
+		str = fs.readFileSync(path, 'utf8')
 		parser = new Parser(str, path, @options)
 		parser.blocks = @blocks
 		parser.contexts = @contexts
 		@extending = parser
 		
 		# TODO: null node
-		new nodes.Literal("")
+		new nodes.Literal('')
 
 	
 	###
 	'block' name block
 	###
 	parseBlock: ->
-		block = @expect("block")
+		block = @expect('block')
 		mode = block.mode
 		name = block.val.trim()
-		block = (if "indent" is @peek().type then @block() else new nodes.Block(new nodes.Literal("")))
+		block = (if 'indent' is @peek().type then @block() else new nodes.Block(new nodes.Literal('')))
 		prev = @blocks[name]
 		if prev
 			switch prev.mode
-				when "append"
+				when 'append'
 					block.nodes = block.nodes.concat(prev.nodes)
 					prev = block
-				when "prepend"
+				when 'prepend'
 					block.nodes = prev.nodes.concat(block.nodes)
 					prev = block
 		block.mode = mode
@@ -316,23 +316,23 @@ class Parser
 	include block?
 	###
 	parseInclude: ->
-		path = require("path")
-		fs = require("fs")
+		path = require('path')
+		fs = require('fs')
 
-		throw new Error("the \"filename\" option is required to use includes") unless @filename
+		throw new Error('the \"filename\" option is required to use includes') unless @filename
 		dir = path.dirname(@filename)
 
-		include_filename = @expect("include").val.trim()
+		include_filename = @expect('include').val.trim()
 		extname = path.extname(include_filename)
 
 		if extname is '' # no extension defaults to jade
-			extname = ".jade"
-			include_filename += ".jade"
+			extname = '.jade'
+			include_filename += '.jade'
 
 		include_filepath = path.join(dir, include_filename)
-		str = fs.readFileSync(include_filepath, "utf8")
+		str = fs.readFileSync(include_filepath, 'utf8')
 		
-		if ".jade" isnt extname # non-jade
+		if '.jade' isnt extname # non-jade
 			return new nodes.Literal(str)
 
 		parser = new Parser(str, include_filepath, @options)
@@ -342,7 +342,7 @@ class Parser
 		ast = parser.parse()
 		@context()
 		ast.filename = include_filepath
-		ast.includeBlock().push @block() if "indent" is @peek().type
+		ast.includeBlock().push @block() if 'indent' is @peek().type
 		return ast
  
 	
@@ -350,7 +350,7 @@ class Parser
 	call indent block
 	###
 	parseCall: ->
-		tok = @expect("call")
+		tok = @expect('call')
 		name = tok.val
 		args = tok.args
 		mixin = new nodes.Mixin(name, args, new nodes.Block, true)
@@ -363,13 +363,13 @@ class Parser
 	mixin block
 	###
 	parseMixin: ->
-		tok = @expect("mixin")
+		tok = @expect('mixin')
 		name = tok.val
 		args = tok.args
 		mixin = undefined
 		
 		# definition
-		if "indent" is @peek().type
+		if 'indent' is @peek().type
 			mixin = new nodes.Mixin(name, args, @block(), false)
 			@mixins[name] = mixin
 			mixin
@@ -409,13 +409,13 @@ class Parser
 	block: ->
 		block = new nodes.Block
 		block.line = @line()
-		@expect "indent"
-		until "outdent" is @peek().type
-			if "newline" is @peek().type
+		@expect 'indent'
+		until 'outdent' is @peek().type
+			if 'newline' is @peek().type
 				@advance()
 			else
 				block.push @parseExpr()
-		@expect "outdent"
+		@expect 'outdent'
 		block
 
 	
@@ -436,7 +436,7 @@ class Parser
 		
 		# ast-filter look-ahead
 		i = 2
-		++i if "attrs" is @lookahead(i).type
+		++i if 'attrs' is @lookahead(i).type
 		tok = @advance()
 		tag = new nodes.Tag(tok.val)
 		tag.selfClosing = tok.selfClosing
@@ -475,20 +475,20 @@ class Parser
 		
 		# (text | code | ':')?
 		switch @peek().type
-			when "text"
+			when 'text'
 				tag.block.push @parseText()
-			when "code"
+			when 'code'
 				tag.code = @parseCode()
-			when ":"
+			when ':'
 				@advance()
 				tag.block = new nodes.Block
 				tag.block.push @parseExpr()
 		
 		# newline*
-		@advance() while "newline" is @peek().type
+		@advance() while 'newline' is @peek().type
 		
 		# block?
-		if "indent" is @peek().type
+		if 'indent' is @peek().type
 			if tag.textOnly
 				@lexer.pipeless = true
 				tag.block = @parseTextBlock()

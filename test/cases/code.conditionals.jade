@@ -1,27 +1,21 @@
 
-- if (true)
+-if true
   p foo
-- else
+-else
   p bar
 
-- if (true) {
-  p foo
-- } else {
-  p bar
-- }
-
-if true
+-if true
   p foo
   p bar
   p baz
-else
+-else
   p bar
 
-unless true
+-unless true
   p foo
-else
+-else
   p bar
 
-if 'nested'
-  if 'works'
+-if 'nested'
+  -if 'works'
     p yay
