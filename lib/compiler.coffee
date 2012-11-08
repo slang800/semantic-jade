@@ -69,7 +69,7 @@ class Compiler
 	###
 	setDoctype: (name) ->
 		name = (name and name.toLowerCase()) or 'default'
-		@doctype = doctypes[name] or '<!DOCTYPE #{name}>'
+		@doctype = doctypes[name] or "<!DOCTYPE #{name}>"
 		@terse = @doctype.toLowerCase() is '<!doctype html>'
 		@xml = 0 is @doctype.indexOf('<?xml')
 
