@@ -140,7 +140,6 @@ class Parser
 	| doctype
 	| mixin
 	| include
-	| filter
 	| comment
 	| text
 	| each
@@ -164,8 +163,6 @@ class Parser
 				@parseInclude()
 			when "doctype"
 				@parseDoctype()
-			when "filter"
-				@parseFilter()
 			when "comment"
 				@parseComment()
 			when 'text'
@@ -249,21 +246,6 @@ class Parser
 	parseDoctype: ->
 		tok = @expect('doctype')
 		node = new nodes.Doctype(tok.val)
-		node.line = @line()
-		node
-
-	
-	###
-	filter attrs? text-block
-	###
-	parseFilter: ->
-		block = undefined
-		tok = @expect('filter')
-		attrs = @accept('attrs')
-		@lexer.pipeless = true
-		block = @parseTextBlock()
-		@lexer.pipeless = false
-		node = new nodes.Filter(tok.val, block, attrs and attrs.attrs)
 		node.line = @line()
 		node
 
@@ -433,8 +415,7 @@ class Parser
 	tag (attrs | class | id)* (text | code | ':')? newline* block?
 	###
 	parseTag: ->
-		
-		# ast-filter look-ahead
+		#TODO: refactor due to removal of AST filters & filters
 		i = 2
 		++i if 'attrs' is @lookahead(i).type
 		tok = @advance()
