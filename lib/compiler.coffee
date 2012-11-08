@@ -41,20 +41,24 @@ class Compiler
 	compile: ->
 		@buf = ['interp = undefined']
 
-		#override buf.push to allow indentation to be passed to be passed to
-		#the resulting code
-		@buf.push = @push
-
-		@buf.push '__indent = []' if @pp
+		@push '__indent = []' if @pp
 		@lastBufferedIdx = -1
 		@visit @node
 		return @buf.join "\n"
 
+	###*
+	 * add elements to the array (@buf) holding the compiled SJ code (which is
+       actually CoffeeScript). this function also adds indentation to the
+       lines that are added based on the value of @code_indents
+	 * @param {[type]} args... elements to be added to @buf
+	 * @return {Integer} length of @buf
+	###
 	push: (args...) =>
+		#add intentation to each line of each element
 		for i in [0...args.length]
 			args[i] = utils.indent(args[i], @code_indents)
 
-		return Array.prototype.push.apply(@buf, args)
+		return Array.prototype.push.apply @buf, args
 
 	###*
 	 * Sets the default doctype `name`. Sets terse mode to `true` when html 5
@@ -87,7 +91,7 @@ class Compiler
 		else
 			@lastBuffered = str
 
-		@buf.push "buf.push('#{@lastBuffered}')"
+		@push "buf.push('#{@lastBuffered}')"
 		@lastBufferedIdx = @buf.length
 
 	###
@@ -102,7 +106,7 @@ class Compiler
 		offset = offset or 0
 		newline = (if newline then '\\n' else '')
 		@buffer newline + Array(@indents + offset).join(@INDENT)
-		@buf.push 'buf.push.apply(buf, __indent)' if @parentIndents
+		@push 'buf.push.apply(buf, __indent)' if @parentIndents
 
 	###
 	Visit `node`.
@@ -113,7 +117,7 @@ class Compiler
 
 	visit: (node) ->
 		if @debug
-			@buf.push """
+			@push """
 			__jade.unshift(
 				lineno:#{node.line}
 				filename:#{
@@ -131,7 +135,7 @@ class Compiler
 			@buf.pop()
 			@buf.pop()
 		@visitNode node
-		@buf.push '__jade.shift()' if @debug
+		@push '__jade.shift()' if @debug
 
 	###
 	Visit `node`.
@@ -162,9 +166,9 @@ class Compiler
 	visitBlock: (block) ->
 		# Block keyword has a special meaning in mixins
 		if @parentIndents and block.mode
-			@buf.push "__indent.push('#{Array(@indents + 1).join(@INDENT)}')" if @pp
-			@buf.push 'block && block()'
-			@buf.push '__indent.pop()' if @pp
+			@push "__indent.push('#{Array(@indents + 1).join(@INDENT)}')" if @pp
+			@push 'block && block()'
+			@push '__indent.pop()' if @pp
 			return
 		
 		len = block.nodes.length
@@ -207,12 +211,12 @@ class Compiler
 		attrs = mixin.attrs
 
 		if mixin.call
-			@buf.push "__indent.push('#{Array(@indents + 1).join(@INDENT)}');" if @pp
+			@push "__indent.push('#{Array(@indents + 1).join(@INDENT)}')" if @pp
 			if block or attrs.length
-				@buf.push "#{name}.call"
+				@push "#{name}.call"
 				@parentIndents++
 				if block
-					@buf.push 'block: () ->'
+					@push 'block: () ->'
 					
 					# Render block with no indents, dynamically added when rendered
 					@parentIndents++
@@ -224,26 +228,26 @@ class Compiler
 				if attrs.length
 					val = @attrs(attrs)
 					if val.inherits
-						@buf.push """
+						@push """
 						attributes: merge {#{val.buf}}, attributes
 						escaped: merge #{val.escaped}, escaped, true
 						"""
 					else
-						@buf.push """
+						@push """
 						attributes: {#{val.buf}}
 						escaped: #{val.escaped}
 						"""
 
 				@parentIndents--
 				if args
-					@buf.push ", #{args}"
+					@push ", #{args}"
 
 			else
-				@buf.push "#{name}(#{args});"
-			@buf.push '__indent.pop();' if @pp
+				@push "#{name}(#{args})"
+			@push '__indent.pop()' if @pp
 		else
-			@buf.push "#{name} = (#{args}) ->"
-			@buf.push 'block = @block, attributes = @attributes || {}, escaped = @escaped || {};'
+			@push "#{name} = (#{args}) ->"
+			@push 'block = @block, attributes = @attributes || {}, escaped = @escaped || {}'
 			@parentIndents++
 			@visit block
 			@parentIndents--
@@ -279,8 +283,8 @@ class Compiler
 				@buffer '>'
 			else
 				@buffer "<#{name}>"
-			@user tag.code if tag.code
-			@escape = 'pre' is tag.name
+			@visitCode tag.code if tag.code
+			@escape = 'pre' is tag.name  # TODO: make pre tag into mixin... more semantic
 			@visit tag.block
 			
 			# pretty print
@@ -290,25 +294,6 @@ class Compiler
 			@buffer "</#{name}>"
 		@indents--
 
-	###
-	Visit `filter`, throwing when the filter does not exist.
-
-	@param {Filter} filter
-	@public
-	###
-	#visitFilter: (filter) ->
-	#	fn = filters[filter.name]
-
-		# unknown filter
-	#	unless fn
-	#		throw new Error("unknown filter \":#{filter.name}\"")
-
-	#	text = filter.block.nodes.map((node) ->
-	#		node.val
-	#	).join("\n")
-	#	filter.attrs = filter.attrs or {}
-	#	filter.attrs.filename = @options.filename
-	#	@buffer utils.text(fn(text, filter.attrs))
 
 	###
 	Visit `text` node.
@@ -364,12 +349,12 @@ class Compiler
 		# Buffer code
 		if code.buffer
 			val = code.val.trimLeft()
-			@buf.push "__val__ = #{val}"
+			@push "__val__ = #{val}"
 			val = 'null == __val__ ? \"\" : __val__'
 			val = "escape(#{val})" if code.escape
-			@buf.push "buf.push(#{val})"
+			@push "buf.push(#{val})"
 		else
-			@buf.push code.val
+			@push code.val
 
 		# Block support
 		if code.block
@@ -386,12 +371,12 @@ class Compiler
 	visitAttributes: (attrs) ->
 		val = @attrs(attrs)
 		if val.inherits
-			@buf.push "buf.push(attrs(merge({ #{val.buf} }, attributes), merge(#{val.escaped}, escaped, true)));"
+			@push "buf.push(attrs(merge({ #{val.buf} }, attributes), merge(#{val.escaped}, escaped, true)))"
 		else if val.constant
-			eval "buf={#{val.buf}};"
+			eval "buf={#{val.buf}}"
 			@buffer runtime.attrs(buf, JSON.parse(val.escaped)), true
 		else
-			@buf.push "buf.push(attrs({ #{val.buf} }, #{val.escaped}));"
+			@push "buf.push(attrs({ #{val.buf} }, #{val.escaped}))"
 
 	#Compile attributes
 	attrs: (attrs) ->
