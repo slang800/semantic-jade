@@ -122,8 +122,6 @@ exports.compile = (str, options) ->
 		#{fn}
 		"""
 
-	console.log fn
-
 	fn = coffee.compile fn, {bare: true}
 
 
