@@ -1,4 +1,4 @@
-utils = require("./utils")
+utils = require './utils'
 
 
 class Lexer
@@ -10,7 +10,7 @@ class Lexer
 	###
 	constructor: (str, options) ->
 		options = options or {}
-		@input = str.replace(/\r\n|\r/g, "\n")
+		@input = str.replace(/\r\n|\r/g, '\n')
 		@deferredTokens = []
 		@lastIndents = 0
 		@lineno = 1
@@ -145,7 +145,7 @@ class Lexer
 			@consume captures[0].length - 1
 			
 			++@lineno
-			return @tok("text", "") if @pipeless
+			return @tok("text", '') if @pipeless
 			@next()
 
 
@@ -170,13 +170,13 @@ class Lexer
 			(captures) =>
 				tok = undefined
 				name = captures[1]
-				if ":" is name[name.length - 1]
+				if ':' is name[name.length - 1]
 					name = name.slice(0, -1)
-					tok = @tok("tag", name)
-					@defer @tok(":")
+					tok = @tok('tag', name)
+					@defer @tok(':')
 					@input = @input.substr(1) while @input[0] is " "
 				else
-					tok = @tok("tag", name)
+					tok = @tok('tag', name)
 				tok.selfClosing = !!captures[2]
 				tok
 		)
@@ -283,25 +283,23 @@ class Lexer
 			/^(!?=|-)([^\n]+)/,
 			(captures) =>
 				flags = captures[1]
-				captures[1] = captures[2]
-				tok = @tok("code", captures[1])
-				tok.escape = flags.charAt(0) is "="
-				tok.buffer = flags.charAt(0) is "=" or flags.charAt(1) is "="
+				tok = @tok("code", captures[2])
+				tok.escape = flags.charAt(0) is '='
+				tok.buffer = flags.charAt(0) is '=' or flags.charAt(1) is '='
 				tok
 		)
 
 
 	attrs: ->
-		if "(" is @input.charAt(0)
-
-			index = @indexOfDelimiters("(", ")")
+		if '(' is @input.charAt(0)
+			index = @indexOfDelimiters('(', ")")
 			str = @input.substr(1, index - 1)
-			tok = @tok("attrs")
+			tok = @tok('attrs')
 			len = str.length
-			states = ["key"]
+			states = ['key']
 			escapedAttr = undefined
-			key = ""
-			val = ""
+			key = ''
+			val = ''
 			quote = undefined
 			c = undefined
 			p = undefined
@@ -318,70 +316,69 @@ class Lexer
 						if escape
 							match
 						else
-							quote + " + (" + expr + ") + " + quote
+							"#{quote} + (#{expr}) + #{quote}"
 					)
 
 			parse = (c) ->
 				real = c
 
 				switch c
-					when ",", "\n"
+					when ',', '\n'
 						switch state()
-							when "expr", "array", "string", "object"
+							when 'expr', 'array', 'string', 'object'
 								val += c
 							else
-								states.push "key"
+								states.push 'key'
 								val = val.trim()
 								key = key.trim()
-								return if "" is key
-								key = key.replace(/^['"]|['"]$/g, "").replace("!", "")
+								return if '' is key
+								key = key.replace(/^['"]|['"]$/g, '').replace('!', '')
 								tok.escaped[key] = escapedAttr
-								tok.attrs[key] = (if "" is val then true else interpolate(val))
-								key = val = ""
-					when "="
+								tok.attrs[key] = (if '' is val then true else interpolate(val))
+								key = val = ''
+					when '='
 						switch state()
-							when "key char"
+							when 'key char'
 								key += real
-							when "val", "expr", "array", "string", "object"
+							when 'val', 'expr', 'array', 'string', 'object'
 								val += real
 							else
-								escapedAttr = "!" isnt p
-								states.push "val"
-					when "("
-						states.push "expr" if "val" is state() or "expr" is state()
+								escapedAttr = '!' isnt p
+								states.push 'val'
+					when '('
+						states.push 'expr' if 'val' is state() or 'expr' is state()
 						val += c
-					when ")"
-						states.pop() if "expr" is state() or "val" is state()
+					when ')'
+						states.pop() if 'expr' is state() or 'val' is state()
 						val += c
-					when "{"
-						states.push "object" if "val" is state()
+					when '{'
+						states.push 'object' if 'val' is state()
 						val += c
-					when "}"
-						states.pop() if "object" is state()
+					when '}'
+						states.pop() if 'object' is state()
 						val += c
-					when "["
-						states.push "array" if "val" is state()
+					when '['
+						states.push 'array' if 'val' is state()
 						val += c
-					when "]"
-						states.pop() if "array" is state()
+					when ']'
+						states.pop() if 'array' is state()
 						val += c
-					when "\"", "'"
+					when "\"", "\'"
 						switch state()
-							when "key"
-								states.push "key char"
-							when "key char"
+							when 'key'
+								states.push 'key char'
+							when 'key char'
 								states.pop()
-							when "string"
+							when 'string'
 								states.pop() if c is quote
 								val += c
 							else
-								states.push "string"
+								states.push 'string'
 								val += c
 								quote = c
-					when ""
 					else
 						switch state()
-							when "key", "key char"
+							when 'key', 'key char'
 								key += c
 							else
 								val += c
@@ -391,9 +388,9 @@ class Lexer
 			for char in str.split ''
 				parse char
 
-			parse ","
+			parse ','
 
-			if "/" is @input.charAt(0)
+			if '/' is @input.charAt(0)
 				@consume 1
 				tok.selfClosing = true
 			tok
@@ -427,10 +424,10 @@ class Lexer
 			indents = captures[1].length
 			++@lineno
 			@consume indents + 1
-			throw new Error("Invalid indentation, you can use tabs or spaces but not both") if " " is @input[0] or "\t" is @input[0]
+			throw new Error("Invalid indentation, you can use tabs or spaces but not both") if ' ' is @input[0] or "\t" is @input[0]
 			
 			# blank line
-			return @tok("newline") if "\n" is @input[0]
+			return @tok('newline') if '\n' is @input[0]
 			
 			# outdent
 			if @indentStack.length and indents < @indentStack[0]
@@ -446,15 +443,15 @@ class Lexer
 			
 			# newline
 			else
-				tok = @tok("newline")
+				tok = @tok('newline')
 			tok
 
 
 	#Pipe-less text consumed only when `pipeless` is true
 	pipelessText: ->
 		if @pipeless
-			return if "\n" is @input[0]
-			i = @input.indexOf("\n")
+			return if '\n' is @input[0]
+			i = @input.indexOf('\n')
 			i = @input.length if -1 is i
 			str = @input.substr(0, i)
 			@consume str.length
@@ -463,7 +460,7 @@ class Lexer
 
 	#':'
 	colon: ->
-		@scan /^: */, ":"
+		@scan /^: */, ':'
 
 	
 	###
@@ -499,7 +496,6 @@ class Lexer
 		@mixin() or
 		@call() or
 		@tag() or
-		@filter() or
 		@code() or
 		@id() or
 		@className() or
