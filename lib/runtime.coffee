@@ -105,6 +105,7 @@ Escape the given string of `html`.
 exports.escape = (html) ->
 	String(html).replace(/&(?!(\w+|\#\d+);)/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace /"/g, "&quot;"
 
+
 ###
 Re-throw the given `err` in context to the
 the jade in `filename` at the given `lineno`.

@@ -212,10 +212,12 @@ class Parser
 	parseCode: ->
 		tok = @expect('code')
 		node = new nodes.Code(tok.val, tok.buffer, tok.escape)
-		block = undefined
 		i = 1
 		node.line = @line()
-		++i while @lookahead(i) and 'newline' is @lookahead(i).type
+
+		while @lookahead(i) and 'newline' is @lookahead(i).type
+			++i
+
 		block = 'indent' is @lookahead(i).type
 		if block
 			@skip i - 1
