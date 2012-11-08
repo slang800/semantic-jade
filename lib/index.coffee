@@ -51,6 +51,7 @@ parse = (str, options) ->
 			compiler = new Compiler(parser.parse(), options)
 		else
 			compiler = new options.compiler(parser.parse(), options)
+
 		js = utils.indent compiler.compile()
 		
 		# Debug compiler
@@ -60,9 +61,9 @@ parse = (str, options) ->
 		_with = (object, block) -> block.call object
 		#{
 			if options.self
-				"self = locals || {}\n" + js + "\n"
+				"self = locals || {}\n" + js
 			else
-				"_with (locals || {}), ->\n" + js + "\n"
+				"_with (locals || {}), ->\n" + js
 		}
 		return buf.join(\"\")
 		"""
@@ -100,20 +101,17 @@ exports.compile = (str, options) ->
 	filename = (if options.filename then JSON.stringify(options.filename) else "undefined")
 
 	str = stripBOM(String(str))
+	fn = parse(str, options)
+
 	if options.compileDebug isnt false
+		# wrap in try / catch for debugging
 		fn = """
 		__jade = [{ lineno: 1, filename: #{filename} }]
 		try
-		#{utils.indent parse(str, options)}
+		#{utils.indent fn}
 		catch err
 			rethrow(err, __jade[0].filename, __jade[0].lineno)
 		"""
-	else
-		fn = parse(str, options)
-
-	console.log fn
-
-	fn = coffee.compile fn, {bare: true}
 
 	if client
 		fn = """
@@ -126,8 +124,12 @@ exports.compile = (str, options) ->
 
 	console.log fn
 
+	fn = coffee.compile fn, {bare: true}
+
+
 	fn = new Function('locals, attrs, escape, rethrow, merge', fn)
 	return fn if client
+
 	(locals) ->
 		fn locals, runtime.attrs, runtime.escape, runtime.rethrow, runtime.merge
 

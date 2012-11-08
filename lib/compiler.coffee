@@ -24,8 +24,14 @@ class Compiler
 		@hasCompiledTag = false
 		@pp = options.pretty or false
 		@debug = false isnt options.compileDebug
+
+		#indentation of HTML
 		@indents = 0
 		@parentIndents = 0
+
+		#indentation of the outputted CoffeeScript
+		@code_indents = 0
+
 		@setDoctype options.doctype if options.doctype
 
 	###*
@@ -34,10 +40,21 @@ class Compiler
 	###
 	compile: ->
 		@buf = ['interp = undefined']
+
+		#override buf.push to allow indentation to be passed to be passed to
+		#the resulting code
+		@buf.push = @push
+
 		@buf.push '__indent = []' if @pp
 		@lastBufferedIdx = -1
 		@visit @node
-		@buf.join "\n"
+		return @buf.join "\n"
+
+	push: (args...) =>
+		for i in [0...args.length]
+			args[i] = utils.indent(args[i], @code_indents)
+
+		return Array.prototype.push.apply(@buf, args)
 
 	###*
 	 * Sets the default doctype `name`. Sets terse mode to `true` when html 5
@@ -53,7 +70,8 @@ class Compiler
 		@xml = 0 is @doctype.indexOf('<?xml')
 
 	###*
-	 * Buffer the given `str` optionally escaped.
+	 * Buffer the given `str` optionally escaped. Used to combine multiple
+       strings of HTML into a single buf.push call in the resulting code.
 	 * @param  {String}  str [description]
 	 * @param  {Boolean} esc [description]
 	 * @return {[type]}
@@ -61,13 +79,16 @@ class Compiler
 	###
 	buffer: (str, esc) ->
 		str = utils.escape(str) if esc
+
 		if @lastBufferedIdx is @buf.length
+			#combine with the last entry to the buffer
 			@lastBuffered += str
-			@buf[@lastBufferedIdx - 1] = "buf.push('#{@lastBuffered}')"
+			@buf.remove @lastBufferedIdx - 1
 		else
-			@buf.push "buf.push('#{str}')"
 			@lastBuffered = str
-			@lastBufferedIdx = @buf.length
+
+		@buf.push "buf.push('#{@lastBuffered}')"
+		@lastBufferedIdx = @buf.length
 
 	###
 	Buffer an indent based on the current `indent`
@@ -91,9 +112,7 @@ class Compiler
 	###
 
 	visit: (node) ->
-		debug = @debug
-		console.log node.block.nodes
-		if debug
+		if @debug
 			@buf.push """
 			__jade.unshift(
 				lineno:#{node.line}
@@ -112,7 +131,7 @@ class Compiler
 			@buf.pop()
 			@buf.pop()
 		@visitNode node
-		@buf.push '__jade.shift()' if debug
+		@buf.push '__jade.shift()' if @debug
 
 	###
 	Visit `node`.
@@ -141,24 +160,21 @@ class Compiler
 	@public
 	###
 	visitBlock: (block) ->
-		escape = @escape
-		pp = @pp
-
 		# Block keyword has a special meaning in mixins
 		if @parentIndents and block.mode
-			@buf.push "__indent.push('#{Array(@indents + 1).join(@INDENT)}')" if pp
+			@buf.push "__indent.push('#{Array(@indents + 1).join(@INDENT)}')" if @pp
 			@buf.push 'block && block()'
-			@buf.push '__indent.pop()' if pp
+			@buf.push '__indent.pop()' if @pp
 			return
 		
 		len = block.nodes.length
 
 		# Pretty print multi-line text
-		@prettyIndent 1, true if pp and len > 1 and not escape and block.nodes[0].isText and block.nodes[1].isText
+		@prettyIndent 1, true if @pp and len > 1 and not @escape and block.nodes[0].isText and block.nodes[1].isText
 
 		for i in [0...len]
 			# Pretty print text
-			@prettyIndent 1, false if pp and i > 0 and not escape and block.nodes[i].isText and block.nodes[i - 1].isText
+			@prettyIndent 1, false if @pp and i > 0 and not @escape and block.nodes[i].isText and block.nodes[i - 1].isText
 			@visit block.nodes[i]
 
 			# Multiple text nodes are separated by newlines
@@ -189,9 +205,9 @@ class Compiler
 		args = mixin.args or ''
 		block = mixin.block
 		attrs = mixin.attrs
-		pp = @pp
+
 		if mixin.call
-			@buf.push "__indent.push('#{Array(@indents + 1).join(@INDENT)}');" if pp
+			@buf.push "__indent.push('#{Array(@indents + 1).join(@INDENT)}');" if @pp
 			if block or attrs.length
 				@buf.push "#{name}.call"
 				@parentIndents++
@@ -224,7 +240,7 @@ class Compiler
 
 			else
 				@buf.push "#{name}(#{args});"
-			@buf.push '__indent.pop();' if pp
+			@buf.push '__indent.pop();' if @pp
 		else
 			@buf.push "#{name} = (#{args}) ->"
 			@buf.push 'block = @block, attributes = @attributes || {}, escaped = @escaped || {};'
@@ -254,7 +270,7 @@ class Compiler
 		if (~selfClosing.indexOf(name) or tag.selfClosing) and not @xml
 			@buffer "<#{name}"
 			@visitAttributes tag.attrs
-			(if @terse then @buffer('>') else @buffer("/>"))
+			if @terse then @buffer('>') else @buffer('/>')
 		else
 			# Optimize attributes buffering
 			if tag.attrs.length
@@ -268,7 +284,9 @@ class Compiler
 			@visit tag.block
 			
 			# pretty print
-			@prettyIndent 0, true if pp and not tag.isInline() and 'pre' isnt tag.name and not tag.canInline()
+			if pp and not tag.isInline() and 'pre' isnt tag.name and not tag.canInline()
+				@prettyIndent 0, true
+
 			@buffer "</#{name}>"
 		@indents--
 
@@ -344,7 +362,6 @@ class Compiler
 	###
 	visitCode: (code) ->
 		# Buffer code
-		console.log code
 		if code.buffer
 			val = code.val.trimLeft()
 			@buf.push "__val__ = #{val}"
@@ -356,9 +373,9 @@ class Compiler
 
 		# Block support
 		if code.block
-			@parentIndents++
+			@code_indents++
 			@visit code.block
-			@parentIndents--
+			@code_indents--
 
 	###
 	Visit `attrs`.
@@ -385,20 +402,20 @@ class Compiler
 			isConstant attr.val
 		)
 		inherits = false
-		buf.push "terse: true" if @terse
+		buf.push 'terse: true' if @terse
 		attrs.forEach (attr) ->
-			return inherits = true if attr.name is "attributes"
+			return inherits = true if attr.name is 'attributes'
 			escaped[attr.name] = attr.escaped
-			if attr.name is "class"
+			if attr.name is 'class'
 				classes.push "(#{attr.val})"
 			else
 				pair = "'#{attr.name}':(#{attr.val})"
 				buf.push pair
 
 		if classes.length
-			classes = classes.join(" + ' ' + ")
+			classes = classes.join(' + \' \' + ')
 			buf.push "class: #{classes}"
-		buf: buf.join(", ").replace("class:", "\"class\":")
+		buf: buf.join(', ').replace('class:', '\"class\":')
 		escaped: JSON.stringify(escaped)
 		inherits: inherits
 		constant: constant
@@ -421,7 +438,7 @@ isConstant = (val) ->
 	
 	# Check arrays
 	matches = undefined
-	return matches[1].split(",").every(isConstant) if matches = /^ *\[(.*)\] *$/.exec(val)
+	return matches[1].split(',').every(isConstant) if matches = /^ *\[(.*)\] *$/.exec(val)
 	false
 
 ###
@@ -432,4 +449,4 @@ Escape the given string of `html`.
 @private
 ###
 escape = (html) ->
-	String(html).replace(/&(?!\w+;)/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace /"/g, "&quot;"
+	String(html).replace(/&(?!\w+;)/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace /"/g, '&quot;'
