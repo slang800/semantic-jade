@@ -147,7 +147,6 @@ class Parser
 	| yield
 	| id
 	| class
-	| interpolation
 	###
 	parseExpr: ->
 		switch @peek().type
@@ -171,8 +170,6 @@ class Parser
 				@parseCode()
 			when "call"
 				@parseCall()
-			when "interpolation"
-				@parseInterpolation()
 			when "yield"
 				@advance()
 				block = new nodes.Block
@@ -402,16 +399,6 @@ class Parser
 
 	
 	###
-	interpolation (attrs | class | id)* (text | code | ':')? newline* block?
-	###
-	parseInterpolation: ->
-		tok = @advance()
-		tag = new nodes.Tag(tok.val)
-		tag.buffer = true
-		@tag tag
-
-	
-	###
 	tag (attrs | class | id)* (text | code | ':')? newline* block?
 	###
 	parseTag: ->
@@ -428,7 +415,6 @@ class Parser
 	Parse tag.
 	###
 	tag: (tag) ->
-		dot = undefined
 		tag.line = @line()
 		
 		# (attrs | class | id)*
@@ -451,7 +437,7 @@ class Parser
 
 		# check immediate '.'
 		if "." is @peek().val
-			dot = tag.textOnly = true
+			tag.textOnly = true
 			@advance()
 		
 		# (text | code | ':')?

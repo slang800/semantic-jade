@@ -158,11 +158,6 @@ class Lexer
 				tok
 		)
 
-	
-	#Interpolated tag
-	interpolation: ->
-		@scan /^#\{(.*?)\}/, "interpolation"
-
 
 	tag: ->
 		@capture(
@@ -487,7 +482,6 @@ class Lexer
 		@pipelessText() or
 		@yield() or
 		@doctype() or
-		@interpolation() or
 		@extends() or
 		@append() or
 		@prepend() or
