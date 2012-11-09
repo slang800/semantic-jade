@@ -61,9 +61,9 @@ parse = (str, options) ->
 		_with = (object, block) -> block.call object
 		#{
 			if options.self
-				"self = locals || {}\n" + js
+				"self = locals || {}\n#{js}"
 			else
-				"_with (locals || {}), ->\n" + js
+				"_with (locals || {}), ->\n#{js}"
 		}
 		return buf.join(\"\")
 		"""
@@ -79,7 +79,7 @@ Strip any UTF-8 BOM off of the start of `str`, if it exists.
 @api private
 ###
 stripBOM = (str) ->
-	(if 0xFEFF is str.charCodeAt(0) then str.substring(1) else str)
+	if 0xFEFF is str.charCodeAt(0) then str.substring(1) else str
 
 ###
 Compile a `Function` representation of the given jade `str`.
@@ -121,6 +121,10 @@ exports.compile = (str, options) ->
 		merge = merge || jade.merge
 		#{fn}
 		"""
+
+
+	fs.writeFileSync("test_out", fn)
+
 
 	fn = coffee.compile fn, {bare: true}
 
