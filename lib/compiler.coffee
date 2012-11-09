@@ -129,7 +129,8 @@ class Compiler
 	
 		# Massive hack to fix our context
 		# stack for - else[ if] etc
-		if false is node.debug and @debug
+		# TODO: Remove????
+		if @debug and node.debug is false
 			@buf.pop()
 			@buf.pop()
 		@visitNode node
@@ -142,6 +143,7 @@ class Compiler
 	@public
 	###
 	visitNode: (node) ->
+		#fix way this is none... make less hackish
 		name = node.constructor.name or node.constructor.toString().match(/function ([^(\s]+)()/)[1]
 		@["visit#{name}"] node
 
@@ -171,8 +173,9 @@ class Compiler
 		
 		len = block.nodes.length
 
-		# Pretty print multi-line text
-		@prettyIndent 1, true if @pp and len > 1 and not @escape and block.nodes[0].isText and block.nodes[1].isText
+		if @pp and len > 1 and not @escape and block.nodes[0].isText and block.nodes[1].isText
+			# Pretty print multi-line text
+			@prettyIndent 1, true
 
 		for i in [0...len]
 			if @pp and i > 0 and not @escape and block.nodes[i].isText and block.nodes[i - 1].isText
@@ -215,10 +218,11 @@ class Compiler
 			@push "__indent.push('#{Array(@indents + 1).join(@INDENT)}')" if @pp
 			if block or attrs.length
 				@push "#{name}.call"
+				@code_indents++
 				@parentIndents++
 				if block
 					@push 'block: () ->'
-					
+					@code_indents++
 					# Render block with no indents, dynamically added when rendered
 					@parentIndents++
 					_indents = @indents
@@ -226,6 +230,7 @@ class Compiler
 					@visit mixin.block
 					@indents = _indents
 					@parentIndents--
+					@code_indents--
 				if attrs.length
 					val = @attrs(attrs)
 					if val.inherits
@@ -240,6 +245,7 @@ class Compiler
 						"""
 
 				@parentIndents--
+				@code_indents--
 				if args
 					@push ", #{args}"
 
@@ -248,7 +254,7 @@ class Compiler
 			@push '__indent.pop()' if @pp
 		else
 			@push "#{name} = (#{args}) ->"
-			@push 'block = @block, attributes = @attributes || {}, escaped = @escaped || {}'
+			@push 'block = @block; attributes = @attributes || {}; escaped = @escaped || {}'
 			@parentIndents++
 			@visit block
 			@parentIndents--
@@ -423,8 +429,8 @@ isConstant = (val) ->
 	return true unless isNaN(Number(val))
 	
 	# Check arrays
-	matches = undefined
-	return matches[1].split(',').every(isConstant) if matches = /^ *\[(.*)\] *$/.exec(val)
+	if matches = /^ *\[(.*)\] *$/.exec(val)
+		return matches[1].split(',').every(isConstant)
 	false
 
 ###
