@@ -81,9 +81,7 @@ class Compiler
 	 * @return {[type]}
 	 * @public
 	###
-	buffer: (str, esc) ->
-		str = utils.escape(str) if esc
-
+	buffer: (str) ->
 		if @lastBufferedIdx is @buf.length
 			#combine with the last entry to the buffer
 			@lastBuffered += str
@@ -91,7 +89,7 @@ class Compiler
 		else
 			@lastBuffered = str
 
-		@push "buf.push('#{@lastBuffered}')"
+		@push "buf.push(\"\"\"#{@lastBuffered}\"\"\")"
 		@lastBufferedIdx = @buf.length
 
 	###
@@ -177,12 +175,15 @@ class Compiler
 		@prettyIndent 1, true if @pp and len > 1 and not @escape and block.nodes[0].isText and block.nodes[1].isText
 
 		for i in [0...len]
-			# Pretty print text
-			@prettyIndent 1, false if @pp and i > 0 and not @escape and block.nodes[i].isText and block.nodes[i - 1].isText
+			if @pp and i > 0 and not @escape and block.nodes[i].isText and block.nodes[i - 1].isText
+				# Pretty print text
+				@prettyIndent 1, false
+
 			@visit block.nodes[i]
 
-			# Multiple text nodes are separated by newlines
-			@buffer "\\n" if block.nodes[i + 1] and block.nodes[i].isText and block.nodes[i + 1].isText
+			if block.nodes[i + 1] and block.nodes[i].isText and block.nodes[i + 1].isText
+				# Multiple text nodes are separated by newlines
+				@buffer "\\n"
 
 	###
 	Visit `doctype`. Sets terse mode to `true` when html 5
@@ -302,7 +303,7 @@ class Compiler
 	@public
 	###
 	visitText: (text) ->
-		text = utils.text(text.val.replace(/\\/g, "_SLASH_"))
+		text = utils.text text.val.replace(/\\/g, "_SLASH_")
 		text = escape(text) if @escape
 		text = text.replace(/_SLASH_/g, "\\\\")
 		@buffer text
@@ -348,9 +349,9 @@ class Compiler
 	visitCode: (code) ->
 		# Buffer code
 		if code.buffer
-			val = code.val.trimLeft()
-			@push "__val__ = #{val}"
-			val = 'null == __val__ ? \"\" : __val__'
+			val = code.val.trimLeft() # TODO: what does this line do?
+			@push "__val__ = #{val}" # so it is only evaluated once
+			val = 'if __val__ is null then "" else __val__'
 			val = "escape(#{val})" if code.escape
 			@push "buf.push(#{val})"
 		else
