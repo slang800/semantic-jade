@@ -163,7 +163,6 @@ class Lexer
 		@capture(
 			/^(\w[\-:\w]*)(\/?)/,
 			(captures) =>
-				tok = undefined
 				name = captures[1]
 				if ':' is name[name.length - 1]
 					name = name.slice(0, -1)
@@ -175,10 +174,6 @@ class Lexer
 				tok.selfClosing = !!captures[2]
 				tok
 		)
-
-
-	filter: ->
-		@scan /^:(\w+)/, "filter"
 
 
 	doctype: ->
@@ -305,14 +300,6 @@ class Lexer
 			state = ->
 				states[states.length - 1]
 
-			interpolate = (attr) ->
-				attr.replace /(\\)?#\{([^}]+)\}/g, (match, escape, expr) ->
-					return (
-						if escape
-							match
-						else
-							"#{quote} + (#{expr}) + #{quote}"
-					)
 
 			parse = (c) ->
 				real = c
@@ -329,7 +316,7 @@ class Lexer
 								return if '' is key
 								key = key.replace(/^['"]|['"]$/g, '').replace('!', '')
 								tok.escaped[key] = escapedAttr
-								tok.attrs[key] = (if '' is val then true else interpolate(val))
+								tok.attrs[key] = (if '' is val then true else val)
 								key = val = ''
 					when '='
 						switch state()
@@ -393,15 +380,12 @@ class Lexer
 
 	#Indent | Outdent | Newline
 	indent: ->
-		re = undefined
-		
 		# established regexp
 		if @indentRe
 			captures = @indentRe.exec(@input)
 		
 		# determine regexp
 		else
-			
 			# tabs
 			re = /^\n(\t*) */
 			captures = re.exec(@input)
@@ -415,7 +399,6 @@ class Lexer
 			@indentRe = re if captures and captures[1].length
 
 		if captures
-			tok = undefined
 			indents = captures[1].length
 			++@lineno
 			@consume indents + 1
