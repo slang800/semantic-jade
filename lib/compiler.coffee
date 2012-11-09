@@ -303,7 +303,7 @@ class Compiler
 	@public
 	###
 	visitText: (text) ->
-		text = utils.text text.val.replace(/\\/g, "_SLASH_")
+		text = text.val.replace(/\\/g, "_SLASH_")
 		text = escape(text) if @escape
 		text = text.replace(/_SLASH_/g, "\\\\")
 		@buffer text
