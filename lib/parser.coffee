@@ -93,7 +93,6 @@ class Parser
 	###
 	parse: ->
 		block = new nodes.Block
-		parser = undefined
 		block.line = @line()
 		until 'eos' is @peek().type
 			if 'newline' is @peek().type
@@ -122,7 +121,7 @@ class Parser
 		if @peek().type is type
 			@advance()
 		else
-			throw new Error('expected \"' + type + '\", but got \"' + @peek().type + '\"')
+			throw new Error("expected \"#{type}\", but got \"#{@peek().type}\"")
 
 	
 	###
@@ -181,7 +180,7 @@ class Parser
 				@lexer.defer tok
 				@parseExpr()
 			else
-				throw new Error("unexpected token \"" + @peek().type + "\"")
+				throw new Error("unexpected token \"#{@peek().type}\"")
 
 	
 	###
@@ -230,7 +229,6 @@ class Parser
 	###
 	parseComment: ->
 		tok = @expect('comment')
-		node = undefined
 		if 'indent' is @peek().type
 			node = new nodes.BlockComment(tok.val, @block(), tok.buffer)
 		else
@@ -261,7 +259,7 @@ class Parser
 		throw new Error('the \"filename\" option is required to extend templates') unless @filename
 		path = @expect('extends').val.trim()
 		dir = dirname(@filename)
-		path = join(dir, path + '.jade')
+		path = join(dir, "#{path}.jade")
 		str = fs.readFileSync(path, 'utf8')
 		parser = new Parser(str, path, @options)
 		parser.blocks = @blocks
@@ -347,7 +345,6 @@ class Parser
 		tok = @expect('mixin')
 		name = tok.val
 		args = tok.args
-		mixin = undefined
 		
 		# definition
 		if 'indent' is @peek().type
@@ -423,7 +420,7 @@ class Parser
 		loop
 			if this.peek().type is 'class' or this.peek().type is 'id'
 				tok = this.advance()
-				tag.setAttribute(tok.type, "'" + tok.val + "'")
+				tag.setAttribute(tok.type, "'#{tok.val}'")
 			else if this.peek().type is 'attrs'
 				tok = this.advance()
 				obj = tok.attrs
