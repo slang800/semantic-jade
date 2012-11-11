@@ -27,7 +27,7 @@ class Compiler
 
 		#indentation of HTML
 		@indents = 0
-		@parentIndents = 0
+		@parent_indents = 0
 
 		#indentation of the outputted CoffeeScript
 		@code_indents = 0
@@ -104,7 +104,7 @@ class Compiler
 		offset = offset or 0
 		newline = (if newline then '\\n' else '')
 		@buffer newline + Array(@indents + offset).join(@INDENT)
-		@push 'buf.push.apply(buf, __indent)' if @parentIndents
+		@push 'buf.push.apply(buf, __indent)' if @parent_indents
 
 	###
 	Visit `node`.
@@ -165,7 +165,7 @@ class Compiler
 	###
 	visitBlock: (block) ->
 		# Block keyword has a special meaning in mixins
-		if @parentIndents and block.mode
+		if @parent_indents and block.mode
 			@push "__indent.push('#{Array(@indents + 1).join(@INDENT)}')" if @pp
 			@push 'block && block()'
 			@push '__indent.pop()' if @pp
@@ -219,17 +219,17 @@ class Compiler
 			if block or attrs.length
 				@push "#{name}.call"
 				@code_indents++
-				@parentIndents++
+				@parent_indents++
 				if block
 					@push 'block: () ->'
 					@code_indents++
 					# Render block with no indents, dynamically added when rendered
-					@parentIndents++
+					@parent_indents++
 					_indents = @indents
 					@indents = 0
 					@visit mixin.block
 					@indents = _indents
-					@parentIndents--
+					@parent_indents--
 					@code_indents--
 				if attrs.length
 					val = @attrs(attrs)
@@ -244,7 +244,7 @@ class Compiler
 						escaped: #{val.escaped}
 						"""
 
-				@parentIndents--
+				@parent_indents--
 				@code_indents--
 				if args
 					@push ", #{args}"
@@ -254,10 +254,12 @@ class Compiler
 			@push '__indent.pop()' if @pp
 		else
 			@push "#{name} = (#{args}) ->"
+			@code_indents++
 			@push 'block = @block; attributes = @attributes || {}; escaped = @escaped || {}'
-			@parentIndents++
+			@parent_indents++
 			@visit block
-			@parentIndents--
+			@parent_indents++
+			@code_indents--
 
 
 	###
