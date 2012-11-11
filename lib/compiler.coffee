@@ -258,7 +258,7 @@ class Compiler
 			@push 'block = @block; attributes = @attributes || {}; escaped = @escaped || {}'
 			@parent_indents++
 			@visit block
-			@parent_indents++
+			@parent_indents--
 			@code_indents--
 
 
@@ -272,14 +272,13 @@ class Compiler
 	visitTag: (tag) ->
 		@indents++
 		name = tag.name
-		pp = @pp
 		name = "' + (#{name}) + '" if tag.buffer
 		unless @hasCompiledTag
 			@visitDoctype() if not @hasCompiledDoctype and 'html' is name
 			@hasCompiledTag = true
 		
 		# pretty print
-		@prettyIndent 0, true if pp and not tag.isInline()
+		@prettyIndent 0, true if @pp and not tag.isInline()
 		if (~selfClosing.indexOf(name) or tag.selfClosing) and not @xml
 			@buffer "<#{name}"
 			@visitAttributes tag.attrs
@@ -297,7 +296,7 @@ class Compiler
 			@visit tag.block
 			
 			# pretty print
-			if pp and not tag.isInline() and 'pre' isnt tag.name and not tag.canInline()
+			if @pp and not tag.isInline() and 'pre' isnt tag.name and not tag.canInline()
 				@prettyIndent 0, true
 
 			@buffer "</#{name}>"
