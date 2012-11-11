@@ -44,10 +44,9 @@ parse = (str, options) ->
 	try
 		# Parse
 		parser = new Parser(str, options.filename, options)
-		compiler = undefined
 		
 		# Compile
-		if typeof (options.compiler) is "undefined"
+		if not options.compiler?
 			compiler = new Compiler(parser.parse(), options)
 		else
 			compiler = new options.compiler(parser.parse(), options)
@@ -123,11 +122,12 @@ exports.compile = (str, options) ->
 		"""
 
 
-	fs.writeFileSync("test_out", fn)
+	fs.writeFileSync("test_out.coffee", fn)
 
 
 	fn = coffee.compile fn, {bare: true}
 
+	fs.writeFileSync("test_out.js", fn)
 
 	fn = new Function('locals, attrs, escape, rethrow, merge', fn)
 	return fn if client
@@ -181,7 +181,12 @@ exports.renderFile = (path, options, fn) ->
 		options = {}
 	try
 		options.filename = path
-		str = (if options.cache then exports.cache[key] or (exports.cache[key] = fs.readFileSync(path, "utf8")) else fs.readFileSync(path, "utf8"))
+		str = (
+			if options.cache
+				exports.cache[key] or (exports.cache[key] = fs.readFileSync(path, "utf8"))
+			else
+				fs.readFileSync(path, "utf8")
+		)
 		exports.render str, options, fn
 	catch err
 		fn err
