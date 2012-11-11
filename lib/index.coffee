@@ -64,7 +64,7 @@ parse = (str, options) ->
 			else
 				"_with (locals || {}), ->\n#{js}"
 		}
-		return buf.join(\"\")
+		return buf.join('')
 		"""
 	catch err
 		parser = parser.context()
@@ -97,7 +97,7 @@ for use with the Jade client-side runtime.js
 exports.compile = (str, options) ->
 	options = options or {}
 	client = options.client
-	filename = (if options.filename then JSON.stringify(options.filename) else "undefined")
+	filename = (if options.filename then JSON.stringify(options.filename) else 'undefined')
 
 	str = stripBOM(String(str))
 	fn = parse(str, options)
@@ -176,7 +176,7 @@ Render a Jade file at the given `path` and callback `fn(err, str)`.
 ###
 exports.renderFile = (path, options, fn) ->
 	key = path + ":string"
-	if "function" is typeof options
+	if typeof options is 'function'
 		fn = options
 		options = {}
 	try
