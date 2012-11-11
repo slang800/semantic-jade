@@ -18,7 +18,7 @@ class Compiler
 		@options = options or {}
 
 		#char used for indentation of outputted HTML
-		@INDENT = options.indent or '	'
+		@INDENT = options.indent or '\t'
 		@node = node
 		@hasCompiledDoctype = false
 		@hasCompiledTag = false
@@ -44,7 +44,7 @@ class Compiler
 		@push '__indent = []' if @pp
 		@lastBufferedIdx = -1
 		@visit @node
-		return @buf.join "\n"
+		return @buf.join '\n'
 
 	###*
 	 * add elements to the array (@buf) holding the compiled SJ code (which is
@@ -186,7 +186,7 @@ class Compiler
 
 			if block.nodes[i + 1] and block.nodes[i].isText and block.nodes[i + 1].isText
 				# Multiple text nodes are separated by newlines
-				@buffer "\\n"
+				@buffer '\\n'
 
 	###
 	Visit `doctype`. Sets terse mode to `true` when html 5
@@ -197,8 +197,10 @@ class Compiler
 	@public
 	###
 	visitDoctype: (doctype) ->
-		@setDoctype doctype.val or 'default' if doctype and (doctype.val or not @doctype)
-		@buffer @doctype if @doctype
+		if doctype and (doctype.val or not @doctype)
+			@setDoctype doctype.val or 'default'
+		if @doctype
+			@buffer @doctype
 		@hasCompiledDoctype = true
 
 	###
@@ -221,7 +223,7 @@ class Compiler
 				@code_indents++
 				@parent_indents++
 				if block
-					@push 'block: () ->'
+					@push 'block: ->'
 					@code_indents++
 					# Render block with no indents, dynamically added when rendered
 					@parent_indents++
@@ -245,9 +247,10 @@ class Compiler
 						"""
 
 				@parent_indents--
-				@code_indents--
 				if args
-					@push ", #{args}"
+					@push "#{args}"
+
+				@code_indents--
 
 			else
 				@push "#{name}(#{args})"
@@ -310,9 +313,8 @@ class Compiler
 	@public
 	###
 	visitText: (text) ->
-		text = text.val.replace(/\\/g, "_SLASH_")
-		text = escape(text) if @escape
-		text = text.replace(/_SLASH_/g, "\\\\")
+		text = utils.interpolate text.val
+		if @escape then text = escape(text)
 		@buffer text
 
 	###
@@ -358,7 +360,7 @@ class Compiler
 		if code.buffer
 			val = code.val.trimLeft() # TODO: what does this line do?
 			@push "__val__ = #{val}" # so it is only evaluated once
-			val = 'if __val__ is null then "" else __val__'
+			val = 'if __val__ is null then \'\' else __val__'
 			val = "escape(#{val})" if code.escape
 			@push "buf.push(#{val})"
 		else
@@ -442,4 +444,8 @@ Escape the given string of `html`.
 @private
 ###
 escape = (html) ->
-	String(html).replace(/&(?!\w+;)/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace /"/g, '&quot;'
+	String(html)
+		.replace /&(?!\w+;)/g, '&amp;'
+		.replace /</g, '&lt;'
+		.replace />/g, '&gt;'
+		.replace /"/g, '&quot;'
