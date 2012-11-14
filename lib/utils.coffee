@@ -10,14 +10,14 @@ exports.indent = (str, indents = 1) ->
 	return indentation + str.replace /\n/g, '\n' + indentation
 
 ###
-Escape single quotes in `str`.
+Escape double quotes in `str`.
 
 @param {String} str
 @return {String}
 @api private
 ###
-exports.escape = (str) ->
-	str.replace /'/g, "\\'"
+exports.escape_quotes = (str) ->
+	str.replace /"/g, "\\\""
 
 ###
 Convert interpolation in the given string to JavaScript.
@@ -27,28 +27,27 @@ Convert interpolation in the given string to JavaScript.
 @api private
 ###
 interpolate = exports.interpolate = (str) ->
-	str = str.replace(/\\/g, "_SLASH_")
+	str = str
+		.replace(/\\/g, '_SLASH_')
 
 	str = str.replace(
-		/(_SLASH_)?([#!]){(.*?)}/g,
-		(str, escape, flag, code) ->
-			# convert all the slashes in the interpolated parts back to regular
-			code = code.replace(/_SLASH_/g, "\\")
-			
-			if escape
-				return str.slice(7)
-			else
-				return '#{' +
-					"#{
-						if '!' is flag
-							''
-						else
-							'escape'
-					}(if (interp = #{code}) is null then '' else interp)" + '}'
+		/([#!]){(.*?)}/g,
+		(str, flag, code) ->
+			# convert all the slashes & quotes in the interpolated parts back to regular
+			code = code
+				.replace(/_SLASH_/g, "\\")
+
+			'#{' + "#{
+				if '!' is flag
+					''
+				else
+					'escape'
+			}(if (interp = #{code}) is null then '' else interp)" + '}'
 	)
 
 	# escape any slashes that are not in the interpolated part
-	return str.replace(/_SLASH_/g, '\\\\')
+	return str
+		.replace(/_SLASH_/g, '\\\\')
 
 
 ###

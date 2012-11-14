@@ -39,7 +39,7 @@ class Compiler
 	 * @public
 	###
 	compile: ->
-		@buf = ['interp = undefined']
+		@buf = []
 
 		@push '__indent = []' if @pp
 		@lastBufferedIdx = -1
@@ -82,6 +82,8 @@ class Compiler
 	 * @public
 	###
 	buffer: (str) ->
+		str = utils.escape_quotes(str)
+
 		if @lastBufferedIdx is @buf.length
 			#combine with the last entry to the buffer
 			@lastBuffered += str
@@ -89,7 +91,7 @@ class Compiler
 		else
 			@lastBuffered = str
 
-		@push "buf.push(\"\"\"#{@lastBuffered}\"\"\")"
+		@push "buf.push(\"#{@lastBuffered}\")"
 		@lastBufferedIdx = @buf.length
 
 	###
@@ -275,7 +277,7 @@ class Compiler
 	visitTag: (tag) ->
 		@indents++
 		name = tag.name
-		name = "' + (#{name}) + '" if tag.buffer
+		name = '#{' + name + '}' if tag.buffer
 		unless @hasCompiledTag
 			@visitDoctype() if not @hasCompiledDoctype and 'html' is name
 			@hasCompiledTag = true
@@ -326,7 +328,7 @@ class Compiler
 	visitComment: (comment) ->
 		return unless comment.buffer
 		@prettyIndent 1, true if @pp
-		@buffer "<!--#{utils.escape(comment.val)}-->"
+		@buffer "<!--#{comment.val}-->"
 
 	###
 	Visit a `BlockComment`.
@@ -390,22 +392,25 @@ class Compiler
 
 	#Compile attributes
 	attrs: (attrs) ->
+		#TODO switch to coffee script attributes handeling
 		buf = []
 		classes = []
 		escaped = {}
-		constant = attrs.every((attr) ->
+		constants = attrs.every((attr) ->
 			isConstant attr.val
 		)
 		inherits = false
 		buf.push 'terse: true' if @terse
-		attrs.forEach (attr) ->
-			return inherits = true if attr.name is 'attributes'
+		for attr in attrs
+			if attr.name is 'attributes'
+				inherits = true
+				break
+
 			escaped[attr.name] = attr.escaped
 			if attr.name is 'class'
-				classes.push "(#{attr.val})"
+				classes.push "#{attr.val}"
 			else
-				pair = "'#{attr.name}':(#{attr.val})"
-				buf.push pair
+				buf.push "'#{attr.name}':(#{attr.val})"
 
 		if classes.length
 			classes = classes.join(' + \' \' + ')
@@ -413,7 +418,7 @@ class Compiler
 		buf: buf.join(', ').replace('class:', '\"class\":')
 		escaped: JSON.stringify(escaped)
 		inherits: inherits
-		constant: constant
+		constant: constants
 
 module.exports = Compiler
 
@@ -445,7 +450,7 @@ Escape the given string of `html`.
 ###
 escape = (html) ->
 	String(html)
-		.replace /&(?!\w+;)/g, '&amp;'
+		.replace /&/g, '&amp;'
 		.replace /</g, '&lt;'
 		.replace />/g, '&gt;'
 		.replace /"/g, '&quot;'
