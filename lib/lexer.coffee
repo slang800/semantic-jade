@@ -43,7 +43,7 @@ class Lexer
 
 	###*
 	 * Scan with the given `regexp`. Pass the matches from the regular
-       expression to the `callback`. The `callback` should return a tok
+			 expression to the `callback`. The `callback` should return a tok
 	 * @param {RegExp} regexp
 	 * @param {Function} callback
 	 * @return {Array or null}
@@ -120,6 +120,45 @@ class Lexer
 					break
 		pos
 
+	###*
+	 * Match everything in parentheses.
+	 * We do not including matched parentheses () or parentheses contained in
+       quotation marks "(". We also ignore newlines. Otherwise, this is
+       similar to doing /\((.*)\)/.exec()
+	 * @param {String} input
+	 * @return {Array}
+	 * @api private
+	###
+	matchArgs: (str) ->
+		startpos = -1
+		while str[++startpos] is ' '
+			continue # replace with trim???
+		if str[startpos] isnt '('
+			return null
+		endpos = startpos
+		ctr = 1
+		chr = ''
+		quot = ''
+		len = str.length - 1
+		skip = false
+		while (ctr > 0) and (endpos < len)
+			chr = str[++endpos]
+			if skip
+				skip = false
+				continue
+			switch chr
+				when '\\'
+					skip = true
+				when '\'', '\"'
+					if chr is quot
+						quot = ''
+					else quot = chr  if '' is quot
+				when '('
+					++ctr  unless quot
+				when ')'
+					--ctr  unless quot
+
+		[str.substring(0, endpos + 1), str.substring(startpos + 1, endpos)]
 
 	stashed: ->
 		@stash.length and @stash.shift()
@@ -248,10 +287,9 @@ class Lexer
 			/^\+([\-\w]+)/,
 			(captures) =>
 				tok = @tok("call", captures[1])
-				
-				# Check for args (not attributes)
-				if captures = /^ *\((.*?)\)/.exec(@input)
-					unless /^ *[\-\w]+ *=/.test(captures[1])
+
+				if captures = @matchArgs(@input)
+					unless /^ *[-\w]+ *=|^ *attributes *(?:,|$)/.test(captures[1])
 						@consume captures[0].length
 						tok.args = captures[1]
 				tok
@@ -260,10 +298,12 @@ class Lexer
 
 	mixin: ->
 		@capture(
-			/^mixin +([\-\w]+)(?: *\((.*)\))?/,
+			/^mixin +([\-\w]+)/,
 			(captures) =>
 				tok = @tok("mixin", captures[1])
-				tok.args = captures[2]
+				if captures = @matchArgs @input
+					@consume captures[0].length
+					tok.args = captures[1]
 				tok
 		)
 
