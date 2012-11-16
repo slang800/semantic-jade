@@ -1,0 +1,19 @@
+mixin test(obj)
+	ul
+		-for k, v in obj
+			li #{k}: #{v}
+
++test({"Hello": "world"})
++test({
+	"first": "line"
+	"second": "line"
+})
++test(
+	((obj) ->
+		# Swap the key/value pairs
+		nobj = {}
+		for key in obj
+			nobj[obj[key]] = key
+		nobj
+	)({"Hello": "world"})
+)
