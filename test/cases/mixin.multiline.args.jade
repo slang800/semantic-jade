@@ -1,6 +1,6 @@
 mixin test(obj)
 	ul
-		-for k, v in obj
+		-for k, v of obj
 			li #{k}: #{v}
 
 +test({"Hello": "world"})
@@ -12,8 +12,8 @@ mixin test(obj)
 	((obj) ->
 		# Swap the key/value pairs
 		nobj = {}
-		for key in obj
-			nobj[obj[key]] = key
-		nobj
+		for key, val of obj
+			nobj[val] = key
+		return nobj
 	)({"Hello": "world"})
 )
