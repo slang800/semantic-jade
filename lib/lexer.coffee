@@ -109,16 +109,14 @@ class Lexer
 		str = @input
 		nstart = 0
 		nend = 0
-		pos = 0
 
 		for char, i in str.split ''
 			if start is char
 				++nstart
 			else if end is char
 				if ++nend is nstart
-					pos = i
-					break
-		pos
+					return i
+		return 0
 
 	###*
 	 * Match everything in parentheses.
