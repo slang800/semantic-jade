@@ -241,6 +241,7 @@ class Compiler
 					@visit mixin.block
 					@indents = _indents
 					@parent_indents--
+					@flush_buffer()
 					@code_indents--
 				if attrs.length
 					val = @attrs(attrs)
@@ -260,9 +261,9 @@ class Compiler
 					@push "#{args}"
 
 				@code_indents--
-
 			else
 				@push "#{name}(#{args})"
+
 			@push '__indent.pop()' if @pp
 		else
 			@push "#{name} = (#{args}) ->"
@@ -271,6 +272,7 @@ class Compiler
 			@parent_indents++
 			@visit block
 			@parent_indents--
+			@flush_buffer()
 			@code_indents--
 
 
@@ -391,12 +393,12 @@ class Compiler
 	visitAttributes: (attrs) ->
 		val = @attrs(attrs)
 		if val.inherits
-			@push "buf.push(attrs(merge({ #{val.buf} }, attributes), merge(#{val.escaped}, escaped, true)))"
+			@push "buf.push(attrs(merge({#{val.buf}}, attributes), merge(#{val.escaped}, escaped, true)))"
 		else if val.constant
 			eval "buf={#{val.buf}}"
 			@buffer runtime.attrs(buf, JSON.parse(val.escaped)), true
 		else
-			@push "buf.push(attrs({ #{val.buf} }, #{val.escaped}))"
+			@push "buf.push(attrs({#{val.buf}}, #{val.escaped}))"
 
 	#Compile attributes
 	attrs: (attrs) ->
