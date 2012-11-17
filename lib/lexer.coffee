@@ -118,46 +118,6 @@ class Lexer
 					return i
 		return 0
 
-	###*
-	 * Match everything in parentheses.
-	 * We do not include matched delimiters (like "()" or "{}") or delimiters
-       contained in quotation marks "(". We also ignore newlines. Otherwise,
-       this is similar to using /\((.*)\)/.exec()
-	 * @param {String} input
-	 * @return {Array}
-	 * @api private
-	###
-	match_delimiters: (str, start_delimiter='(', end_delimiter=')') ->
-		startpos = -1
-		while str[++startpos] is ' '
-			continue
-		if str[startpos] isnt start_delimiter
-			return null
-		endpos = startpos
-		ctr = 1
-		chr = ''
-		quot = ''
-		len = str.length - 1
-		skip = false
-		while (ctr > 0) and (endpos < len)
-			chr = str[++endpos]
-			if skip
-				skip = false
-				continue
-			switch chr
-				when '\\'
-					skip = true
-				when '\'', '\"'
-					if chr is quot
-						quot = ''
-					else quot = chr if '' is quot
-				when start_delimiter
-					++ctr  unless quot
-				when end_delimiter
-					--ctr  unless quot
-
-		[str.substring(0, endpos + 1), str.substring(startpos + 1, endpos)]
-
 	stashed: ->
 		@stash.length and @stash.shift()
 
@@ -286,7 +246,7 @@ class Lexer
 			(captures) =>
 				tok = @tok("call", captures[1])
 
-				if captures = @match_delimiters(@input)
+				if captures = utils.match_delimiters(@input)
 					unless /^ *[-\w]+ *=|^ *attributes *(?:,|$)/.test(captures[1])
 						@consume captures[0].length
 						tok.args = captures[1]
@@ -299,7 +259,7 @@ class Lexer
 			/^mixin +([\-\w]+)/,
 			(captures) =>
 				tok = @tok("mixin", captures[1])
-				if captures = @match_delimiters @input
+				if captures = utils.match_delimiters @input
 					@consume captures[0].length
 					tok.args = captures[1]
 				tok
