@@ -279,101 +279,103 @@ class Lexer
 
 
 	attrs: ->
-		if '(' is @input.charAt(0)
-			index = @indexOfDelimiters('(', ")")
-			str = @input.substr(1, index - 1)
-			tok = @tok('attrs')
-			len = str.length
-			states = ['key']
-			escapedAttr = undefined
-			key = ''
-			val = ''
-			quote = undefined
-			c = undefined
-			p = undefined
-			@consume index + 1
-			tok.attrs = {}
-			tok.escaped = {}
+		unless '(' is @input.charAt(0)
+			return
 
-			state = ->
-				states[states.length - 1]
+		index = @indexOfDelimiters('(', ")")
+		str = @input.substr(1, index - 1)
+		tok = @tok('attrs')
+		len = str.length
+		states = ['key']
+		escapedAttr = undefined
+		key = ''
+		val = ''
+		quote = undefined
+		c = undefined
+		p = undefined
+		@consume index + 1
+		tok.attrs = {}
+		tok.escaped = {}
 
-
-			parse = (c) ->
-				real = c
-
-				switch c
-					when ',', '\n'
-						switch state()
-							when 'expr', 'array', 'string', 'object'
-								val += c
-							else
-								states.push 'key'
-								val = val.trim()
-								key = key.trim()
-								return if '' is key
-								key = key.replace(/^['"]|['"]$/g, '').replace('!', '')
-								tok.escaped[key] = escapedAttr
-								tok.attrs[key] = (if '' is val then true else val)
-								key = val = ''
-					when '='
-						switch state()
-							when 'key char'
-								key += real
-							when 'val', 'expr', 'array', 'string', 'object'
-								val += real
-							else
-								escapedAttr = '!' isnt p
-								states.push 'val'
-					when '('
-						states.push 'expr' if 'val' is state() or 'expr' is state()
-						val += c
-					when ')'
-						states.pop() if 'expr' is state() or 'val' is state()
-						val += c
-					when '{'
-						states.push 'object' if 'val' is state()
-						val += c
-					when '}'
-						states.pop() if 'object' is state()
-						val += c
-					when '['
-						states.push 'array' if 'val' is state()
-						val += c
-					when ']'
-						states.pop() if 'array' is state()
-						val += c
-					when "\"", "\'"
-						switch state()
-							when 'key'
-								states.push 'key char'
-							when 'key char'
-								states.pop()
-							when 'string'
-								states.pop() if c is quote
-								val += c
-							else
-								states.push 'string'
-								val += c
-								quote = c
-					else
-						switch state()
-							when 'key', 'key char'
-								key += c
-							else
-								val += c
-				p = c
+		state = ->
+			states[states.length - 1]
 
 
-			for char in str.split ''
-				parse char
+		parse = (c) ->
+			real = c
 
-			parse ','
+			switch c
+				when ',', '\n'
+					switch state()
+						when 'expr', 'array', 'string', 'object'
+							val += c
+						else
+							states.push 'key'
+							val = val.trim()
+							key = key.trim()
+							return if '' is key
+							key = key.replace(/^['"]|['"]$/g, '').replace('!', '')
+							tok.escaped[key] = escapedAttr
+							tok.attrs[key] = (if '' is val then true else val)
+							key = val = ''
+				when '='
+					switch state()
+						when 'key char'
+							key += real
+						when 'val', 'expr', 'array', 'string', 'object'
+							val += real
+						else
+							escapedAttr = '!' isnt p
+							states.push 'val'
+				when '('
+					states.push 'expr' if 'val' is state() or 'expr' is state()
+					val += c
+				when ')'
+					states.pop() if 'expr' is state() or 'val' is state()
+					val += c
+				when '{'
+					states.push 'object' if 'val' is state()
+					val += c
+				when '}'
+					states.pop() if 'object' is state()
+					val += c
+				when '['
+					states.push 'array' if 'val' is state()
+					val += c
+				when ']'
+					states.pop() if 'array' is state()
+					val += c
+				when "\"", "\'"
+					switch state()
+						when 'key'
+							states.push 'key char'
+						when 'key char'
+							states.pop()
+						when 'string'
+							states.pop() if c is quote
+							val += c
+						else
+							states.push 'string'
+							val += c
+							quote = c
+				else
+					switch state()
+						when 'key', 'key char'
+							key += c
+						else
+							val += c
+			p = c
 
-			if '/' is @input.charAt(0)
-				@consume 1
-				tok.selfClosing = true
-			tok
+
+		for char in str.split ''
+			parse char
+
+		parse ','
+
+		if '/' is @input.charAt(0)
+			@consume 1
+			tok.selfClosing = true
+		tok
 
 
 	#Indent | Outdent | Newline
