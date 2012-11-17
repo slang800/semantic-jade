@@ -24,25 +24,41 @@ exports.escape_quotes = (str) ->
  * @private
 ###
 exports.interpolate = (str) ->
-	str = str.replace(/\\/g, '_SLASH_')
+	remaining = str.replace(/\\/g, '_BSLASH_')
+	processed = ''
 
-	str = str.replace(
-		/([#!]){(.*?)}/g,
-		(str, flag, code) ->
-			# convert all the slashes & quotes in the interpolated parts back to regular
-			code = code.replace(/_SLASH_/g, "\\")
+	loop
+		for flag in ['#','!']
+			if start_pos = remaining.indexOf(flag + '{') + 1 then break
+			# `+ 1` accounts for the length of the flag
 
-			'#{' + "#{
-				if '!' is flag
-					''
-				else
-					'escape'
-			}(if (interp = #{code}) is null then '' else interp)" + '}'
-	)
+		unless start_pos
+			break
 
-	# escape any slashes that are not in the interpolated part
-	return str.replace(/_SLASH_/g, '\\\\')
+		processed += remaining.substring(0, start_pos - 1)
+		# `- 1` accounts for the length of the flag
 
+		remaining = remaining.substring(start_pos)
+
+		matches = match_delimiters(remaining, '{', '}')
+
+		unless matches
+			break
+
+		# convert all the slashes in the interpolated part back to regular
+		code = matches[1].replace(/_BSLASH_/g, '\\')
+
+		processed += '#{' + "#{
+			if '!' is flag
+				''
+			else
+				'escape'
+		}(if (interp = #{code}) is null then '' else interp)" + '}'
+
+		remaining = remaining.substring(matches[0].length)
+
+	# escape any slashes that were not in the interpolated parts
+	return (processed + remaining).replace(/_BSLASH_/g, '\\\\')
 
 ###*
  * Merge `b` into `a`.
