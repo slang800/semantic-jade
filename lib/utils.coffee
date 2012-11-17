@@ -26,7 +26,7 @@ Convert interpolation in the given string to JavaScript.
 @return {String}
 @api private
 ###
-interpolate = exports.interpolate = (str) ->
+exports.interpolate = (str) ->
 	str = str
 		.replace(/\\/g, '_SLASH_')
 
