@@ -267,7 +267,7 @@ class Compiler
 		else
 			@push "#{name} = (#{args}) ->"
 			@code_indents++
-			@push 'block = @block; attributes = @attributes || {}; escaped = @escaped || {}'
+			@push 'block = @block; attributes = @attributes or {}; escaped = @escaped or {}'
 			@parent_indents++
 			@visit block
 			@parent_indents--
@@ -369,7 +369,7 @@ class Compiler
 		if code.buffer
 			val = code.val.trimLeft() # TODO: what does this line do?
 			@push "__val__ = #{val}" # so it is only evaluated once
-			val = 'if __val__ is null then \'\' else __val__'
+			val = 'if __val__ is null or not __val__? then \'\' else __val__'
 			val = "escape(#{val})" if code.escape
 			@push "buf.push(#{val})"
 		else
