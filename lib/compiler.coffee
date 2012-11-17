@@ -94,6 +94,13 @@ class Compiler
 		@push "buf.push(\"#{@lastBuffered}\")"
 		@lastBufferedIdx = @buf.length
 
+	###*
+	 * prevent additional strings from being added to the current buffer
+	 * @return {[type]} [description]
+	###
+	flush_buffer: ->
+		@lastBufferedIdx = -1
+
 	###
 	Buffer an indent based on the current `indent`
 	property and an additional `offset`.
@@ -340,7 +347,7 @@ class Compiler
 		return unless comment.buffer
 
 		# detect IE 'if' filters
-		if 0 is comment.val.trim().indexOf("if")
+		if 0 is comment.val.trim().indexOf('if')
 			@buffer "<!--[#{comment.val.trim()}]>"
 			@visit comment.block
 			@buffer '<![endif]-->'
@@ -372,6 +379,7 @@ class Compiler
 		if code.block
 			@code_indents++
 			@visit code.block
+			@flush_buffer()
 			@code_indents--
 
 	###
