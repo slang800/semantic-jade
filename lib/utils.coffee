@@ -53,7 +53,7 @@ exports.interpolate = (str) ->
 				''
 			else
 				'escape'
-		}(if (interp = #{code}) is null then '' else interp)" + '}'
+		}(if (interp = #{code}) is null or not interp? then '' else interp)" + '}'
 
 		remaining = remaining.substring(matches[0].length)
 
