@@ -329,7 +329,7 @@ class Compiler
 
 		#NOTE: escape and interpolate probably can't be mixed together...
 		#maybe use escape at run-time?
-		if @escape then text = escape(text)
+		if @escape then text =  '#{' + "escape(\"#{text}\")" + '}'
 		@buffer text, escape=false
 
 	###
