@@ -77,12 +77,13 @@ class Compiler
 	 * Buffer the given `str` optionally escaped. Used to combine multiple
        strings of HTML into a single buf.push call in the resulting code.
 	 * @param  {String}  str [description]
-	 * @param  {Boolean} esc [description]
-	 * @return {[type]}
+	 * @param  {Boolean} escape escape double quotes. set to false if they are
+       already escaped
 	 * @public
 	###
-	buffer: (str) ->
-		str = utils.escape_quotes(str)
+	buffer: (str, escape=true) ->
+		if escape
+			str = utils.escape_quotes(str)
 
 		if @lastBufferedIdx is @buf.length
 			#combine with the last entry to the buffer
@@ -325,8 +326,11 @@ class Compiler
 	###
 	visitText: (text) ->
 		text = utils.interpolate text.val
+
+		#NOTE: escape and interpolate probably can't be mixed together...
+		#maybe use escape at run-time?
 		if @escape then text = escape(text)
-		@buffer text
+		@buffer text, escape=false
 
 	###
 	Visit a `comment`, only buffering when the buffer flag is set.

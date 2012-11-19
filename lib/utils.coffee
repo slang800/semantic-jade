@@ -24,7 +24,9 @@ exports.escape_quotes = (str) ->
  * @private
 ###
 exports.interpolate = (str) ->
-	remaining = str.replace(/\\/g, '_BSLASH_')
+	remaining = str
+		.replace(/\\/g, '_BSLASH_')
+		.replace(/"/g, '_DBLQUOTE_')
 	processed = ''
 
 	loop
@@ -46,7 +48,9 @@ exports.interpolate = (str) ->
 			break
 
 		# convert all the slashes in the interpolated part back to regular
-		code = matches[1].replace(/_BSLASH_/g, '\\')
+		code = matches[1]
+			.replace(/_BSLASH_/g, '\\')
+			.replace(/_DBLQUOTE_/g, '"')
 
 		processed += '#{' + "#{
 			if '!' is flag
@@ -58,7 +62,9 @@ exports.interpolate = (str) ->
 		remaining = remaining.substring(matches[0].length)
 
 	# escape any slashes that were not in the interpolated parts
-	return (processed + remaining).replace(/_BSLASH_/g, '\\\\')
+	return (processed + remaining)
+		.replace(/_BSLASH_/g, '\\\\')
+		.replace(/_DBLQUOTE_/g, '\\"')
 
 ###*
  * Merge `b` into `a`.
