@@ -50,9 +50,9 @@ exports.interpolate = (str) ->
 
 		processed += '#{' + "#{
 			if '!' is flag
-				''
-			else
 				'escape'
+			else
+				''
 		}(if (interp = #{code}) is null or not interp? then '' else interp)" + '}'
 
 		remaining = remaining.substring(matches[0].length)
