@@ -1,11 +1,9 @@
+// Module dependencies.
 
-/**
- * Module dependencies.
- */
 require('coffee-script');
 
-var jade = require('../')
-  , fs = require('fs');
+var jade = require('../'),
+  fs = require('fs');
 
 // test cases
 
@@ -22,7 +20,7 @@ cases.forEach(function(test){
     var str = fs.readFileSync(path, 'utf8');
     var html = fs.readFileSync('test/cases/' + test + '.html', 'utf8').trim().replace(/\r/g, '');
     var fn = jade.compile(str, { filename: path, pretty: true });
-    var actual = fn({ title: 'Jade' });
+    var actual = fn({title: 'Jade'});
     actual.trim().should.equal(html);
-  })
+  });
 });
