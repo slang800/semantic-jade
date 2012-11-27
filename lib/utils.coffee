@@ -118,6 +118,20 @@ exports.match_delimiters = match_delimiters = (str, start_delimiter='(', end_del
 
 	[str.substring(0, endpos + 1), str.substring(startpos + 1, endpos)]
 
+###
+Escape the given string of `html`.
+
+@param {String} html
+@return {String}
+@private
+###
+exports.escape = (html) ->
+	String(html)
+		.replace /&/g, '&amp;'
+		.replace /</g, '&lt;'
+		.replace />/g, '&gt;'
+		.replace /"/g, '&quot;'
+
 Array::remove = (from, to) ->
 	rest = @slice((to or from) + 1 or @length)
 	@length = (if from < 0 then @length + from else from)

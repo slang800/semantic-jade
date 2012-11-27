@@ -176,9 +176,9 @@ class Compiler
 	visitBlock: (block) ->
 		# Block keyword has a special meaning in mixins
 		if @parent_indents and block.mode
-			@push "__indent.push('#{Array(@indents + 1).join(@INDENT)}')" if @pp
+			if @pp then @push "__indent.push('#{Array(@indents + 1).join(@INDENT)}')"
 			@push 'block && block()'
-			@push '__indent.pop()' if @pp
+			if @pp then @push '__indent.pop()'
 			return
 		
 		len = block.nodes.length
@@ -329,7 +329,7 @@ class Compiler
 
 		#NOTE: escape and interpolate probably can't be mixed together...
 		#maybe use escape at run-time?
-		if @escape then text =  '#{' + "escape(\"#{text}\")" + '}'
+		if @escape then text = '#{' + "escape(\"#{text}\")" + '}'
 		@buffer text, escape=false
 
 	###
@@ -413,6 +413,7 @@ class Compiler
 		constants = attrs.every((attr) ->
 			isConstant attr.val
 		)
+
 		inherits = false
 		buf.push 'terse: true' if @terse
 		for attr in attrs
@@ -454,17 +455,3 @@ isConstant = (val) ->
 	if matches = /^ *\[(.*)\] *$/.exec(val)
 		return matches[1].split(',').every(isConstant)
 	false
-
-###
-Escape the given string of `html`.
-
-@param {String} html
-@return {String}
-@private
-###
-escape = (html) ->
-	String(html)
-		.replace /&/g, '&amp;'
-		.replace /</g, '&lt;'
-		.replace />/g, '&gt;'
-		.replace /"/g, '&quot;'
