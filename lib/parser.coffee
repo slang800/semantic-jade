@@ -360,8 +360,8 @@ class Parser
 	# indent (text | newline)* outdent
 	parseTextBlock: ->
 		block = new nodes.Block
-		block.line = this.line()
-		spaces = this.expect('indent').val
+		block.line = @line()
+		spaces = @expect('indent').val
 		if not @_spaces? then @_spaces = spaces
 		indent = Array(spaces - @_spaces + 1).join(' ')
 		while 'outdent' isnt @peek().type
@@ -371,8 +371,8 @@ class Parser
 				@parseTextBlock().nodes.forEach (node) ->
 					block.push(node)
 			else
-				text = new nodes.Text(indent + this.advance().val)
-				text.line = this.line()
+				text = new nodes.Text(indent + @advance().val)
+				text.line = @line()
 				block.push(text)
 
 
@@ -418,11 +418,11 @@ class Parser
 		
 		# (attrs | class | id)*
 		loop
-			if this.peek().type is 'class' or this.peek().type is 'id'
-				tok = this.advance()
+			if @peek().type is 'class' or @peek().type is 'id'
+				tok = @advance()
 				tag.setAttribute(tok.type, "'#{tok.val}'")
-			else if this.peek().type is 'attrs'
-				tok = this.advance()
+			else if @peek().type is 'attrs'
+				tok = @advance()
 				obj = tok.attrs
 				escaped = tok.escaped
 				names = Object.keys(obj)
