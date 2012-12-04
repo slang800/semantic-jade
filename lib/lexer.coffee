@@ -198,9 +198,9 @@ class Lexer
 		@capture(
 			/^prepend +([^\n]+)/,
 			(captures) =>
-				mode = "prepend"
+				mode = 'prepend'
 				name = captures[1]
-				tok = @tok("block", name)
+				tok = @tok('block', name)
 				tok.mode = mode
 				tok
 		)
@@ -211,9 +211,9 @@ class Lexer
 		@capture(
 			/^append +([^\n]+)/,
 			(captures) =>
-				mode = "append"
+				mode = 'append'
 				name = captures[1]
-				tok = @tok("block", name)
+				tok = @tok('block', name)
 				tok.mode = mode
 				tok
 		)
@@ -223,9 +223,9 @@ class Lexer
 		@capture(
 			/^block\b *(?:(prepend|append) +)?([^\n]*)/,
 			(captures) =>
-				mode = captures[1] or "replace"
+				mode = captures[1] or 'replace'
 				name = captures[2]
-				tok = @tok("block", name)
+				tok = @tok('block', name)
 				tok.mode = mode
 				tok
 		)
@@ -244,7 +244,7 @@ class Lexer
 		@capture(
 			/^\+([\-\w]+)/,
 			(captures) =>
-				tok = @tok("call", captures[1])
+				tok = @tok('call', captures[1])
 
 				if captures = utils.match_delimiters(@input)
 					unless /^ *[-\w]+ *=|^ *attributes *(?:,|$)/.test(captures[1])
@@ -258,7 +258,7 @@ class Lexer
 		@capture(
 			/^mixin +([\-\w]+)/,
 			(captures) =>
-				tok = @tok("mixin", captures[1])
+				tok = @tok('mixin', captures[1])
 				if captures = utils.match_delimiters @input
 					@consume captures[0].length
 					tok.args = captures[1]
@@ -282,7 +282,7 @@ class Lexer
 		unless '(' is @input.charAt(0)
 			return
 
-		index = @indexOfDelimiters('(', ")")
+		index = @indexOfDelimiters('(', ')')
 		str = @input.substr(1, index - 1)
 		tok = @tok('attrs')
 		len = str.length
@@ -345,7 +345,7 @@ class Lexer
 				when ']'
 					states.pop() if 'array' is state()
 					val += c
-				when "\"", "\'"
+				when '\"', '\''
 					switch state()
 						when 'key'
 							states.push 'key char'
