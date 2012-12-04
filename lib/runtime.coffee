@@ -80,6 +80,9 @@ exports.attrs = (obj) ->
 				else
 					buf.push("#{key}=\"#{key}\"")
 		else
+			if typeof val is 'array'
+				val = val.join(' ')
+
 			if 0 is key.indexOf('data') and 'string' isnt typeof val
 				value = JSON.stringify(val)
 			else if 'class' is key and Array.isArray(val)
