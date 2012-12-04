@@ -299,13 +299,10 @@ class Compiler
 			@visitAttributes tag.attrs
 			if @terse then @buffer('>') else @buffer('/>')
 		else
-			# Optimize attributes buffering
-			if tag.attrs.length
-				@buffer "<#{name}"
-				@visitAttributes tag.attrs if tag.attrs.length
-				@buffer '>'
-			else
-				@buffer "<#{name}>"
+			@buffer "<#{name}"
+			@visitAttributes tag.attrs
+			@buffer '>'
+
 			@visitCode tag.code if tag.code
 			@escape = 'pre' is tag.name  # TODO: make pre tag into mixin... more semantic
 			@visit tag.block
