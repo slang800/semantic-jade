@@ -395,63 +395,33 @@ class Compiler
 	@public
 	###
 	visitAttributes: (attrs) ->
-		val = @attrs(attrs)
-		if val.inherits
-			@push "buf.push(attrs(merge({#{val.buf}}, attributes), merge(#{val.escaped}, escaped, true)))"
-		else if val.constant
-			eval "buf={#{val.buf}}"
-			@buffer runtime.attrs(buf, JSON.parse(val.escaped)), true
-		else
-			@push "buf.push(attrs({#{val.buf}}, #{val.escaped}))"
-
-	#Compile attributes
-	attrs: (attrs) ->
-		#TODO switch to coffee script attributes handeling
-		buf = []
-		classes = []
-		escaped = {}
-		constants = attrs.every((attr) ->
-			isConstant attr.val
-		)
-
-		inherits = false
-		buf.push 'terse: true' if @terse
-		for attr in attrs
-			if attr.name is 'attributes'
+		compiled_attrs = {}
+		for key of attrs
+			if attrs[key].name is 'attributes'
 				inherits = true
-				break
-
-			escaped[attr.name] = attr.escaped
-			if attr.name is 'class'
-				classes.push "#{attr.val}"
 			else
-				buf.push "'#{attr.name}':(#{attr.val})"
+				attrs[key].val = utils.interpolate attrs[key].val
+				if typeof attrs[key].val isnt 'string'
+					compiled_attrs[attrs[key].name] = attrs[key].val
+				else
+					compiled_attrs[attrs[key].name] = '#{' + "#{
+						if attrs[key].escaped
+							'escape'
+						else
+							''
+					}(#{attrs[key].val})" + '}'
 
-		if classes.length
-			classes = classes.join(' + \' \' + ')
-			buf.push "class: #{classes}"
-		buf: buf.join(', ').replace('class:', '\"class\":')
-		escaped: JSON.stringify(escaped)
-		inherits: inherits
-		constant: constants
+		if inherits
+			@push """
+			buf.push(
+				attrs(
+					merge(
+						#{JSON.stringify(compiled_attrs)},
+						attributes
+					)
+				)
+			)"""
+		else
+			@push "buf.push(attrs(#{JSON.stringify(compiled_attrs)}))"
 
 module.exports = Compiler
-
-###
-Check if expression can be evaluated to a constant
-
-@param {String} expression
-@return {Boolean}
-@private
-###
-isConstant = (val) ->
-	# Check strings/literals
-	return true if /^ *("([^"\\]*(\\.[^"\\]*)*)"|'([^'\\]*(\\.[^'\\]*)*)'|true|false|null|undefined) *$/i.test(val)
-	
-	# Check numbers
-	return true unless isNaN(Number(val))
-	
-	# Check arrays
-	if matches = /^ *\[(.*)\] *$/.exec(val)
-		return matches[1].split(',').every(isConstant)
-	false

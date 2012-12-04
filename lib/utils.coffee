@@ -24,6 +24,16 @@ exports.escape_quotes = (str) ->
  * @private
 ###
 exports.interpolate = (str) ->
+	# check for null/undefined
+	if str is null or not str? or /undefined|null/i.test(str)
+		return '\'\''
+
+	if typeof str is 'boolean' or /(true|false)/i.test(str)
+		return Boolean(str)
+
+	# check for numbers
+	return Number(str) unless isNaN(Number(str))
+
 	remaining = str
 		.replace(/\\/g, '_BSLASH_')
 		.replace(/"/g, '_DBLQUOTE_')

@@ -64,40 +64,34 @@ Render the given attributes object.
 @return {String}
 @private
 ###
-exports.attrs = (obj, escaped) ->
+exports.attrs = (obj) ->
 	buf = []
 	terse = obj.terse
 	delete obj.terse
 
-	keys = Object.keys obj
-	len = keys.length
-	if len
-		buf.push ''
-		i = 0
+	console.log obj
+	buf.push('')
 
-		while i < len
-			key = keys[i]
-			val = obj[key]
-			if typeof val is 'boolean' or val is null
-				if val
-					if terse
-						buf.push(key)
-					else
-						buf.push("#{key}=\"#{key}\"")
-			else
-				if 0 is key.indexOf('data') and 'string' isnt typeof val
-					value = JSON.stringify(val)
-				else if 'class' is key and Array.isArray(val)
-					value = utils.escape(val.join(' '))
-				else if escaped and escaped[key]
-					value = utils.escape(val)
+	for key, val of obj
+		if typeof val is 'boolean' or val is null
+			if val
+				if terse
+					buf.push(key)
 				else
-					value = val
+					buf.push("#{key}=\"#{key}\"")
+		else
+			if 0 is key.indexOf('data') and 'string' isnt typeof val
+				value = JSON.stringify(val)
+			else if 'class' is key and Array.isArray(val)
+				value = utils.escape(val.join(' '))
+			else
+				value = val
 
+			if value isnt ''
 				buf.push("#{key}=\"#{value}\"")
-			++i
 
-	buf.join " "
+	console.log buf
+	return buf.join " "
 
 ###
 Re-throw the given `err` in context to the
