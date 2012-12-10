@@ -2,13 +2,11 @@
 SRC = $(shell find lib -name "*.js" -type f)
 UGLIFY = $(shell find node_modules -name "uglifyjs" -type f)
 UGLIFY_FLAGS = --no-mangle
-REPORTER = dot
 
 all: jade.min.js runtime.min.js
 
 test:
-	@./node_modules/.bin/mocha \
-		--reporter $(REPORTER)
+	@./node_modules/.bin/mocha
 
 test-cov: lib-cov
 	JADE_COV=1 $(MAKE) test REPORTER=html-cov > coverage.html
