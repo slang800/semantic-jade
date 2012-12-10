@@ -6,7 +6,7 @@ stringify = (variable) ->
 
 
 it 'should parse attrs', ->
-	test_lexer = new Lexer('a(foo="bar" bar=\'baz\' checked)')
+	test_lexer = new Lexer('a(foo="bar", bar=\'baz\', checked)')
 	tokens = []
 	while (token = test_lexer.next()).type isnt 'eos'
 		tokens.push(token)
@@ -29,6 +29,8 @@ it 'should parse attrs', ->
 					checked: true
 				escaped:{
 					foo:true
+					bar:true
+					checked:true
 				}
 			}
 		])
