@@ -9,7 +9,7 @@ Initialize a `Attrs` node.
 ###
 class Attrs extends Node
 	constructor: ->
-		@val = []
+		@attrs = []
 
 
 	###
@@ -24,7 +24,7 @@ class Attrs extends Node
 	@api public
 	###
 	setAttribute: (name, val, escaped) ->
-		@val.push
+		@attrs.push
 			name: name
 			val: val
 			escaped: escaped
@@ -39,8 +39,8 @@ class Attrs extends Node
 	@api public
 	###
 	removeAttribute: (name) ->
-		for i in [0..@val.length]
-			delete @val[i]  if @val[i] and @val[i].name is name
+		for i in [0..@attrs.length]
+			delete @attrs[i]  if @attrs[i] and @attrs[i].name is name
 
 
 	###
@@ -51,7 +51,7 @@ class Attrs extends Node
 	@api public
 	###
 	getAttribute: (name) ->
-		for i in [0..@val.length]
-			return @val[i].val  if @val[i] and @val[i].name is name
+		for i in [0..@attrs.length]
+			return @attrs[i].val  if @attrs[i] and @attrs[i].name is name
 
 module.exports = Attrs
