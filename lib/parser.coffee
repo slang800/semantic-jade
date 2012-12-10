@@ -418,8 +418,6 @@ class Parser
 				if tok.selfClosing then tag.selfClosing = true
 
 				for key, value of tok.val['attrs']
-					console.log '\nkey:: ' + key
-					console.log 'val: ' + value
 					tag.setAttribute(key, value, tok.val['escape'][key])
 			else
 				break
