@@ -41,7 +41,7 @@ class Parser
 	@api private
 	###
 	advance: ->
-		@lexer.advance()
+		@lexer.next()
 
 	
 	###
@@ -401,41 +401,27 @@ class Parser
 	tag (attrs | class | id)* (text | code | ':')? newline* block?
 	###
 	parseTag: ->
-		#TODO: refactor due to removal of AST filters & filters
-		i = 2
-		++i if 'attrs' is @lookahead(i).type
 		tok = @advance()
 		tag = new nodes.Tag(tok.val)
 		tag.selfClosing = tok.selfClosing
-		@tag tag
-
-	
-	###
-	Parse tag.
-	###
-	tag: (tag) ->
 		tag.line = @line()
 		
 		# (attrs | class | id)*
 		loop
 			if @peek().type is 'class' or @peek().type is 'id'
 				tok = @advance()
-				tag.setAttribute(tok.type, "'#{tok.val}'")
+				tag.setAttribute(tok.type, tok.val)
 			else if @peek().type is 'attrs'
 				tok = @advance()
-				obj = tok.attrs
-				escaped = tok.escaped
-				names = Object.keys(obj)
-
 				if tok.selfClosing then tag.selfClosing = true
 
-				for name in names
-					tag.setAttribute(name, obj[name], escaped[name])
+				for key, value of tok.val['attrs']
+					tag.setAttribute(key, value, tok.val['escape'][key])
 			else
 				break
 
 		# check immediate '.'
-		if "." is @peek().val
+		if '.' is @peek().val
 			tag.textOnly = true
 			@advance()
 		
