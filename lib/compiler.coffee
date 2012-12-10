@@ -393,20 +393,16 @@ class Compiler
 	###
 	visitAttributes: (attrs) ->
 		compiled_attrs = {}
-		for key of attrs
-			if attrs[key].name is 'attributes'
+		for key, attr of attrs
+			if attr.name is 'attributes'
 				inherits = true
 			else
-				attrs[key].val = utils.interpolate attrs[key].val
-				if typeof attrs[key].val isnt 'string'
-					compiled_attrs[attrs[key].name] = attrs[key].val
-				else
-					compiled_attrs[attrs[key].name] = '#{' + "#{
-						if attrs[key].escaped
-							'escape'
-						else
-							''
-					}(#{attrs[key].val})" + '}'
+				#attr.val = utils.interpolate attr.val
+				compiled_attrs[attr.name] =
+					if attr.escaped and typeof attr.val isnt 'bool'
+						'#{' + "escape(#{attr.val})" + '}'
+					else
+						attr.val
 
 		if inherits
 			@push """
