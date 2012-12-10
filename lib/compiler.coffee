@@ -370,7 +370,8 @@ class Compiler
 			val = code.val.trimLeft() # TODO: what does this line do?
 			@push "__val__ = #{val}" # so it is only evaluated once
 			val = 'if __val__ is null or not __val__? then \'\' else __val__'
-			val = "escape(#{val})" if code.escape
+			if code.escape
+				val = "escape(#{val})"
 			@push "buf.push(#{val})"
 		else
 			@push code.val
