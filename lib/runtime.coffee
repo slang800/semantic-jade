@@ -69,7 +69,6 @@ exports.attrs = (obj) ->
 	terse = obj.terse
 	delete obj.terse
 
-	console.log obj
 	buf.push('')
 
 	for key, val of obj
@@ -93,7 +92,6 @@ exports.attrs = (obj) ->
 			if value isnt ''
 				buf.push("#{key}=\"#{value}\"")
 
-	console.log buf
 	return buf.join " "
 
 ###
