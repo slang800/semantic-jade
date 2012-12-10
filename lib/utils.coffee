@@ -106,13 +106,17 @@ exports.match_delimiters = match_delimiters = (str, start_delimiter='(', end_del
 	startpos = -1
 	while str[++startpos] is ' '
 		continue # consume whitespace at start of string
-	if (start_delimiter isnt '') and (str[startpos] isnt start_delimiter)
-		return null
+	if str[startpos] isnt start_delimiter
+		if start_delimiter isnt ''
+			return null
+		endpos = startpos - 1 # pass over the first char too
+	else
+		endpos = startpos
+
 	if typeof end_delimiters is 'string'
 		# end_delimiters can be an array of possible delimeters or a string.
 		# make into a array if only a string is given
 		end_delimiters = [end_delimiters]
-	endpos = startpos - 1 # pass over the first char too
 	ctr = 1
 	chr = ''
 	quot = ''
@@ -127,7 +131,7 @@ exports.match_delimiters = match_delimiters = (str, start_delimiter='(', end_del
 		else if chr in ['\'', '\"', '[', ']', '{', '}']
 			if chr is quot or (quot is '[' and chr is ']') or (quot is '{' and chr is '}')
 				quot = ''
-			else if quot is ''
+			else if quot is '' and chr not in [']', '}']
 				quot = chr
 			#ignore if it's already inside quotes
 		else if chr is start_delimiter
