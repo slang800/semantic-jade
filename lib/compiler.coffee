@@ -289,18 +289,20 @@ class Compiler
 		name = tag.name
 		name = '#{' + name + '}' if tag.buffer
 		unless @hasCompiledTag
-			@visitDoctype() if not @hasCompiledDoctype and 'html' is name
-			@hasCompiledTag = true
+			if not @hasCompiledDoctype and name is 'html'
+				@visitDoctype()
+				@hasCompiledTag = true
 		
 		# pretty print
 		@prettyIndent 0, true if @pp and not tag.isInline()
-		if (~selfClosing.indexOf(name) or tag.selfClosing) and not @xml
-			@buffer "<#{name}"
-			@visitAttributes tag.attrs
-			if @terse then @buffer('>') else @buffer('/>')
+		@buffer "<#{name}"
+		@visitAttributes tag.attrs
+		if not @xml and (tag.selfClosing or name in selfClosing)
+			if @terse
+				@buffer('>')
+			else
+				@buffer('/>')
 		else
-			@buffer "<#{name}"
-			@visitAttributes tag.attrs
 			@buffer '>'
 
 			@visitCode tag.code if tag.code

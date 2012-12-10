@@ -40,7 +40,7 @@ class Attrs extends Node
 	###
 	removeAttribute: (name) ->
 		for i in [0..@attrs.length]
-			delete @attrs[i]  if @attrs[i] and @attrs[i].name is name
+			delete @attrs[i] if @attrs[i] and @attrs[i].name is name
 
 
 	###
@@ -52,6 +52,6 @@ class Attrs extends Node
 	###
 	getAttribute: (name) ->
 		for i in [0..@attrs.length]
-			return @attrs[i].val  if @attrs[i] and @attrs[i].name is name
+			return @attrs[i].val if @attrs[i] and @attrs[i].name is name
 
 module.exports = Attrs

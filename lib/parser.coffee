@@ -410,7 +410,7 @@ class Parser
 	# (attrs | class | id)*
 	attrs: (tag) ->
 		loop
-			if @peek().type is 'class' or @peek().type is 'id'
+			if @peek().type in ['class', 'id']
 				tok = @advance()
 				tag.setAttribute(tok.type, "\'#{tok.val}\'")
 			else if @peek().type is 'attrs'
