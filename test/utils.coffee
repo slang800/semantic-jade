@@ -2,7 +2,7 @@ utils = require '../lib/utils'
 
 #shortcut
 stringify = (variable) ->
-	JSON.stringify(variable, null, '    ')
+	JSON.stringify(variable, null, '\t')
 
 describe 'utils.match_delimiters()', ->
 	it 'should handle matching brackets', ->

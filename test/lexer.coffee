@@ -2,7 +2,7 @@ Lexer = require '../lib/lexer'
 
 #shortcut
 stringify = (variable) ->
-	JSON.stringify(variable, null, '    ')
+	JSON.stringify(variable, null, '\t')
 
 tokenize = (str) ->
 	test_lexer = new Lexer(str)
