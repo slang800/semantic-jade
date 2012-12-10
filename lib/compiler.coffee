@@ -393,7 +393,6 @@ class Compiler
 	###
 	visitAttributes: (raw_attrs) ->
 		compiled_attrs = ''
-		console.log JSON.stringify(raw_attrs)
 		for attr in raw_attrs
 			if attr.name is 'attributes'
 				inherits = true
