@@ -73,3 +73,24 @@ describe 'Lexer.attrs()', ->
 					more_data: true
 			)
 		)
+
+describe 'Lexer', ->
+	it 'should tokenize shorthand ids', ->
+
+		stringify(tokenize('''
+			a#an_ID
+			#another-id
+			p#MoreID()
+		''')) .should.equal(
+			stringify([
+				{type: "tag", line: 1, "val": "a", "selfClosing": false}
+				{type: "id", line: 1, val: "an_ID"}
+				{type: "newline", line: 2}
+				{type: "id", line: 2, val: "another-id"}
+				{type: "newline", line: 3}
+				{type: "tag", line: 3, val: "p", selfClosing: false}
+				{type: "id", line: 3, val: "MoreID"}
+			])
+		)
+
+

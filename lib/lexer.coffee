@@ -239,6 +239,11 @@ class Lexer
 			return
 		@consume matches[0].length
 		str = matches[1].trim()
+
+		if str is ''
+			#for empty attribute containers like `p()`
+			return @next()
+
 		attrs = {}
 		escape = {}
 		value = 'true'
