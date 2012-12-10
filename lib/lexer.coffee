@@ -131,9 +131,9 @@ class Lexer
 		return if @input.length
 		if @indentStack.length
 			@indentStack.shift()
-			@tok "outdent"
+			@tok 'outdent'
 		else
-			@tok "eos"
+			@tok 'eos'
 
 	
 	#Blank line
@@ -285,7 +285,6 @@ class Lexer
 		index = @indexOfDelimiters('(', ')')
 		str = @input.substr(1, index - 1)
 		tok = @tok('attrs')
-		len = str.length
 		states = ['key']
 		escapedAttr = undefined
 		key = ''
@@ -328,16 +327,20 @@ class Lexer
 							escapedAttr = '!' isnt p
 							states.push 'val'
 				when '('
-					states.push 'expr' if 'val' is state() or 'expr' is state()
+					if 'val' is state() or 'expr' is state()
+						states.push 'expr'
 					val += c
 				when ')'
-					states.pop() if 'expr' is state() or 'val' is state()
+					if 'expr' is state() or 'val' is state()
+						states.pop()
 					val += c
 				when '{'
-					states.push 'object' if 'val' is state()
+					if 'val' is state()
+						states.push 'object'
 					val += c
 				when '}'
-					states.pop() if 'object' is state()
+					if 'object' is state()
+						states.pop()
 					val += c
 				when '['
 					states.push 'array' if 'val' is state()
@@ -357,8 +360,9 @@ class Lexer
 						else
 							states.push 'string'
 							val += c
-							quote = c
+							quote = c  # keep track of quote char
 				else
+					# what does this do??
 					switch state()
 						when 'key', 'key char'
 							key += c
