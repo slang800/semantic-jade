@@ -270,12 +270,15 @@ class Lexer
 				key = matches[1]
 
 				if key[key.length - 1] is '!'
-					console.log key
-					key = key.substr(0,1) #consume `!`
-					console.log key
+					key = key.substr(0,key.length - 1) #consume `!` (unescape symbol)
+					escape_attr = false
 				state = 'value'
 
-		tok = @tok('attrs', attrs)
+		tok = @tok(
+			'attrs',
+			attrs: attrs
+			escape: escape
+		)
 		#TODO: make self-closing get detected while parsing tag
 		if '/' is @input.charAt(0)
 			@consume 1
