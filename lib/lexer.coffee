@@ -239,8 +239,11 @@ class Lexer
 			return
 		@consume matches[0].length
 		attrs = {}
+		escape = {}
 		str = matches[1].trim()
-		state = 'key'
+		value = ''
+		key = ''
+		escape_attr = true
 
 		if str[str.length - 1] not in ['\n', ',']
 			#add an end_delemeter at the end if there isn't one
@@ -252,19 +255,18 @@ class Lexer
 			matches[1] = matches[1].trim()
 
 			if matches[0][matches[0].length - 1] in [',', '\n']
-				if state is 'key'
+				if key is ''
 					# if a key is not followed by a value
 					key = matches[1]
 				else
 					# key was already specified
 					value = matches[1]
-					state = 'key'
-
 				attrs[key] = value
 				escape[key] = escape_attr
 
 				escape_attr = true # default
-				value = '' # key will be cleared anyway
+				value = ''
+				key = ''
 			else
 				# ends in a `=`. store key and wait for value
 				key = matches[1]
@@ -272,7 +274,6 @@ class Lexer
 				if key[key.length - 1] is '!'
 					key = key.substr(0,key.length - 1) #consume `!` (unescape symbol)
 					escape_attr = false
-				state = 'value'
 
 		tok = @tok(
 			'attrs',
