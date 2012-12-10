@@ -23,11 +23,11 @@ class Attrs extends Node
 	@return {Tag} for chaining
 	@api public
 	###
-	setAttribute: (name, val, escaped) ->
+	setAttribute: (name, val, escape) ->
 		@attrs.push
 			name: name
 			val: val
-			escaped: escaped
+			escape: escape
 
 		this
 
