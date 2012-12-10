@@ -1,6 +1,5 @@
 utils = require './utils'
 
-
 class Lexer
 	###*
 	 * Initialize `Lexer` with the given `str`
@@ -40,7 +39,6 @@ class Lexer
 	consume: (len) ->
 		@input = @input.substr(len)
 
-
 	###*
 	 * Scan with the given `regexp`. Pass the matches from the regular
 			 expression to the `callback`. The `callback` should return a tok
@@ -55,7 +53,6 @@ class Lexer
 			@consume captures[0].length
 			return callback(captures)
 		return null
-
 
 	###
 	Scan for `type` with the given `regexp`.
@@ -73,7 +70,6 @@ class Lexer
 				@tok type, captures[1]
 		)
 
-
 	###
 	Defer the given `tok`.
 	
@@ -83,9 +79,11 @@ class Lexer
 	defer: (tok) ->
 		@deferredTokens.push tok
 
+	deferred: ->
+		@deferredTokens.length and @deferredTokens.shift()
 
 	###
-	Lookahead `n` tokens.
+	Lookahead `n` tokens and stash results
 	
 	@param {Number} n
 	@return {Object}
@@ -96,14 +94,8 @@ class Lexer
 		@stash.push @next() while fetch-- > 0
 		@stash[--n]
 
-
 	stashed: ->
 		@stash.length and @stash.shift()
-
-
-	deferred: ->
-		@deferredTokens.length and @deferredTokens.shift()
-
 	
 	#end-of-source
 	eos: ->
@@ -114,7 +106,6 @@ class Lexer
 		else
 			@tok 'eos'
 
-	
 	#Blank line
 	blank: ->
 		if captures = /^\n *\n/.exec(@input)
@@ -124,7 +115,6 @@ class Lexer
 			return @tok("text", '') if @pipeless
 			@next()
 
-
 	comment: ->
 		@capture(
 			/^ *\/\/(-)?([^\n]*)/,
@@ -133,7 +123,6 @@ class Lexer
 				tok.buffer = "-" isnt captures[1]
 				tok
 		)
-
 
 	tag: ->
 		@capture(
@@ -151,22 +140,17 @@ class Lexer
 				tok
 		)
 
-
 	doctype: ->
 		@scan /^(?:!!!|doctype) *([^\n]+)?/, "doctype"
-
 
 	id: ->
 		@scan /^#([\w-]+)/, "id"
 
-
 	className: ->
 		@scan /^\.([\w-]+)/, "class"
 
-
 	text: ->
 		@scan /^(?:\| ?| ?)?([^\n]+)/, "text"
-
 
 	extends: ->
 		@scan /^extends? +([^\n]+)/, "extends"
@@ -197,7 +181,6 @@ class Lexer
 				tok
 		)
 
-
 	block: ->
 		@capture(
 			/^block\b *(?:(prepend|append) +)?([^\n]*)/,
@@ -209,14 +192,11 @@ class Lexer
 				tok
 		)
 
-
 	yield: ->
 		@scan /^yield */, "yield"
 
-
 	include: ->
 		@scan /^include +([^\n]+)/, "include"
-
 
 	#Call mixin
 	call: ->
@@ -232,7 +212,6 @@ class Lexer
 				tok
 		)
 
-
 	mixin: ->
 		@capture(
 			/^mixin +([\-\w]+)/,
@@ -243,7 +222,6 @@ class Lexer
 					tok.args = captures[1]
 				tok
 		)
-
 
 	code: ->
 		@capture(
@@ -256,112 +234,53 @@ class Lexer
 				tok
 		)
 
-
 	attrs: ->
-		unless '(' is @input.charAt(0)
+		if (matches = utils.match_delimiters(@input)) is null
 			return
-
-		matches = utils.match_delimiters(@input)
 		@consume matches[0].length
-		str = matches[1]
-		tok = @tok('attrs')
-		states = ['key']
-		escapedAttr = undefined
-		key = ''
-		val = ''
-		quote = undefined
-		c = undefined
-		p = undefined
-		tok.attrs = {}
-		tok.escaped = {}
+		attrs = {}
+		str = matches[1].trim()
+		state = 'key'
 
-		state = ->
-			states[states.length - 1]
+		if str[str.length - 1] not in ['\n', ',']
+			#add an end_delemeter at the end if there isn't one
+			str += ','
 
+		while str isnt ''
+			matches = utils.match_delimiters(str, '', [',', '\n', '='])
+			str = str.substr(matches[0].length).trim() #consume
+			matches[1] = matches[1].trim()
 
-		parse = (c) ->
-			real = c
-
-			switch c
-				when ',', '\n'
-					switch state()
-						when 'expr', 'array', 'string', 'object'
-							val += c
-						else
-							states.push 'key'
-							val = val.trim()
-							key = key.trim()
-							return if '' is key
-							# what does below line do?
-							key = key.replace(/^['"]|['"]$/g, '').replace('!', '')
-							tok.escaped[key] = escapedAttr
-							tok.attrs[key] = (if '' is val then true else val)
-							key = val = ''
-				when '='
-					switch state()
-						when 'key char'
-							key += real
-						when 'val', 'expr', 'array', 'string', 'object'
-							val += real
-						else
-							escapedAttr = '!' isnt p
-							states.push 'val'
-				when '('
-					if 'val' is state() or 'expr' is state()
-						states.push 'expr'
-					val += c
-				when ')'
-					if 'expr' is state() or 'val' is state()
-						states.pop()
-					val += c
-				when '{'
-					if 'val' is state()
-						states.push 'object'
-					val += c
-				when '}'
-					if 'object' is state()
-						states.pop()
-					val += c
-				when '['
-					states.push 'array' if 'val' is state()
-					val += c
-				when ']'
-					states.pop() if 'array' is state()
-					val += c
-				when '\"', '\''
-					switch state()
-						when 'key'
-							states.push 'key char'
-						when 'key char'
-							states.pop()
-						when 'string'
-							states.pop() if c is quote
-							val += c
-						else
-							states.push 'string'
-							val += c
-							quote = c # keep track of quote char
+			if matches[0][matches[0].length - 1] in [',', '\n']
+				if state is 'key'
+					# if a key is not followed by a value
+					key = matches[1]
 				else
-					# what does this do??
-					unless c is ''
-						switch state()
-							when 'key', 'key char'
-								key += c
-							else
-								val += c
-			p = c
+					# key was already specified
+					value = matches[1]
+					state = 'key'
 
+				attrs[key] = value
+				escape[key] = escape_attr
 
-		for char in str.split ''
-			parse char
+				escape_attr = true # default
+				value = '' # key will be cleared anyway
+			else
+				# ends in a `=`. store key and wait for value
+				key = matches[1]
 
-		parse ','
+				if key[key.length - 1] is '!'
+					console.log key
+					key = key.substr(0,1) #consume `!`
+					console.log key
+				state = 'value'
 
+		tok = @tok('attrs', attrs)
+		#TODO: make self-closing get detected while parsing tag
 		if '/' is @input.charAt(0)
 			@consume 1
-			tok.selfClosing = true
-		tok
-
+			tok.selfClosing = true # moved over to the tag during parsing
+		return tok
 
 	#Indent | Outdent | Newline
 	indent: ->
@@ -409,7 +328,6 @@ class Lexer
 				tok = @tok('newline')
 			tok
 
-
 	#Pipe-less text consumed only when `pipeless` is true
 	pipelessText: ->
 		if @pipeless
@@ -420,22 +338,9 @@ class Lexer
 			@consume str.length
 			@tok "text", str
 
-
 	#':'
 	colon: ->
 		@scan /^: */, ':'
-
-	
-	###
-	Return the next token object, or those
-	previously stashed by lookahead.
-	
-	@return {Object}
-	@private
-	###
-	advance: ->
-		@stashed() or @next()
-
 
 	###
 	Return the next token object.
@@ -445,6 +350,7 @@ class Lexer
 	###
 	next: ->
 		@deferred() or
+		@stashed() or
 		@blank() or
 		@eos() or
 		@pipelessText() or
@@ -466,6 +372,5 @@ class Lexer
 		@comment() or
 		@colon() or
 		@text()
-
 
 exports = module.exports = Lexer
