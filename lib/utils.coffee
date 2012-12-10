@@ -107,7 +107,6 @@ exports.match_delimiters = match_delimiters = (str, start_delimiter='(', end_del
 	while str[++startpos] is ' '
 		continue # consume whitespace at start of string
 	if (start_delimiter isnt '') and (str[startpos] isnt start_delimiter)
-		console.log start_delimiter
 		return null
 	if typeof end_delimiters is 'string'
 		# end_delimiters can be an array of possible delimeters or a string.
