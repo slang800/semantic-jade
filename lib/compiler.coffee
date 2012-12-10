@@ -323,10 +323,6 @@ class Compiler
 	###
 	visitText: (text) ->
 		text = text.val
-		#text = utils.interpolate text
-
-		#NOTE: escape and interpolate probably can't be mixed together...
-		#maybe use escape at run-time?
 		if @escape then text = '#{' + "escape(\"#{text}\")" + '}'
 		@buffer text, escape = false
 
@@ -401,7 +397,6 @@ class Compiler
 			if attr.name is 'attributes'
 				inherits = true
 			else
-				#attr.val = utils.interpolate attr.val
 				if attr.escaped and typeof attr.escape isnt 'bool'
 					attr.val = '#{' + "escape(#{attr.val})" + '}'
 
