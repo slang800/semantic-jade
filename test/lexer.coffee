@@ -19,8 +19,8 @@ describe 'Lexer.attrs()', ->
 			tokenize('''
 			a(
 				foo="bar"
-				bar=\'baz\'
-				interpolate=\'#{nope}\'
+				bar='baz'
+				interpolate='#{nope}'
 			)
 			''')[1].val
 		).should.equal(
@@ -47,7 +47,7 @@ describe 'Lexer.attrs()', ->
 		).should.equal(
 			stringify(
 				attrs:
-					checked: ''
+					checked: 'true'
 					blah: 'true'
 				escape:
 					checked: true

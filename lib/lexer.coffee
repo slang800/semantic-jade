@@ -241,7 +241,7 @@ class Lexer
 		str = matches[1].trim()
 		attrs = {}
 		escape = {}
-		value = ''
+		value = 'true'
 		key = ''
 		escape_attr = true
 
@@ -265,7 +265,7 @@ class Lexer
 				escape[key] = escape_attr
 
 				escape_attr = true # default
-				value = ''
+				value = 'true'
 				key = ''
 			else
 				# ends in a `=`. store key and wait for value
@@ -274,7 +274,6 @@ class Lexer
 				if key[key.length - 1] is '!'
 					key = key.substr(0,key.length - 1) #consume `!` (unescape symbol)
 					escape_attr = false
-
 		tok = @tok(
 			'attrs',
 			attrs: attrs
