@@ -59,15 +59,15 @@ describe 'Lexer.attrs()', ->
 		stringify(
 			tokenize('''
 			a(
-				data={semantic: \'jade\'}
-				more_data=[semantic: \'jade\']
+				data={semantic: 'jade'}
+				more_data=['semantic', 'jade']
 			)
 			''')[1].val
 		).should.equal(
 			stringify(
 				attrs:
 					data: '{semantic: \'jade\'}'
-					more_data: '[semantic: \'jade\']'
+					more_data: '[\'semantic\', \'jade\']'
 				escape:
 					data: true
 					more_data: true
