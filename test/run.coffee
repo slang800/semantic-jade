@@ -11,8 +11,7 @@ cases = fs.readdirSync("test/cases").filter(
 		file.replace ".jade", ""
 )
 cases.forEach (test) ->
-	name = test.replace(/[-.]/g, " ")
-	it name, ->
+	it test, ->
 		path = "test/cases/" + test + ".jade"
 		str = fs.readFileSync(path, "utf8")
 		html = fs
