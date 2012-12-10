@@ -391,30 +391,32 @@ class Compiler
 	@param {Array} attrs
 	@public
 	###
-	visitAttributes: (attrs) ->
-		compiled_attrs = {}
-		for key, attr of attrs
+	visitAttributes: (raw_attrs) ->
+		compiled_attrs = ''
+		console.log JSON.stringify(raw_attrs)
+		for attr in raw_attrs
 			if attr.name is 'attributes'
 				inherits = true
 			else
 				#attr.val = utils.interpolate attr.val
-				compiled_attrs[attr.name] =
-					if attr.escaped and typeof attr.val isnt 'bool'
-						'#{' + "escape(#{attr.val})" + '}'
-					else
-						attr.val
+				if attr.escaped and typeof attr.escape isnt 'bool'
+					attr.val = '#{' + "escape(#{attr.val})" + '}'
+
+			compiled_attrs += "#{attr.name}:#{attr.val},"
+
+		compiled_attrs = "{#{compiled_attrs}}"
 
 		if inherits
 			@push """
 			buf.push(
 				attrs(
 					merge(
-						#{JSON.stringify(compiled_attrs)},
+						#{compiled_attrs},
 						attributes
 					)
 				)
 			)"""
 		else
-			@push "buf.push(attrs(#{JSON.stringify(compiled_attrs)}))"
+			@push "buf.push(attrs(#{compiled_attrs}))"
 
 module.exports = Compiler
