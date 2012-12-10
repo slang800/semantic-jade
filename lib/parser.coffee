@@ -333,7 +333,7 @@ class Parser
 		name = tok.val
 		args = tok.args
 		mixin = new nodes.Mixin(name, args, new nodes.Block, true)
-		@tag mixin
+		@attrs mixin
 		mixin.block = null if mixin.block.isEmpty()
 		mixin
 
@@ -405,17 +405,21 @@ class Parser
 		tag = new nodes.Tag(tok.val)
 		tag.selfClosing = tok.selfClosing
 		tag.line = @line()
-		
-		# (attrs | class | id)*
+		@attrs tag
+
+	# (attrs | class | id)*
+	attrs: (tag) ->
 		loop
 			if @peek().type is 'class' or @peek().type is 'id'
 				tok = @advance()
-				tag.setAttribute(tok.type, tok.val)
+				tag.setAttribute(tok.type, "\'#{tok.val}\'")
 			else if @peek().type is 'attrs'
 				tok = @advance()
 				if tok.selfClosing then tag.selfClosing = true
 
 				for key, value of tok.val['attrs']
+					console.log '\nkey:: ' + key
+					console.log 'val: ' + value
 					tag.setAttribute(key, value, tok.val['escape'][key])
 			else
 				break
@@ -453,7 +457,7 @@ class Parser
 						tag.block.push node
 				else
 					tag.block = block
-		tag
+		return tag
 
 
 module.exports = Parser
