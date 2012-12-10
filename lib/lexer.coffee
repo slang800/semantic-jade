@@ -96,27 +96,6 @@ class Lexer
 		@stash.push @next() while fetch-- > 0
 		@stash[--n]
 
-	
-	###
-	Return the indexOf `start` / `end` delimiters.
-	
-	@param {String} start
-	@param {String} end
-	@return {Number}
-	@private
-	###
-	indexOfDelimiters: (start, end) ->
-		str = @input
-		nstart = 0
-		nend = 0
-
-		for char, i in str.split ''
-			if start is char
-				++nstart
-			else if end is char
-				if ++nend is nstart
-					return i
-		return 0
 
 	stashed: ->
 		@stash.length and @stash.shift()
@@ -282,8 +261,9 @@ class Lexer
 		unless '(' is @input.charAt(0)
 			return
 
-		index = @indexOfDelimiters('(', ')')
-		str = @input.substr(1, index - 1)
+		matches = utils.match_delimiters(@input)
+		@consume matches[0].length
+		str = matches[1]
 		tok = @tok('attrs')
 		states = ['key']
 		escapedAttr = undefined
@@ -292,7 +272,6 @@ class Lexer
 		quote = undefined
 		c = undefined
 		p = undefined
-		@consume index + 1
 		tok.attrs = {}
 		tok.escaped = {}
 
@@ -353,10 +332,8 @@ class Lexer
 					switch state()
 						when 'key'
 							states.push 'key char'
-							#key += c
 						when 'key char'
 							states.pop()
-							#key += c
 						when 'string'
 							states.pop() if c is quote
 							val += c
