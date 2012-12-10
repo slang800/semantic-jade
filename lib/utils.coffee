@@ -90,20 +90,30 @@ exports.merge = (a, b) ->
 
 ###*
  * Match everything in parentheses.
- * We do not include matched delimiters (like "()" or "{}") or delimiters
-   contained in quotation marks "(". We also ignore newlines. Otherwise,
-   this is similar to using /\((.*)\)/.exec()
- * @param {String} input
+ * We do not include matched delimiters like `()` or `{}` (depending on the
+   specified delimeter) or delimiters contained in quotation marks `"("`. We
+   also ignore newlines. Otherwise, this is similar to using
+   `/\((.*)\)/.exec()`
+ * This can also be called with start_delimeter as null to get the next
+   occurance of an end_delimiter while excluding the cases mentioned above
+ * @param {String} str
+ * @param {String} start_delimiter
+ * @param {String, Array} end_delimiters
  * @return {Array} similar to the output of a regex
  * @private
 ###
-exports.match_delimiters = match_delimiters = (str, start_delimiter='(', end_delimiter= ')') ->
+exports.match_delimiters = match_delimiters = (str, start_delimiter='(', end_delimiters= ')') ->
 	startpos = -1
 	while str[++startpos] is ' '
 		continue # consume whitespace at start of string
-	if str[startpos] isnt start_delimiter
+	if (start_delimiter isnt '') and (str[startpos] isnt start_delimiter)
+		console.log start_delimiter
 		return null
-	endpos = startpos
+	if typeof end_delimiters is 'string'
+		# end_delimiters can be an array of possible delimeters or a string.
+		# make into a array if only a string is given
+		end_delimiters = [end_delimiters]
+	endpos = startpos - 1 # pass over the first char too
 	ctr = 1
 	chr = ''
 	quot = ''
@@ -113,20 +123,21 @@ exports.match_delimiters = match_delimiters = (str, start_delimiter='(', end_del
 		chr = str[++endpos]
 		if skip
 			skip = false
-			continue
-		switch chr
-			when '\\'
-				skip = true
-			when '\'', '\"'
-				if chr is quot
-					quot = ''
-				else quot = chr if '' is quot
-			when start_delimiter
-				++ctr unless quot
-			when end_delimiter
-				--ctr unless quot
+		else if chr is '\\'
+			skip = true
+		else if chr in ['\'', '\"', '[', ']', '{', '}']
+			if chr is quot or (quot is '[' and chr is ']') or (quot is '{' and chr is '}')
+				quot = ''
+			else if quot is ''
+				quot = chr
+			#ignore if it's already inside quotes
+		else if chr is start_delimiter
+			++ctr unless quot
+		else if chr in end_delimiters
+			--ctr unless quot
 
-	[str.substring(0, endpos + 1), str.substring(startpos + 1, endpos)]
+	#chr will be the end_delimiter that ended the string
+	[str.substring(0, endpos + chr.length), str.substring(startpos + start_delimiter.length, endpos)]
 
 ###
 Escape the given string of `html`.
