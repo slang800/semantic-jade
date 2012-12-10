@@ -313,6 +313,7 @@ class Lexer
 							val = val.trim()
 							key = key.trim()
 							return if '' is key
+							# what does below line do?
 							key = key.replace(/^['"]|['"]$/g, '').replace('!', '')
 							tok.escaped[key] = escapedAttr
 							tok.attrs[key] = (if '' is val then true else val)
@@ -352,22 +353,25 @@ class Lexer
 					switch state()
 						when 'key'
 							states.push 'key char'
+							#key += c
 						when 'key char'
 							states.pop()
+							#key += c
 						when 'string'
 							states.pop() if c is quote
 							val += c
 						else
 							states.push 'string'
 							val += c
-							quote = c  # keep track of quote char
+							quote = c # keep track of quote char
 				else
 					# what does this do??
-					switch state()
-						when 'key', 'key char'
-							key += c
-						else
-							val += c
+					unless c is ''
+						switch state()
+							when 'key', 'key char'
+								key += c
+							else
+								val += c
 			p = c
 
 
