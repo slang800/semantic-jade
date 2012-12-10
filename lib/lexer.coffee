@@ -238,9 +238,9 @@ class Lexer
 		if (matches = utils.match_delimiters(@input)) is null
 			return
 		@consume matches[0].length
+		str = matches[1].trim()
 		attrs = {}
 		escape = {}
-		str = matches[1].trim()
 		value = ''
 		key = ''
 		escape_attr = true
