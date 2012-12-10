@@ -322,12 +322,13 @@ class Compiler
 	@public
 	###
 	visitText: (text) ->
-		text = utils.interpolate text.val
+		text = text.val
+		#text = utils.interpolate text
 
 		#NOTE: escape and interpolate probably can't be mixed together...
 		#maybe use escape at run-time?
 		if @escape then text = '#{' + "escape(\"#{text}\")" + '}'
-		@buffer text, escape=false
+		@buffer text, escape = false
 
 	###
 	Visit a `comment`, only buffering when the buffer flag is set.
@@ -392,6 +393,9 @@ class Compiler
 	@public
 	###
 	visitAttributes: (raw_attrs) ->
+		if raw_attrs.length is 0
+			return
+
 		compiled_attrs = ''
 		for attr in raw_attrs
 			if attr.name is 'attributes'
