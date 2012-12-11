@@ -9,6 +9,18 @@ exports.indent = (str, indents = 1) ->
 	return indentation + str.replace /\n/g, '\n' + indentation
 
 ###*
+ * remove whitespace from left of str
+ * NOTE: not used right now
+ * @param {String} str
+ * @return {String}
+###
+exports.trim_left = trim_left = (str) ->
+	pos = -1
+	while str[++pos] is ' '
+		continue # consume whitespace at start of string
+	return str.substring(pos)
+
+###*
  * Escape double quotes in `str`.
  * @param {String} str
  * @return {String}
@@ -104,11 +116,10 @@ exports.match_delimiters = match_delimiters = (str, start_delimiter='(', end_del
 	startpos = -1
 	while str[++startpos] is ' '
 		continue # consume whitespace at start of string
-	if str[startpos] isnt start_delimiter
-		if start_delimiter isnt ''
-			return null
-		endpos = startpos - 1 # pass over the first char too
+	if str[startpos...startpos + start_delimiter.length] isnt start_delimiter
+		return null
 	else
+		startpos += start_delimiter.length - 1
 		endpos = startpos
 
 	if typeof end_delimiters is 'string'
@@ -116,16 +127,12 @@ exports.match_delimiters = match_delimiters = (str, start_delimiter='(', end_del
 		# make into a array if only a string is given
 		end_delimiters = [end_delimiters]
 	ctr = 1
-	chr = ''
-	quot = ''
+	chr = quot = ''
 	len = str.length - 1
-	skip = false
 	while (ctr > 0) and (endpos < len)
 		chr = str[++endpos]
-		if skip
-			skip = false
-		else if chr is '\\'
-			skip = true
+		if chr is '\\'
+			++endpos # skip next char
 		else if chr in ['\'', '\"', '[', ']', '{', '}']
 			if chr is quot or (quot is '[' and chr is ']') or (quot is '{' and chr is '}')
 				quot = ''
@@ -136,9 +143,13 @@ exports.match_delimiters = match_delimiters = (str, start_delimiter='(', end_del
 			++ctr unless quot
 		else if chr in end_delimiters
 			--ctr unless quot
-
+	
+	if startpos < 0 then startpos = 0
 	#chr will be the end_delimiter that ended the string
-	[str.substring(0, endpos + chr.length), str.substring(startpos + start_delimiter.length, endpos)]
+	[
+		str[...endpos + chr.length]
+		str[startpos + start_delimiter.length...endpos]
+	]
 
 ###
 Escape the given string of `html`.
