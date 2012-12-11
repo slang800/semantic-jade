@@ -43,6 +43,8 @@ exports.interpolate = (str) ->
 	processed = ''
 
 	loop
+		# TODO: refactor to use match_delimiters for all delimiter finding (remove `remaining.indexOf(flag + '{')`)
+		# make match_delimiters able to search for start_delimiter beyond first characters of string... maybe break function into smaller pieces?
 		for flag in ['#','!']
 			if start_pos = remaining.indexOf(flag + '{') + 1 then break
 			# `+ 1` accounts for the length of the flag
