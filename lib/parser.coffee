@@ -149,34 +149,34 @@ class Parser
 	###
 	parseExpr: ->
 		switch @peek().type
-			when "tag"
+			when 'tag'
 				@parseTag()
-			when "mixin"
+			when 'mixin'
 				@parseMixin()
-			when "block"
+			when 'block'
 				@parseBlock()
-			when "extends"
+			when 'extends'
 				@parseExtends()
-			when "include"
+			when 'include'
 				@parseInclude()
-			when "doctype"
+			when 'doctype'
 				@parseDoctype()
-			when "comment"
+			when 'comment'
 				@parseComment()
 			when 'text'
 				@parseText()
 			when 'code'
 				@parseCode()
-			when "call"
+			when 'call'
 				@parseCall()
-			when "yield"
+			when 'yield'
 				@advance()
 				block = new nodes.Block
 				block.yield_tok = true
 				block
-			when "id", "class"
+			when 'id', 'class'
 				tok = @advance()
-				@lexer.defer @lexer.tok("tag", "div")
+				@lexer.defer @lexer.tok('tag', 'div')
 				@lexer.defer tok
 				@parseExpr()
 			else
@@ -409,18 +409,21 @@ class Parser
 
 	# (attrs | class | id)*
 	attrs: (tag) ->
-		loop
-			if @peek().type in ['class', 'id']
-				tok = @advance()
-				tag.setAttribute(tok.type, "\'#{tok.val}\'")
-			else if @peek().type is 'attrs'
-				tok = @advance()
-				if tok.selfClosing then tag.selfClosing = true
+		continue_loop = true
+		while continue_loop
+			switch @peek().type
+				when 'class', 'id'
+					tok = @advance()
+					tag.setAttribute(tok.type, "\'#{tok.val}\'")
+				when 'attrs'
+					tok = @advance()
+					if tok.selfClosing then tag.selfClosing = true
 
-				for key, value of tok.val['attrs']
-					tag.setAttribute(key, value, tok.val['escape'][key])
-			else
-				break
+					for key, value of tok.val['attrs']
+						tag.setAttribute(key, value, tok.val['escape'][key])
+				else
+					#break doesn't work since it's in a switch
+					continue_loop = false
 
 		# check immediate '.'
 		if '.' is @peek().val
