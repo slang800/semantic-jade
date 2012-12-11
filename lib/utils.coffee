@@ -41,9 +41,6 @@ exports.interpolate = (str) ->
 	if str is null or not str?
 		return '\'\''
 
-	# check for numbers
-	return Number(str) unless isNaN(Number(str))
-
 	remaining = str
 		.replace(/\\/g, '_BSLASH_')
 		.replace(/"/g, '_DBLQUOTE_')
