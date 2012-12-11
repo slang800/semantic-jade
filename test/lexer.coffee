@@ -81,9 +81,9 @@ describe 'Lexer', ->
 			a#an_ID
 			#another-id
 			p#MoreID()
-		''')) .should.equal(
+		''')).should.equal(
 			stringify([
-				{type: "tag", line: 1, "val": "a", "selfClosing": false}
+				{type: "tag", line: 1, val: "a", selfClosing: false}
 				{type: "id", line: 1, val: "an_ID"}
 				{type: "newline", line: 2}
 				{type: "id", line: 2, val: "another-id"}
@@ -93,4 +93,20 @@ describe 'Lexer', ->
 			])
 		)
 
+	it 'should tokenize shorthand classes', ->
 
+		stringify(tokenize('''
+			a.a_class
+			.another-class
+			p.MoreClass()
+		''')).should.equal(
+			stringify([
+				{type: "tag", line: 1, val: "a", selfClosing: false}
+				{type: "class", line: 1, val: "a_class"}
+				{type: "newline", line: 2}
+				{type: "class", line: 2, val: "another-class"}
+				{type: "newline", line: 3}
+				{type: "tag", line: 3, val: "p", selfClosing: false}
+				{type: "class", line: 3, val: "MoreClass"}
+			])
+		)
