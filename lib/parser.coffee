@@ -1,8 +1,6 @@
-#Module dependencies
 Lexer = require("./lexer")
 nodes = require("./nodes")
 utils = require("./utils")
-
 
 class Parser
 	###
@@ -22,7 +20,6 @@ class Parser
 		@options = options
 		@contexts = [this]
 
-
 	###
 	Push `parser` onto the context stack,
 	or pop and return a `Parser`.
@@ -33,7 +30,6 @@ class Parser
 		else
 			@contexts.pop()
 
-	
 	###
 	Return the next token object.
 	
@@ -43,7 +39,6 @@ class Parser
 	advance: ->
 		@lexer.next()
 
-	
 	###
 	Skip `n` tokens.
 	
@@ -53,7 +48,6 @@ class Parser
 	skip: (n) ->
 		@advance() while n--
 
-	
 	###
 	Single token lookahead.
 	
@@ -63,7 +57,6 @@ class Parser
 	peek: ->
 		@lookahead 1
 
-	
 	###
 	Return lexer lineno.
 	
@@ -73,7 +66,6 @@ class Parser
 	line: ->
 		@lexer.lineno
 
-	
 	###
 	`n` token lookahead.
 	
@@ -84,7 +76,6 @@ class Parser
 	lookahead: (n) ->
 		@lexer.lookahead n
 
-	
 	###
 	Parse input returning a string of js for evaluation.
 	
@@ -110,7 +101,6 @@ class Parser
 			return ast
 		block
 
-	
 	###
 	Expect the given type, or throw an exception.
 	
@@ -123,7 +113,6 @@ class Parser
 		else
 			throw new Error("expected \"#{type}\", but got \"#{@peek().type}\"")
 
-	
 	###
 	Accept the given `type`.
 	
@@ -133,7 +122,6 @@ class Parser
 	accept: (type) ->
 		@advance() if @peek().type is type
 
-	
 	###
 	tag
 	| doctype
@@ -182,7 +170,6 @@ class Parser
 			else
 				throw new Error("unexpected token \"#{@peek().type}\"")
 
-	
 	###
 	Text
 	###
@@ -192,7 +179,6 @@ class Parser
 		node.line = @line()
 		node
 
-	
 	###
 	':' expr
 	| block
@@ -204,7 +190,6 @@ class Parser
 		else
 			@block()
 
-	
 	###
 	code
 	###
@@ -223,7 +208,6 @@ class Parser
 			node.block = @block()
 		node
 
-	
 	###
 	comment
 	###
@@ -236,7 +220,6 @@ class Parser
 		node.line = @line()
 		node
 
-	
 	###
 	doctype
 	###
@@ -245,7 +228,6 @@ class Parser
 		node = new nodes.Doctype(tok.val)
 		node.line = @line()
 		node
-
 
 	###
 	'extends' name
@@ -269,7 +251,6 @@ class Parser
 		# TODO: null node
 		new nodes.Literal('')
 
-	
 	###
 	'block' name block
 	###
@@ -290,7 +271,6 @@ class Parser
 		block.mode = mode
 		@blocks[name] = prev or block
 
-	
 	###
 	include block?
 	###
@@ -337,7 +317,6 @@ class Parser
 		mixin.block = null if mixin.block.isEmpty()
 		mixin
 
-	
 	###
 	mixin block
 	###
@@ -356,7 +335,6 @@ class Parser
 		else
 			new nodes.Mixin(name, args, null, true)
 
-	
 	# indent (text | newline)* outdent
 	parseTextBlock: ->
 		block = new nodes.Block
@@ -375,12 +353,10 @@ class Parser
 				text.line = @line()
 				block.push(text)
 
-
 		if spaces is @_spaces then @_spaces = null
 		@expect('outdent')
 		block
 
-	
 	###
 	indent expr* outdent
 	###
@@ -396,7 +372,6 @@ class Parser
 		@expect 'outdent'
 		block
 
-	
 	###
 	tag (attrs | class | id)* (text | code | ':')? newline* block?
 	###
@@ -459,6 +434,5 @@ class Parser
 				else
 					tag.block = block
 		return tag
-
 
 module.exports = Parser
