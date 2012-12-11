@@ -139,7 +139,8 @@ exports.match_delimiters = match_delimiters = (str, start_delimiter='(', end_del
 			else if quot is '' and chr not in [']', '}']
 				quot = chr
 			#ignore if it's already inside quotes
-		else if chr is start_delimiter
+		else if str[endpos...start_delimiter.length - 1] is start_delimiter
+			endpos += start_delimiter.length
 			++ctr unless quot
 		else if chr in end_delimiters
 			--ctr unless quot
