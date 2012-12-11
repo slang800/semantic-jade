@@ -25,11 +25,8 @@ exports.escape_quotes = (str) ->
 ###
 exports.interpolate = (str) ->
 	# check for null/undefined
-	if str is null or not str? or /undefined|null/i.test(str)
+	if str is null or not str?
 		return '\'\''
-
-	if typeof str is 'boolean' or /(true|false)/i.test(str)
-		return Boolean(str)
 
 	# check for numbers
 	return Number(str) unless isNaN(Number(str))

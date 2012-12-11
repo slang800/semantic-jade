@@ -153,7 +153,7 @@ class Compiler
 	@public
 	###
 	visitNode: (node) ->
-		#fix way this is none... make less hackish
+		#fix way this is done... make less hackish
 		name = node.constructor.name or node.constructor.toString().match(/function ([^(\s]+)()/)[1]
 		@["visit#{name}"] node
 
@@ -325,6 +325,7 @@ class Compiler
 	###
 	visitText: (text) ->
 		text = text.val
+		text = utils.interpolate text
 		if @escape then text = '#{' + "escape(\"#{text}\")" + '}'
 		@buffer text, escape = false
 
