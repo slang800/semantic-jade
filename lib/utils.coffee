@@ -18,7 +18,8 @@ exports.escape_quotes = (str) ->
 	str.replace /"/g, "\\\""
 
 ###*
- * Convert interpolation in the given string to CoffeeScript
+ * Convert interpolation (like !{}) in the given string, to pure CoffeeScript
+ * Also, handle escaping for interpolated strings
  * @param {String} str
  * @return {String}
  * @private
