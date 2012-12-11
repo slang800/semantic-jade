@@ -37,10 +37,6 @@ exports.escape_quotes = (str) ->
  * @private
 ###
 exports.interpolate = (str) ->
-	# check for null/undefined
-	if str is null or not str?
-		return '\'\''
-
 	remaining = str
 		.replace(/\\/g, '_BSLASH_')
 		.replace(/"/g, '_DBLQUOTE_')
