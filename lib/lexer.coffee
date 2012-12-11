@@ -110,7 +110,6 @@ class Lexer
 	blank: ->
 		if captures = /^\n *\n/.exec(@input)
 			@consume captures[0].length - 1
-			
 			++@lineno
 			return @tok("text", '') if @pipeless
 			@next()

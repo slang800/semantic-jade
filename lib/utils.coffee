@@ -57,10 +57,10 @@ exports.interpolate = (str) ->
 		unless start_pos
 			break
 
-		processed += remaining.substring(0, start_pos - 1)
+		processed += remaining[..start_pos - 1]
 		# `- 1` accounts for the length of the flag
 
-		remaining = remaining.substring(start_pos)
+		remaining = remaining[start_pos..]
 
 		matches = match_delimiters(remaining, '{', '}')
 
@@ -79,7 +79,7 @@ exports.interpolate = (str) ->
 				''
 		}(if (interp = #{code}) is null or not interp? then '' else interp)" + '}'
 
-		remaining = remaining.substring(matches[0].length)
+		remaining = remaining[matches[0].length..]
 
 	# escape any slashes that were not in the interpolated parts
 	return (processed + remaining)
