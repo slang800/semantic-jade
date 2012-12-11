@@ -357,8 +357,8 @@ class Lexer
 	@private
 	###
 	next: ->
-		@deferred() or
 		@stashed() or
+		@deferred() or
 		@blank() or
 		@eos() or
 		@pipelessText() or
