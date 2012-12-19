@@ -30,58 +30,6 @@ exports.escape_quotes = (str) ->
 	str.replace /"/g, "\\\""
 
 ###*
- * Convert interpolation (like !{}) in the given string, to pure CoffeeScript
- * Also, handle escaping for interpolated strings
- * @param {String} str
- * @return {String}
- * @private
-###
-exports.interpolate = (str) ->
-	remaining = str
-		.replace(/\\/g, '_BSLASH_')
-		.replace(/"/g, '_DBLQUOTE_')
-	processed = ''
-
-	loop
-		# TODO: refactor to use match_delimiters for all delimiter finding (remove `remaining.indexOf(flag + '{')`)
-		# make match_delimiters able to search for start_delimiter beyond first characters of string... maybe break function into smaller pieces?
-		for flag in ['#','!']
-			if start_pos = remaining.indexOf(flag + '{') + 1 then break
-			# `+ 1` accounts for the length of the flag
-
-		unless start_pos
-			break
-
-		processed += remaining[..start_pos - 1]
-		# `- 1` accounts for the length of the flag
-
-		remaining = remaining[start_pos..]
-
-		matches = match_delimiters(remaining, '{', '}')
-
-		unless matches
-			break
-
-		# convert all the slashes in the interpolated part back to regular
-		code = matches[1]
-			.replace(/_BSLASH_/g, '\\')
-			.replace(/_DBLQUOTE_/g, '"')
-
-		processed += '#{' + "#{
-			if '!' is flag
-				'escape'
-			else
-				''
-		}(if (interp = #{code}) is null or not interp? then '' else interp)" + '}'
-
-		remaining = remaining[matches[0].length..]
-
-	# escape any slashes that were not in the interpolated parts
-	return (processed + remaining)
-		.replace(/_BSLASH_/g, '\\\\')
-		.replace(/_DBLQUOTE_/g, '\\"')
-
-###*
  * Merge `b` into `a`.
  * @param {Object} a
  * @param {Object} b
