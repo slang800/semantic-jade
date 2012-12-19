@@ -484,7 +484,7 @@ exports.Lexer = class Lexer
     tokens.push ['NEOSTRING', str[pi..]] if i > pi < str.length
     return tokens if regex
     return @token 'STRING', '""' unless tokens.length
-    if letter isnt '!'
+    if letter is '!'
       @token 'IDENTIFIER', 'escape'
       @token 'CALL_START', '('
     tokens.unshift ['', ''] unless tokens[0][0] is 'NEOSTRING'
@@ -496,7 +496,7 @@ exports.Lexer = class Lexer
       else
         @token 'STRING', @makeString value, '"', heredoc
     @token ')', ')' if interpolated
-    @token 'CALL_END', ')' if letter isnt '!'
+    @token 'CALL_END', ')' if letter is '!'
     tokens
 
   # Pairs up a closing token, ensuring that all listed pairs of tokens are
