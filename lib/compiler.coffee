@@ -6,7 +6,6 @@ selfClosing = require './self-closing'
 runtime = require './runtime'
 utils = require './utils'
 
-
 class Compiler
 	###*
 	 * Initialize `Compiler` with the given `node`
@@ -324,10 +323,7 @@ class Compiler
 	@public
 	###
 	visitText: (text) ->
-		text = text.val
-		text = utils.interpolate text
-		if @escape then text = '#{' + "escape(\"#{text}\")" + '}'
-		@buffer text, escape = false
+		@buffer text.val, escape = false
 
 	###
 	Visit a `comment`, only buffering when the buffer flag is set.

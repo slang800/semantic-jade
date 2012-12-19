@@ -77,7 +77,7 @@ class Parser
 		@lexer.lookahead n
 
 	###
-	Parse input returning a string of js for evaluation.
+	Parse input returning a string of CoffeeScript for evaluation.
 	
 	@return {String}
 	@api public
