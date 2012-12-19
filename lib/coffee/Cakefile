@@ -6,7 +6,6 @@ task 'sbuild', 'build the CoffeeScript language from source', build = (cb) ->
   files = fs.readdirSync 'src'
   for file in files
     data = coffee_script.compile fs.readFileSync('src/' + file, 'utf8')
-    console.log file
     fs.writeFile(
       'lib/' + file.replace(/\.coffee$/, '.js'),
       data,
