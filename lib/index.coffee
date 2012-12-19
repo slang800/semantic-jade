@@ -1,5 +1,5 @@
 #Module dependencies
-coffee = require "coffee-script"
+coffee = require "./coffee/lib"
 fs = require "fs"
 
 #Expose self closing tags
