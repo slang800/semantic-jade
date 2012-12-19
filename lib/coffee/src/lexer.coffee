@@ -466,8 +466,6 @@ exports.Lexer = class Lexer
              (expr = @balancedString str[i + 1..], '}')
         continue
 
-      @token 'JS', 'escape(' if letter isnt '!'
-
       tokens.push ['NEOSTRING', str[pi...i]] if pi < i
       # make the stuff in an interpolated string get escaped
       inner = expr[1...-1]
@@ -481,13 +479,14 @@ exports.Lexer = class Lexer
             nested.push    [')', ')', @line]
           tokens.push ['TOKENS', nested]
 
-      @token 'JS', ')' if letter isnt '!'
-
       i += expr.length
       pi = i + 1
     tokens.push ['NEOSTRING', str[pi..]] if i > pi < str.length
     return tokens if regex
     return @token 'STRING', '""' unless tokens.length
+    if letter isnt '!'
+      @token 'IDENTIFIER', 'escape'
+      @token 'CALL_START', '('
     tokens.unshift ['', ''] unless tokens[0][0] is 'NEOSTRING'
     @token '(', '(' if interpolated = tokens.length > 1
     for [tag, value], i in tokens
@@ -497,6 +496,7 @@ exports.Lexer = class Lexer
       else
         @token 'STRING', @makeString value, '"', heredoc
     @token ')', ')' if interpolated
+    @token 'CALL_END', ')' if letter isnt '!'
     tokens
 
   # Pairs up a closing token, ensuring that all listed pairs of tokens are
