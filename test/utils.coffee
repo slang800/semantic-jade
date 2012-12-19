@@ -14,3 +14,11 @@ describe 'utils.match_delimiters()', ->
 				'class=[\'foo\', \'bar\', \'baz\']'
 			])
 		)
+###
+describe 'utils.interpolate', ->
+	it 'should handle multiple instances of interpolation', ->
+		stringify(
+			utils.interpolate '#{k}: #{v}'
+		).should.equal(
+			'#{k}: #{v}'
+		)###
