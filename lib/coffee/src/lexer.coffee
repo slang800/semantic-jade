@@ -440,7 +440,7 @@ exports.Lexer = class Lexer
         continueCount += match[0].length - 1
       else if end is '}' and letter is '{'
         stack.push end = '}'
-      else if end is '"' and prev in ['#','!'] and letter is '{'
+      else if end is '"' and prev is '#' and letter is '{'
         stack.push end = '}'
       prev = letter
     @error "missing #{ stack.pop() }, starting"
