@@ -1,5 +1,6 @@
 fs = require 'fs'
-coffee_script  = require 'coffee-script'
+coffee_script = require 'coffee-script'
+{extend} = require './lib/helpers'
 
 task 'sbuild', 'build the CoffeeScript language from source', build = (cb) ->
   files = fs.readdirSync 'src'
@@ -13,7 +14,7 @@ task 'sbuild', 'build the CoffeeScript language from source', build = (cb) ->
     )
 
 task 'build:parser', 'rebuild the Jison parser (run build first)', ->
-  extend global, require('util')
   require 'jison'
-  parser = require('./lib/coffee-script/grammar').parser
-  fs.writeFile 'lib/coffee-script/parser.js', parser.generate()
+  extend global, require('util')
+  parser = require('./lib/grammar').parser
+  fs.writeFile 'lib/parser.js', parser.generate()
