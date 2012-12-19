@@ -1,6 +1,6 @@
-Lexer = require("./lexer")
-nodes = require("./nodes")
-utils = require("./utils")
+Lexer = require './lexer'
+nodes = require './nodes'
+utils = require './utils'
 
 class Parser
 	###
@@ -202,7 +202,7 @@ class Parser
 		while @lookahead(i) and 'newline' is @lookahead(i).type
 			++i
 
-		block = 'indent' is @lookahead(i).type
+		block = @lookahead(i)? and 'indent' is @lookahead(i).type
 		if block
 			@skip i - 1
 			node.block = @block()
