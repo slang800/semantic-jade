@@ -154,7 +154,6 @@ class Compiler
 	visitNode: (node) ->
 		#fix way this is done... make less hackish
 		name = node.constructor.name or node.constructor.toString().match(/function ([^(\s]+)()/)[1]
-		console.log "name= " + name
 		@["visit#{name}"] node
 
 	###
