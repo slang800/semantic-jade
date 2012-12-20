@@ -103,11 +103,11 @@ Escape the given string of `html`.
 @private
 ###
 exports.escape = (html) ->
-	String(html)
-		.replace /&/g, '&amp;'
-		.replace /</g, '&lt;'
-		.replace />/g, '&gt;'
-		.replace /"/g, '&quot;'
+	return html
+		.replace(/&/g, '&amp;')
+		.replace(/"/g, '&quot;')
+		.replace(/</g, '&lt;')
+		.replace(/>/g, '&gt;')
 
 Array::remove = (from, to) ->
 	rest = @slice((to or from) + 1 or @length)

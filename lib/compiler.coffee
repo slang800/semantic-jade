@@ -81,9 +81,6 @@ class Compiler
 	 * @public
 	###
 	buffer: (str, escape=true) ->
-		#if escape
-		#	str = utils.escape_quotes(str)
-
 		if @lastBufferedIdx is @buf.length
 			#combine with the last entry to the buffer
 			@lastBuffered += str
@@ -163,8 +160,7 @@ class Compiler
 	@public
 	###
 	visitLiteral: (node) ->
-		str = node.str.replace(/\n/g, "\\\\n")
-		@buffer str
+		@buffer node.str.replace(/\n/g, "\\\\n")
 
 	###
 	Visit all nodes in `block`.

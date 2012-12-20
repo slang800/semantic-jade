@@ -158,7 +158,7 @@ exports.Lexer = class Lexer
         @token 'STRING', (string = match[0]).replace MULTILINER, '\\\n'
       when '"'
         return 0 unless string = @balancedString @chunk, '"'
-        if 0 < string.indexOf '#{', 1
+        if 0 < string.indexOf('#{', 1) or 0 < string.indexOf('!{', 1)
           @interpolateString string[1...-1]
         else
           @token 'STRING', @escapeLines string
@@ -176,7 +176,7 @@ exports.Lexer = class Lexer
     heredoc = match[0]
     quote = heredoc.charAt 0
     doc = @sanitizeHeredoc match[2], quote: quote, indent: null
-    if quote is '"' and 0 <= doc.indexOf '#{'
+    if quote is '"' and (0 <= doc.indexOf('#{') or 0 <= doc.indexOf('!{'))
       @interpolateString doc, heredoc: yes
     else
       @token 'STRING', @makeString doc, quote, yes
@@ -222,7 +222,7 @@ exports.Lexer = class Lexer
   # Matches multiline extended regular expressions.
   heregexToken: (match) ->
     [heregex, body, flags] = match
-    if 0 > body.indexOf '#{'
+    if 0 > body.indexOf '#{' or 0 > body.indexOf '!{'
       re = body.replace(HEREGEX_OMIT, '').replace(/\//g, '\\/')
       if re.match /^\*/ then @error 'regular expressions cannot begin with `*`'
       @token 'REGEX', "/#{ re or '(?:)' }/#{flags}"
@@ -462,8 +462,10 @@ exports.Lexer = class Lexer
       if letter is '\\'
         i += 1
         continue
-      unless letter in ['#','!'] and str.charAt(i+1) is '{' and
+      if letter in ['#','!'] and str.charAt(i+1) is '{' and
              (expr = @balancedString str[i + 1..], '}')
+        flag = letter
+      else
         continue
 
       tokens.push ['NEOSTRING', str[pi...i]] if pi < i
@@ -484,7 +486,7 @@ exports.Lexer = class Lexer
     tokens.push ['NEOSTRING', str[pi..]] if i > pi < str.length
     return tokens if regex
     return @token 'STRING', '""' unless tokens.length
-    if letter is '!'
+    if flag is '!'
       @token 'IDENTIFIER', 'escape'
       @token 'CALL_START', '('
     tokens.unshift ['', ''] unless tokens[0][0] is 'NEOSTRING'
@@ -496,7 +498,7 @@ exports.Lexer = class Lexer
       else
         @token 'STRING', @makeString value, '"', heredoc
     @token ')', ')' if interpolated
-    @token 'CALL_END', ')' if letter is '!'
+    @token 'CALL_END', ')' if flag is '!'
     tokens
 
   # Pairs up a closing token, ensuring that all listed pairs of tokens are
