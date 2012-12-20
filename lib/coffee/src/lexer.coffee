@@ -158,7 +158,7 @@ exports.Lexer = class Lexer
         @token 'STRING', (string = match[0]).replace MULTILINER, '\\\n'
       when '"'
         return 0 unless string = @balancedString @chunk, '"'
-        if 0 < string.indexOf '#{', 1
+        if 0 < string.indexOf /[#!]{/, 1
           @interpolateString string[1...-1]
         else
           @token 'STRING', @escapeLines string
@@ -176,7 +176,7 @@ exports.Lexer = class Lexer
     heredoc = match[0]
     quote = heredoc.charAt 0
     doc = @sanitizeHeredoc match[2], quote: quote, indent: null
-    if quote is '"' and 0 <= doc.indexOf '#{'
+    if quote is '"' and 0 <= doc.indexOf /[#!]{/
       @interpolateString doc, heredoc: yes
     else
       @token 'STRING', @makeString doc, quote, yes
@@ -222,7 +222,7 @@ exports.Lexer = class Lexer
   # Matches multiline extended regular expressions.
   heregexToken: (match) ->
     [heregex, body, flags] = match
-    if 0 > body.indexOf '#{'
+    if 0 > body.indexOf /[#!]{/
       re = body.replace(HEREGEX_OMIT, '').replace(/\//g, '\\/')
       if re.match /^\*/ then @error 'regular expressions cannot begin with `*`'
       @token 'REGEX', "/#{ re or '(?:)' }/#{flags}"
@@ -440,7 +440,7 @@ exports.Lexer = class Lexer
         continueCount += match[0].length - 1
       else if end is '}' and letter is '{'
         stack.push end = '}'
-      else if end is '"' and prev is '#' and letter is '{'
+      else if end is '"' and prev in ['#','!'] and letter is '{'
         stack.push end = '}'
       prev = letter
     @error "missing #{ stack.pop() }, starting"

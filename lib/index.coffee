@@ -1,5 +1,5 @@
 #Module dependencies
-coffee = require "./coffee/lib"
+coffee_compile = require("./coffee/lib/coffee-script").compile
 fs = require "fs"
 
 #Expose self closing tags
@@ -114,10 +114,10 @@ exports.compile = (str, options) ->
 
 	if client
 		fn = """
-		attrs = attrs || jade.attrs
-		escape = escape || jade.escape
-		rethrow = rethrow || jade.rethrow
-		merge = merge || jade.merge
+		attrs = attrs or jade.attrs
+		escape = escape or jade.escape
+		rethrow = rethrow or jade.rethrow
+		merge = merge or jade.merge
 		#{fn}
 		"""
 
@@ -125,7 +125,7 @@ exports.compile = (str, options) ->
 	fs.writeFileSync("test_out.coffee", fn)
 
 
-	fn = coffee.compile fn, {bare: true}
+	fn = coffee_compile fn, {bare: true}
 
 	fs.writeFileSync("test_out.js", fn)
 
@@ -134,7 +134,6 @@ exports.compile = (str, options) ->
 
 	(locals) ->
 		fn locals, runtime.attrs, runtime.escape, runtime.rethrow, runtime.merge
-
 
 ###
 Render the given `str` of jade and invoke
@@ -157,14 +156,13 @@ exports.render = (str, options, fn) ->
 		options = {}
 	
 	# cache requires .filename
-	return fn(new Error('the "filename" option is required for caching'))  if options.cache and not options.filename
+	return fn(new Error('the "filename" option is required for caching')) if options.cache and not options.filename
 	try
 		path = options.filename
 		tmpl = (if options.cache then exports.cache[path] or (exports.cache[path] = exports.compile(str, options)) else exports.compile(str, options))
 		fn null, tmpl(options)
 	catch err
 		fn err
-
 
 ###
 Render a Jade file at the given `path` and callback `fn(err, str)`.
@@ -190,7 +188,6 @@ exports.renderFile = (path, options, fn) ->
 		exports.render str, options, fn
 	catch err
 		fn err
-
 
 #Express support
 exports.__express = exports.renderFile

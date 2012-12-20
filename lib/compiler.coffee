@@ -81,8 +81,8 @@ class Compiler
 	 * @public
 	###
 	buffer: (str, escape=true) ->
-		if escape
-			str = utils.escape_quotes(str)
+		#if escape
+		#	str = utils.escape_quotes(str)
 
 		if @lastBufferedIdx is @buf.length
 			#combine with the last entry to the buffer
@@ -91,7 +91,7 @@ class Compiler
 		else
 			@lastBuffered = str
 
-		@push "buf.push(\"#{@lastBuffered}\")"
+		@push "buf.push(\"\"\"#{@lastBuffered}\"\"\")"
 		@lastBufferedIdx = @buf.length
 
 	###*
@@ -154,6 +154,7 @@ class Compiler
 	visitNode: (node) ->
 		#fix way this is done... make less hackish
 		name = node.constructor.name or node.constructor.toString().match(/function ([^(\s]+)()/)[1]
+		console.log "name= " + name
 		@["visit#{name}"] node
 
 	###
@@ -323,7 +324,7 @@ class Compiler
 	@public
 	###
 	visitText: (text) ->
-		@buffer text.val, escape = false
+		@buffer text.val
 
 	###
 	Visit a `comment`, only buffering when the buffer flag is set.
