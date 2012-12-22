@@ -222,13 +222,13 @@ describe 'attributes', ->
 		render(
 			'p(\'class\'= "name", \'data-dynamic\'= "true")'
 		).should.equal(
-			'<p data-dynamic="true" class="name"></p>'
+			'<p class="name" data-dynamic="true"></p>'
 		)
 		
 		render(
 			'p(\'class\'= "name", \'data-dynamic\'= "true", yay)'
 		).should.equal(
-			'<p data-dynamic="true" yay="yay" class="name"></p>'
+			'<p class="name" data-dynamic="true" yay="yay"></p>'
 		)
 
 
