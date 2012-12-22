@@ -8,7 +8,7 @@ render = (str, options) ->
 
 
 describe 'attributes', ->
-	it "should support multi-line attrs w/ funky formatting", ->
+	it "should support multi-line attrs w/ odd formatting", ->
 		output = '<a foo="bar" bar="baz" checked="checked">foo</a>'
 
 		render('''
@@ -41,27 +41,18 @@ describe 'attributes', ->
 		).should.equal(output)
 
 
-	it "should support single quoted attrs", ->
-		render(
-			'p(class=\'foo\')'
-		).should.equal(
-			'<p class="foo"></p>'
-		)
-
-
-	it "should escape attrs", ->
-		render(
-			'img(src="<script>")'
-		).should.equal(
-			'<img src="&lt;script&gt;"/>'
-		)
-
 
 	it "should support shorthands for checkboxes", ->
 		render(
 			'input( type="checkbox", checked )'
 		).should.equal(
 			'<input type="checkbox" checked="checked"/>'
+		)
+
+		render(
+			'input(checked, type="checkbox")'
+		).should.equal(
+			'<input checked="checked" type="checkbox"/>'
 		)
 
 		render(
@@ -89,175 +80,7 @@ describe 'attributes', ->
 		)
 
 
-	it "should support standard attrs", ->
-		render(
-			'a(data-attr="bar")'
-		).should.equal(
-			'<a data-attr="bar"></a>'
-		)
-
-		render(
-			'a(data-attr="bar", data-attr-2="baz")'
-		).should.equal(
-			'<a data-attr="bar" data-attr-2="baz"></a>'
-		)
-
-		render(
-			'a(title= "foo,bar")'
-		).should.equal(
-			'<a title="foo,bar"></a>'
-		)
-
-		render(
-			'a(title= "foo,bar", href="#")'
-		).should.equal(
-			'<a title="foo,bar" href="#"></a>'
-		)
-
-
-		# "Test attr ="
-		render(
-			'img(src="/foo.png")'
-		).should.equal(
-			'<img src="/foo.png"/>'
-		)
-
-		#'Test attr = whitespace'
-		render(
-			'img(src  =  "/foo.png")'
-		).should.equal(
-			'<img src="/foo.png"/>'
-		)
-		
-		render(
-			'img(src="/foo.png", alt="just some foo")'
-		).should.equal(
-			'<img src="/foo.png" alt="just some foo"/>'
-		)
-		
-		render(
-			'img(src = "/foo.png", alt = "just some foo")'
-		).should.equal(
-			'<img src="/foo.png" alt="just some foo"/>'
-		)
-		
-		render(
-			'p(class="foo,bar,baz")'
-		).should.equal(
-			'<p class="foo,bar,baz"></p>'
-		)
-		
-		render(
-			'a(href= "http://google.com", title= "Some : weird = title")'
-		).should.equal(
-			'<a href="http://google.com" title="Some : weird = title"></a>'
-		)
-		
-		render(
-			'label(for="name")'
-		).should.equal(
-			'<label for="name"></label>'
-		)
-		
-		#'Test attrs that contain attr separators'
-		render(
-			'meta(name= \'viewport\', content=\'width=device-width\')'
-		).should.equal(
-			'<meta name="viewport" content="width=device-width"/>'
-		)
-		
-		render(
-			'div(style=\'color= white\')'
-		).should.equal(
-			'<div style="color= white"></div>'
-		)
-		
-		render(
-			'div(style=\'color: white\')'
-		).should.equal(
-			'<div style="color: white"></div>'
-		)
-		
-		#'Test keys with single quotes'
-		render(
-			'p(\'class\'=\'foo\')'
-		).should.equal(
-			'<p class="foo"></p>'
-		)
-		
-		#'Test keys with double quotes'
-		render(
-			'p("class"= \'foo\')'
-		).should.equal(
-			'<p class="foo"></p>'
-		)
-		
-		render(
-			'p(data-lang = "en")'
-		).should.equal(
-			'<p data-lang="en"></p>'
-		)
-		
-		render(
-			'p("data-dynamic"= "true")'
-		).should.equal(
-			'<p data-dynamic="true"></p>'
-		)
-		
-		render(
-			'p("class"= "name", "data-dynamic"= "true")'
-		).should.equal(
-			'<p data-dynamic="true" class="name"></p>'
-		)
-		
-		render(
-			'p(\'data-dynamic\'= "true")'
-		).should.equal(
-			'<p data-dynamic="true"></p>'
-		)
-		
-		render(
-			'p(\'class\'= "name", \'data-dynamic\'= "true")'
-		).should.equal(
-			'<p data-dynamic="true" class="name"></p>'
-		)
-		
-		render(
-			'p(\'class\'= "name", \'data-dynamic\'= "true", yay)'
-		).should.equal(
-			'<p data-dynamic="true" yay="yay" class="name"></p>'
-		)
-		
-		render(
-			'input(checked, type="checkbox")'
-		).should.equal(
-			'<input checked="checked" type="checkbox"/>'
-		)
-		
-		render(
-			'a(data-foo  = "{ foo: \'bar\', bar= \'baz\' }")'
-		).should.equal(
-			'<a data-foo="{ foo: \'bar\', bar= \'baz\' }"></a>'
-		)
-		
-		render(
-			'meta(http-equiv="X-UA-Compatible", content="IE=edge,chrome=1")'
-		).should.equal(
-			'<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>'
-		)
-		
-		render(
-			'div(style= \'background: url(/images/test.png)\') Foo'
-		).should.equal(
-			'<div style="background: url(/images/test.png)">Foo</div>'
-		)
-		
-		render(
-			'div(style= \'background = url(/images/test.png)\') Foo'
-		).should.equal(
-			'<div style="background = url(/images/test.png)">Foo</div>'
-		)
-		
+	it 'should support expressions in attrs', ->
 		render(
 			'div(style= [\'foo\', \'bar\'][0]) Foo'
 		).should.equal(
@@ -288,7 +111,8 @@ describe 'attributes', ->
 			'<a href="def">Foo</a>'
 		)
 
-	it "should ignore special chars in attrs", ->
+
+	it "should ignore special chars in keys", ->
 		render(
 			'rss(xmlns:atom="atom")'
 		).should.equal(
@@ -314,6 +138,20 @@ describe 'attributes', ->
 		)
 		
 		render(
+			'div(style=\'color: white\')'
+		).should.equal(
+			'<div style="color: white"></div>'
+		)
+
+
+	it "should ignore special chars in values", ->
+		render(
+			'a(title= "foo,bar", href="#")'
+		).should.equal(
+			'<a title="foo,bar" href="#"></a>'
+		)
+
+		render(
 			'a(data-obj= "{ foo: \'bar\' }")'
 		).should.equal(
 			'<a data-obj="{ foo: \'bar\' }"></a>'
@@ -323,4 +161,162 @@ describe 'attributes', ->
 			'meta(content="what\'s up? \'weee\'")'
 		).should.equal(
 			'<meta content="what\'s up? \'weee\'"/>'
+		)
+
+		render(
+			'a(data-foo  = "{ foo: \'bar\', bar= \'baz\' }")'
+		).should.equal(
+			'<a data-foo="{ foo: \'bar\', bar= \'baz\' }"></a>'
+		)
+
+
+	it "should support single quoted values", ->
+		render(
+			'p(class=\'foo\')'
+		).should.equal(
+			'<p class="foo"></p>'
+		)
+
+
+	it "should escape attrs", ->
+		render(
+			'img(src="<script>")'
+		).should.equal(
+			'<img src="&lt;script&gt;"/>'
+		)
+
+
+	it 'should support keys with double quotes', ->
+		render(
+			'p("class"= \'foo\')'
+		).should.equal(
+			'<p class="foo"></p>'
+		)
+		
+		render(
+			'p(data-lang = "en")'
+		).should.equal(
+			'<p data-lang="en"></p>'
+		)
+		
+		render(
+			'p("data-dynamic"= "true")'
+		).should.equal(
+			'<p data-dynamic="true"></p>'
+		)
+		
+		render(
+			'p("class"= "name", "data-dynamic"= "true")'
+		).should.equal(
+			'<p data-dynamic="true" class="name"></p>'
+		)
+
+
+	it 'should support keys with single quotes', ->
+		render(
+			'p(\'data-dynamic\'= "true")'
+		).should.equal(
+			'<p data-dynamic="true"></p>'
+		)
+		
+		render(
+			'p(\'class\'= "name", \'data-dynamic\'= "true")'
+		).should.equal(
+			'<p data-dynamic="true" class="name"></p>'
+		)
+		
+		render(
+			'p(\'class\'= "name", \'data-dynamic\'= "true", yay)'
+		).should.equal(
+			'<p data-dynamic="true" yay="yay" class="name"></p>'
+		)
+
+
+	it 'should support attrs that contain attr separators', ->
+		render(
+			'meta(name= \'viewport\', content=\'width=device-width\')'
+		).should.equal(
+			'<meta name="viewport" content="width=device-width"/>'
+		)
+
+		render(
+			'div(style=\'color= white\')'
+		).should.equal(
+			'<div style="color= white"></div>'
+		)
+
+		render(
+			'div(style= \'background = url(/images/test.png)\') Foo'
+		).should.equal(
+			'<div style="background = url(/images/test.png)">Foo</div>'
+		)
+
+		render(
+			'meta(http-equiv="X-UA-Compatible", content="IE=edge,chrome=1")'
+		).should.equal(
+			'<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>'
+		)
+
+		render(
+			'a(title= "foo,bar")'
+		).should.equal(
+			'<a title="foo,bar"></a>'
+		)
+
+		render(
+			'p(class="foo,bar,baz")'
+		).should.equal(
+			'<p class="foo,bar,baz"></p>'
+		)
+
+		render(
+			'a(href= "http://google.com", title= "Some : weird = title")'
+		).should.equal(
+			'<a href="http://google.com" title="Some : weird = title"></a>'
+		)
+
+
+	it "should allow ugly spacing", ->
+		render(
+			'img(src = "/foo.png", alt = "just some foo")'
+		).should.equal(
+			'<img src="/foo.png" alt="just some foo"/>'
+		)
+
+		render(
+			'img(src= "/foo.png", alt ="just some foo")'
+		).should.equal(
+			'<img src="/foo.png" alt="just some foo"/>'
+		)
+
+		render(
+			'img(src= "/foo.png"  , alt ="just some foo")'
+		).should.equal(
+			'<img src="/foo.png" alt="just some foo"/>'
+		)
+
+
+	it "should support standard attrs", ->
+		render(
+			'a(data-attr="bar")'
+		).should.equal(
+			'<a data-attr="bar"></a>'
+		)
+
+		render(
+			'a(data-attr="bar", data-attr-2="baz")'
+		).should.equal(
+			'<a data-attr="bar" data-attr-2="baz"></a>'
+		)
+
+		render(
+			'img(src="/foo.png", alt="just some foo")'
+		).should.equal(
+			'<img src="/foo.png" alt="just some foo"/>'
+		)
+
+		render(
+			'label(for="name")'
+		).should.equal(
+			'<label for="name"></label>'
 		)
