@@ -204,10 +204,11 @@ class Lexer
 			(captures) =>
 				tok = @tok('call', captures[1])
 
-				if captures = utils.match_delimiters(@input)
-					unless /^ *[-\w]+ *=|^ *attributes *(?:,|$)/.test(captures[1])
-						@consume captures[0].length
-						tok.args = captures[1]
+				if @input[0] is '('
+					str = utils.balance_string(@input, ')')
+					unless /^ *[-\w]+ *=|^ *attributes *(?:,|$)/.test(str[1...-1])
+						@consume str.length
+						tok.args = str[1...-1]
 				tok
 		)
 

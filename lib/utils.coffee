@@ -1,3 +1,58 @@
+# Regex-matching-regexes.
+REGEX = /// ^
+	(/ (?! [\s=] )   # disallow leading whitespace or equals signs
+	[^ [ / \n \\ ]*  # every other thing
+	(?:
+		(?: \\[\s\S]   # anything escaped
+			| \[       # character class
+					 [^ \] \n \\ ]*
+					 (?: \\[\s\S] [^ \] \n \\ ]* )*
+				 ]
+		) [^ [ / \n \\ ]*
+	)*
+	/) ([imgy]{0,4}) (?!\w)
+///
+
+HEREGEX = /// ^ /{3} ([\s\S]+?) /{3} ([imgy]{0,4}) (?!\w) ///
+
+###*
+ * Matches a balanced group such as a single or double-quoted string. Pass in
+ * a series of delimiters, all of which must be nested correctly within the
+ * contents of the string. This method allows us to have strings within
+ * interpolations within strings, ad infinitum.
+ * @param {String} str The string to balance
+ * @param {String} end The character that ends the balanced string
+ * @return {String} The balanced string
+ * @private
+###
+exports.balance_string = (str, end) ->
+	continueCount = 0
+	stack = [end]
+	for i in [1...str.length]
+		if continueCount
+			--continueCount
+			continue
+		switch letter = str.charAt i
+			when '\\'
+				++continueCount
+				continue
+			when end
+				stack.pop()
+				unless stack.length
+					return str[0..i]
+				end = stack[stack.length - 1]
+				continue
+		if end is '}' and letter in ['"', "'"]
+			stack.push end = letter
+		else if end is '}' and letter is '/' and match = (HEREGEX.exec(str[i..]) or REGEX.exec(str[i..]))
+			continueCount += match[0].length - 1
+		else if end is '}' and letter is '{'
+			stack.push end = '}'
+		else if end is '"' and prev in ['#','!'] and letter is '{'
+			stack.push end = '}'
+		prev = letter
+	throw new Error "missing #{ stack.pop() }, starting"
+
 ###*
  * Indent a string by adding indents before each newline in the string
  * @param {String} str
@@ -44,11 +99,11 @@ exports.merge = (a, b) ->
 ###*
  * Match everything in parentheses.
  * We do not include matched delimiters like `()` or `{}` (depending on the
-   specified delimeter) or delimiters contained in quotation marks `"("`. We
-   also ignore newlines. Otherwise, this is similar to using
-   `/\((.*)\)/.exec()`
+	 specified delimeter) or delimiters contained in quotation marks `"("`. We
+	 also ignore newlines. Otherwise, this is similar to using
+	 `/\((.*)\)/.exec()`
  * This can also be called with start_delimeter as null to get the next
-   occurance of an end_delimiter while excluding the cases mentioned above
+	 occurance of an end_delimiter while excluding the cases mentioned above
  * @param {String} str
  * @param {String} start_delimiter
  * @param {String, Array} end_delimiters
