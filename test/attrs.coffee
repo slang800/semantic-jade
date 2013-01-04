@@ -45,9 +45,8 @@ describe 'attributes', ->
 	it "should support shorthands for checkboxes", ->
 		output = '<input type="checkbox" checked="checked"/>'
 
-		render(
-			'input(type="checkbox", checked)'
-		).should.equal(output)
+		render('input(type="checkbox", checked)')
+			.should.equal(output)
 
 		###
 		#disabled because order shouldn't matter... maybe reenable later for
@@ -57,55 +56,34 @@ describe 'attributes', ->
 		).should.equal(output)
 		###
 
-		render(
-			'input( type="checkbox", checked = true )'
-		).should.equal(output)
+		render('input( type="checkbox", checked = true )')
+			.should.equal(output)
 
 		output = '<input type="checkbox"/>'
 
-		render(
-			'input(type="checkbox", checked= false)'
-		).should.equal(output)
-
-		render(
-			'input(type="checkbox", checked= null)'
-		).should.equal(output)
-
-		render(
-			'input(type="checkbox", checked= undefined)'
-		).should.equal(output)
+		render('input(type="checkbox", checked= false)')
+			.should.equal(output)
+		render('input(type="checkbox", checked= null)')
+			.should.equal(output)
+		render('input(type="checkbox", checked= undefined)')
+			.should.equal(output)
 
 
 	it 'should support expressions in attrs', ->
-		render(
-			'div(style= [\'foo\', \'bar\'][0]) Foo'
-		).should.equal(
-			'<div style="foo">Foo</div>'
-		)
+		output = '<div style="bar">Foo</div>'
+		render('div(style= [\'foo\', \'bar\'][0]) Foo')
+			.should.equal(output)
+		render('div(style= { foo: \'bar\', baz: \'raz\' }[\'foo\']) Foo')
+			.should.equal(output)
+
+		output = '<a href="def">Foo</a>'
 		
-		render(
-			'div(style= { foo: \'bar\', baz: \'raz\' }[\'foo\']) Foo'
-		).should.equal(
-			'<div style="bar">Foo</div>'
-		)
-		
-		render(
-			'a(href=\'abcdefg\'.substr(3,3)) Foo'
-		).should.equal(
-			'<a href="def">Foo</a>'
-		)
-		
-		render(
-			'a(href={test: \'abcdefg\'}.test.substr(3,3)) Foo'
-		).should.equal(
-			'<a href="def">Foo</a>'
-		)
-		
-		render(
-			'a(href={test: \'abcdefg\'}.test.substr(3,[0,3][1])) Foo'
-		).should.equal(
-			'<a href="def">Foo</a>'
-		)
+		render('a(href=\'abcdefg\'.substr(3,3)) Foo')
+			.should.equal(output)
+		render('a(href={test: \'abcdefg\'}.test.substr(3,3)) Foo')
+			.should.equal(output)
+		render('a(href={test: \'abcdefg\'}.test.substr(3,[0,3][1])) Foo')
+			.should.equal(output)
 
 
 	it "should ignore special chars in keys", ->
