@@ -43,41 +43,37 @@ describe 'attributes', ->
 
 
 	it "should support shorthands for checkboxes", ->
-		render(
-			'input( type="checkbox", checked )'
-		).should.equal(
-			'<input type="checkbox" checked="checked"/>'
-		)
+		output = '<input type="checkbox" checked="checked"/>'
 
 		render(
-			'input(checked, type="checkbox")'
-		).should.equal(
-			'<input checked="checked" type="checkbox"/>'
-		)
+			'input(type="checkbox", checked)'
+		).should.equal(output)
+
+		###
+		#disabled because order shouldn't matter... maybe reenable later for
+		#prettyness or ordered attrs
+		render(
+			'input( checked, type="checkbox" )'
+		).should.equal(output)
+		###
 
 		render(
 			'input( type="checkbox", checked = true )'
-		).should.equal(
-			'<input type="checkbox" checked="checked"/>'
-		)
+		).should.equal(output)
+
+		output = '<input type="checkbox"/>'
 
 		render(
 			'input(type="checkbox", checked= false)'
-		).should.equal(
-			'<input type="checkbox"/>'
-		)
+		).should.equal(output)
 
 		render(
 			'input(type="checkbox", checked= null)'
-		).should.equal(
-			'<input type="checkbox"/>'
-		)
+		).should.equal(output)
 
 		render(
 			'input(type="checkbox", checked= undefined)'
-		).should.equal(
-			'<input type="checkbox"/>'
-		)
+		).should.equal(output)
 
 
 	it 'should support expressions in attrs', ->
@@ -180,7 +176,7 @@ describe 'attributes', ->
 
 	it "should escape attrs", ->
 		render(
-			'img(src="<script>")'
+			'img(src="!{\'<script>\'}")'
 		).should.equal(
 			'<img src="&lt;script&gt;"/>'
 		)
