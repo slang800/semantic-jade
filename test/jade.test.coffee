@@ -173,24 +173,24 @@ module.exports =
 		assert.equal html, render(str)
 
 	"test newlines": ->
-		str = [
-			"ul",
-			"  li a",
-			"  ",
-			"    ",
-			"",
-			" ",
-			"  li b",
-			"  li",
-			"    ",
-			"        ",
-			" ",
-			"    ul",
-			"      ",
-			"      li c",
-			"      li d",
-			"  li e"
-		].join("\n")
+		str = """
+			ul
+			  li a
+			  
+			    
+			
+			 
+			  li b
+			  li
+			    
+			        
+			 
+			    ul
+			      
+			      li c
+			      li d
+			  li e
+		"""
 
 		html = ["<ul>", "<li>a</li>", "<li>b</li>", "<li><ul><li>c</li><li>d</li></ul></li>", "<li>e</li>", "</ul>"].join("")
 		assert.equal html, render(str)
