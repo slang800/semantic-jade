@@ -245,6 +245,7 @@ class Lexer
 
 		attrs = {}
 		escape = {}
+		# TODO: remove that escaped attr thing... not used
 		value = 'true'
 		key = ''
 		escape_attr = true
