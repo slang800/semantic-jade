@@ -116,5 +116,5 @@ exports.rethrow = (err, filename, lineno) ->
 	
 	# Alter exception message
 	err.path = filename
-	err.message = (filename or "Jade") + ":" + lineno + "\n" + context + "\n\n" + err.message
+	err.message = "#{(filename or "Jade")}:#{lineno}\n#{context}\n\n#{err.message}"
 	throw err
