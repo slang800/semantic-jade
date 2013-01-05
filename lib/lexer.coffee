@@ -217,9 +217,10 @@ class Lexer
 			/^mixin +([\-\w]+)/,
 			(captures) =>
 				tok = @tok('mixin', captures[1])
-				if captures = utils.match_delimiters @input
-					@consume captures[0].length
-					tok.args = captures[1]
+				if @input[0] is '('
+					str = utils.balance_string(@input, ')')
+					@consume str.length
+					tok.args = str[1...-1]
 				tok
 		)
 
@@ -235,10 +236,11 @@ class Lexer
 		)
 
 	attrs: ->
-		if (matches = utils.match_delimiters(@input)) is null
+		if '(' isnt @input[0]
 			return
-		@consume matches[0].length
-		str = matches[1].trim()
+		str = utils.balance_string @input, ')'
+		@consume str.length
+		str = str[1...-1].trim()
 
 		if str is ''
 			#for empty attribute containers like `p()`

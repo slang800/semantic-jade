@@ -104,6 +104,7 @@ exports.merge = (a, b) ->
 	 `/\((.*)\)/.exec()`
  * This can also be called with start_delimeter as null to get the next
 	 occurance of an end_delimiter while excluding the cases mentioned above
+ * Deprecated: mostly replaced with balance_string()
  * @param {String} str
  * @param {String} start_delimiter
  * @param {String, Array} end_delimiters
@@ -158,11 +159,12 @@ Escape the given string of `html`.
 @private
 ###
 exports.escape = (html) ->
-	return html
-		.replace(/&/g, '&amp;')
-		.replace(/"/g, '&quot;')
-		.replace(/</g, '&lt;')
-		.replace(/>/g, '&gt;')
+	if typeof html is 'string'
+		return html
+			.replace(/&/g, '&amp;')
+			.replace(/"/g, '&quot;')
+			.replace(/</g, '&lt;')
+			.replace(/>/g, '&gt;')
 
 Array::remove = (from, to) ->
 	rest = @slice((to or from) + 1 or @length)
