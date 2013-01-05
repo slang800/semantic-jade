@@ -111,7 +111,7 @@ exports.merge = (a, b) ->
  * @return {Array} similar to the output of a regex
  * @private
 ###
-exports.match_delimiters = match_delimiters = (str, start_delimiter='(', end_delimiters= ')') ->
+exports.match_delimiters = match_delimiters = (str, start_delimiter, end_delimiters) ->
 	startpos = -1
 	while str[++startpos] is ' '
 		continue # consume whitespace at start of string
