@@ -132,13 +132,7 @@ class Compiler
 				}
 			)
 			"""
-	
-		# Massive hack to fix our context
-		# stack for - else[ if] etc
-		# TODO: Remove????
-		if @debug and node.debug is false
-			@buf.pop()
-			@buf.pop()
+
 		@visitNode node
 		@push '__jade.shift()' if @debug
 
