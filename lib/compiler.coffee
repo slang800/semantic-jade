@@ -88,7 +88,7 @@ class Compiler
 		else
 			@lastBuffered = str
 
-		@push "buf.push(\"\"\"#{@lastBuffered}\"\"\")"
+		@push "buf.push(\"#{utils.process_str(@lastBuffered)}\")"
 		@lastBufferedIdx = @buf.length
 
 	###*

@@ -22,10 +22,10 @@ HEREGEX = /// ^ /{3} ([\s\S]+?) /{3} ([imgy]{0,4}) (?!\w) ///
  * interpolations within strings, ad infinitum.
  * @param {String} str The string to balance
  * @param {String} end The character that ends the balanced string
- * @return {String} The balanced string
+ * @return {String} The balanced string with both delimiters still wrapping it
  * @private
 ###
-exports.balance_string = (str, end) ->
+exports.balance_string = balance_string = (str, end) ->
 	continueCount = 0
 	stack = [end]
 	for i in [1...str.length]
@@ -64,25 +64,41 @@ exports.indent = (str, indents = 1) ->
 	return indentation + str.replace /\n/g, '\n' + indentation
 
 ###*
- * remove whitespace from left of str
- * NOTE: not used right now
- * @param {String} str
- * @return {String}
-###
-exports.trim_left = trim_left = (str) ->
-	pos = -1
-	while str[++pos] is ' '
-		continue # consume whitespace at start of string
-	return str.substring(pos)
-
-###*
- * Escape double quotes in `str`.
+ * Escape double quotes in `str` and convert `!{}` interpolation into standard
+   coffee `#{escape()}`. Quotes don't need to be escaped if they are in
+   interpolated sections.
  * @param {String} str
  * @return {String}
  * @private
 ###
-exports.escape_quotes = (str) ->
-	str.replace /"/g, "\\\""
+exports.process_str = (str) ->
+	output = ''
+	loop
+		if match = /(?:#|!){/.exec(str)
+			i = match.index
+		else
+			#nothing found, escape the rest of the string
+			i = str.length
+
+		output += str[0...i].replace /"/g, '\\"'
+		str = str[i..] # cut off outputted part
+
+		if str is ''
+			return output
+
+		if match
+			interp_part = balance_string str[1..], '}'
+			# remove the interpolated_part from the rest of the string
+			str = str[interp_part.length + 1..]
+		
+			if match[0] is '!{'
+				# cut off the delimiters & replace with vanilla coffee
+				interp_part = '{escape(' + interp_part[1...-1] + ')}'
+
+			output += '#' + interp_part
+
+			if str is ''
+				return output
 
 ###*
  * Merge `b` into `a`.
@@ -99,17 +115,17 @@ exports.merge = (a, b) ->
 ###*
  * Match everything in parentheses.
  * We do not include matched delimiters like `()` or `{}` (depending on the
-	 specified delimeter) or delimiters contained in quotation marks `"("`. We
-	 also ignore newlines. Otherwise, this is similar to using
-	 `/\((.*)\)/.exec()`
+   specified delimiter) or delimiters contained in quotation marks `"("`. We
+   also ignore newlines. Otherwise, this is similar to using
+   `/\((.*)\)/.exec()`
  * This can also be called with start_delimeter as null to get the next
-	 occurance of an end_delimiter while excluding the cases mentioned above
- * Deprecated: mostly replaced with balance_string()
+   occurrence of an end_delimiter while excluding the cases mentioned above
  * @param {String} str
  * @param {String} start_delimiter
- * @param {String, Array} end_delimiters
+ * @param {Array} end_delimiters
  * @return {Array} similar to the output of a regex
  * @private
+ * @deprecated mostly replaced with balance_string()
 ###
 exports.match_delimiters = match_delimiters = (str, start_delimiter, end_delimiters) ->
 	startpos = -1
@@ -121,10 +137,6 @@ exports.match_delimiters = match_delimiters = (str, start_delimiter, end_delimit
 		startpos += start_delimiter.length - 1
 		endpos = startpos
 
-	if typeof end_delimiters is 'string'
-		# end_delimiters can be an array of possible delimeters or a string.
-		# make into a array if only a string is given
-		end_delimiters = [end_delimiters]
 	ctr = 1
 	chr = quot = ''
 	len = str.length - 1
