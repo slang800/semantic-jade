@@ -1,5 +1,5 @@
 #Module dependencies
-coffee_compile = require("./coffee/lib/coffee-script").compile
+coffee_compile = require("coffee-script").compile
 fs = require "fs"
 
 #Expose self closing tags
