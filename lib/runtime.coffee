@@ -72,22 +72,22 @@ exports.attrs = (obj) ->
 	buf.push('')
 
 	for key, val of obj
-		if typeof val is 'boolean' or val is null or not val
+		if typeof val is 'boolean' or val is null or not val?
 			if val
 				if terse
 					buf.push(key)
 				else
 					buf.push("#{key}=\"#{key}\"")
 		else
-			if 0 is key.indexOf('data') and 'string' isnt typeof val
+			if 'class' is key and Array.isArray(val)
+				value = val.join(' ')
+			else if 'string' isnt typeof val
 				value = JSON.stringify(val)
-			else if 'class' is key and Array.isArray(val)
-				value = utils.escape(val.join(' '))
 			else
 				value = val
 
 			if value isnt ''
-				buf.push("#{key}=\"#{value}\"")
+				buf.push("#{key}=\"#{utils.escape(value)}\"")
 
 	return buf.join " "
 

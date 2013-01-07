@@ -154,7 +154,7 @@ describe 'attributes', ->
 
 	it "should escape attrs", ->
 		render(
-			'img(src="!{\'<script>\'}")'
+			'img(src="<script>")'
 		).should.equal(
 			'<img src="&lt;script&gt;"/>'
 		)
@@ -182,7 +182,7 @@ describe 'attributes', ->
 		render(
 			'p("class"= "name", "data-dynamic"= "true")'
 		).should.equal(
-			'<p data-dynamic="true" class="name"></p>'
+			'<p class="name" data-dynamic="true"></p>'
 		)
 
 
