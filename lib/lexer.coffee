@@ -268,6 +268,11 @@ class Lexer
 				else
 					# key was already specified
 					value = matches[1]
+
+				if /^".+"$/.exec(key) or /^'.+'$/.exec(key)
+					#remove 1 set of wrapping quotes if they are put around a key
+					key = key[1...-1]
+
 				attrs[key] = value
 				escape[key] = true
 				value = 'true'
@@ -311,7 +316,10 @@ class Lexer
 			indents = captures[1].length
 			++@lineno
 			@consume indents + 1
-			throw new Error("Invalid indentation, you can use tabs or spaces but not both") if ' ' is @input[0] or "\t" is @input[0]
+			if ' ' is @input[0] or "\t" is @input[0]
+				throw new Error(
+					'Invalid indentation, you can use tabs or spaces but not both'
+				)
 			
 			# blank line
 			return @tok('newline') if '\n' is @input[0]
