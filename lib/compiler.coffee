@@ -219,11 +219,10 @@ class Compiler
 		name = mixin.name
 		args = mixin.args or ''
 		block = mixin.block
-		attrs = mixin.attrs
 
 		if mixin.call
 			@push "__indent.push('#{Array(@indents + 1).join(@INDENT)}')" if @pp
-			if block or attrs.length
+			if block or mixin.attrs.length
 				@push "#{name}.call"
 				@code_indents++
 				@parent_indents++
@@ -239,8 +238,8 @@ class Compiler
 					@parent_indents--
 					@flush_buffer()
 					@code_indents--
-				if attrs.length
-					val = @attrs(attrs)
+				if mixin.attrs.length
+					val = @visitAttributes mixin.attrs
 					if val.inherits
 						@push """
 						attributes: merge {#{val.buf}}, attributes
@@ -393,24 +392,21 @@ class Compiler
 			if attr.name is 'attributes'
 				inherits = true
 			else
-				if attr.escaped and typeof attr.escape isnt 'bool'
-					attr.val = '#{' + "escape(#{attr.val})" + '}'
+				attr.name = utils.process_str attr.name
 
-			compiled_attrs += "#{attr.name}:#{attr.val},"
+				compiled_attrs += "\"#{attr.name}\":#{attr.val},"
 
 		compiled_attrs = "{#{compiled_attrs}}"
 
 		if inherits
-			@push """
-			buf.push(
-				attrs(
-					merge(
-						#{compiled_attrs},
-						attributes
-					)
-				)
-			)"""
-		else
-			@push "buf.push(attrs(#{compiled_attrs}))"
+			# wrap with a merge function
+			compiled_attrs = """
+			merge(
+				#{compiled_attrs},
+				attributes
+			)
+			"""
+
+		@push "buf.push(attrs(#{compiled_attrs}))"
 
 module.exports = Compiler

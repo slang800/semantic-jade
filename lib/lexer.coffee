@@ -251,7 +251,6 @@ class Lexer
 		# TODO: remove that escaped attr thing... not used
 		value = 'true'
 		key = ''
-		escape_attr = true
 
 		if str[str.length - 1] not in ['\n', ',']
 			#add an end_delemeter at the end if there isn't one
@@ -270,18 +269,13 @@ class Lexer
 					# key was already specified
 					value = matches[1]
 				attrs[key] = value
-				escape[key] = escape_attr
-
-				escape_attr = true # default
+				escape[key] = true
 				value = 'true'
 				key = ''
 			else
 				# ends in a `=`. store key and wait for value
 				key = matches[1]
 
-				if key[key.length - 1] is '!'
-					key = key.substr(0,key.length - 1) #consume `!` (unescape symbol)
-					escape_attr = false
 		tok = @tok(
 			'attrs',
 			attrs: attrs
