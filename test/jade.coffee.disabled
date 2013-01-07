@@ -29,18 +29,18 @@ assert.render = (jade, html, options) ->
 		console.error res
 		process.exit 1
 
-module.exports =
-	"test .version": ->
+describe 'jade', ->
+	it "should test .version", ->
 		assert.ok /^\d+\.\d+\.\d+$/.test(jade.version), "Invalid version format"
 
-	"test exports": ->
+	it "should test exports", ->
 		assert.equal "object", typeof jade.selfClosing, "exports.selfClosing missing"
 		assert.equal "object", typeof jade.doctypes, "exports.doctypes missing"
 		assert.equal "object", typeof jade.filters, "exports.filters missing"
 		assert.equal "object", typeof jade.utils, "exports.utils missing"
 		assert.equal "function", typeof jade.Compiler, "exports.Compiler missing"
 
-	"test doctypes": ->
+	it "should test doctypes", ->
 		assert.equal "<?xml version=\"1.0\" encoding=\"utf-8\" ?>", render("!!! xml")
 		assert.equal "<!DOCTYPE html>", render("doctype html")
 		assert.equal "<!DOCTYPE foo bar baz>", render("doctype foo bar baz")
@@ -56,10 +56,10 @@ module.exports =
 			doctype: "html"
 		)
 
-	"test Buffers": ->
+	it "should test Buffers", ->
 		assert.equal "<p>foo</p>", render(new Buffer("p foo"))
 
-	"test line endings": ->
+	it "should test line endings", ->
 		str = ["p", "div", "img"].join("\r\n")
 		html = ["<p></p>", "<div></div>", "<img/>"].join("")
 		assert.equal html, render(str)
@@ -72,21 +72,21 @@ module.exports =
 			doctype: "html"
 		)
 
-	"test single quotes": ->
+	it "should test single quotes", ->
 		assert.equal "<p>'foo'</p>", render("p 'foo'")
 		assert.equal "<p>'foo'\n</p>", render("p\n  | 'foo'")
 		assert.equal "<a href=\"/foo\"></a>", render("- var path = 'foo';\na(href='/' + path)")
 
-	"test block-expansion": ->
+	it "should test block-expansion", ->
 		assert.equal "<li><a>foo</a></li><li><a>bar</a></li><li><a>baz</a></li>", render("li: a foo\nli: a bar\nli: a baz")
 		assert.equal "<li class=\"first\"><a>foo</a></li><li><a>bar</a></li><li><a>baz</a></li>", render("li.first: a foo\nli: a bar\nli: a baz")
 		assert.equal "<div class=\"foo\"><div class=\"bar\">baz</div></div>", render(".foo: .bar baz")
 
-	"test case statement": ->
+	it "should test case statement", ->
 		assert.equal fixture("case.html"), render(fixture("case.jade"))
 		assert.equal fixture("case-blocks.html"), render(fixture("case-blocks.jade"))
 
-	"test tags": ->
+	it "should test tags", ->
 		str = ["p", "div", "img"].join("\n")
 		html = ["<p></p>", "<div></div>", "<img/>"].join("")
 		assert.equal html, render(str), "Test basic tags"
@@ -110,7 +110,7 @@ module.exports =
 		assert.equal "<fb:user:role></fb:user:role>", render("fb:user:role")
 		assert.equal "<colgroup><col class=\"test\"/></colgroup>", render("colgroup\n  col.test")
 
-	"test nested tags": ->
+	it "should test nested tags", ->
 		str = ["ul", "  li a", "  li b", "  li", "    ul", "      li c", "      li d", "  li e"].join("\n")
 		html = ["<ul>", "<li>a</li>", "<li>b</li>", "<li><ul><li>c</li><li>d</li></ul></li>", "<li>e</li>", "</ul>"].join("")
 		assert.equal html, render(str)
@@ -120,7 +120,7 @@ module.exports =
 		html = ["<ul>", "<li>one</li>", "<ul>two\n", "<li>three</li>", "</ul>", "</ul>"].join("")
 		assert.equal html, render(str)
 
-	"test variable length newlines": ->
+	it "should test variable length newlines", ->
 		str = """
 			ul
 			  li a
@@ -147,7 +147,7 @@ module.exports =
 		assert.equal html,
 		render(str)
 
-	"test tab conversion": ->
+	it "should test tab conversion", ->
 		str = """
 			ul
 			\tli a
@@ -172,7 +172,7 @@ module.exports =
 
 		assert.equal html, render(str)
 
-	"test newlines": ->
+	it "should test newlines", ->
 		str = """
 			ul
 			  li a
@@ -200,7 +200,7 @@ module.exports =
 		assert.equal "<foo></foo>something<bar></bar>", render("foo\n= \"something\"\nbar")
 		assert.equal "<foo></foo>something<bar></bar>else", render("foo\n= \"something\"\nbar\n= \"else\"")
 
-	"test text": ->
+	it "should test text", ->
 		assert.equal "foo\nbar\nbaz\n", render("| foo\n| bar\n| baz")
 		assert.equal "foo \nbar \nbaz\n", render("| foo \n| bar \n| baz")
 		assert.equal "(hey)\n", render("| (hey)")
@@ -209,7 +209,7 @@ module.exports =
 		assert.equal "  foo  \n", render("|   foo  ")
 		assert.equal "  foo  \n bar    \n", render("|   foo  \n|  bar    ")
 
-	"test pipe-less text": ->
+	it "should test pipe-less text", ->
 		assert.equal "<pre><code><foo></foo><bar></bar></code></pre>", render("pre\n  code\n    foo\n\n    bar")
 		assert.equal "<p>foo\n\nbar\n</p>", render("p.\n  foo\n\n  bar")
 		assert.equal "<p>foo\n\n\n\nbar\n</p>", render("p.\n  foo\n\n\n\n  bar")
@@ -217,19 +217,19 @@ module.exports =
 		assert.equal "<script>s.parentNode.insertBefore(g,s)\n</script>", render("script\n  s.parentNode.insertBefore(g,s)\n")
 		assert.equal "<script>s.parentNode.insertBefore(g,s)\n</script>", render("script\n  s.parentNode.insertBefore(g,s)")
 
-	"test tag text": ->
+	it "should test tag text", ->
 		assert.equal "<p>some random text</p>", render("p some random text")
 		assert.equal "<p>click\n<a>Google</a>.\n</p>", render("p\n  | click\n  a Google\n  | .")
 		assert.equal "<p>(parens)</p>", render("p (parens)")
 		assert.equal "<p foo=\"bar\">(parens)</p>", render("p(foo=\"bar\") (parens)")
 		assert.equal "<option value=\"\">-- (optional) foo --</option>", render("option(value=\"\") -- (optional) foo --")
 
-	"test tag text block": ->
+	it "should test tag text block", ->
 		assert.equal "<p>foo \nbar \nbaz\n</p>", render("p\n  | foo \n  | bar \n  | baz")
 		assert.equal "<label>Password:\n<input/></label>", render("label\n  | Password:\n  input")
 		assert.equal "<label>Password:<input/></label>", render("label Password:\n  input")
 
-	"test tag text interpolation": ->
+	it "should test tag text interpolation", ->
 		assert.equal "yo, jade is cool\n", render("| yo, #{name} is cool\n",
 			name: "jade"
 		)
@@ -249,10 +249,10 @@ module.exports =
 			code: "<script>"
 		)
 
-	"test flexible indentation": ->
+	it "should test flexible indentation", ->
 		assert.equal "<html><body><h1>Wahoo</h1><p>test</p></body></html>", render("html\n  body\n   h1 Wahoo\n   p test")
 
-	"test interpolation values": ->
+	it "should test interpolation values", ->
 		assert.equal "<p>Users: 15</p>", render("p Users: #{15}")
 		assert.equal "<p>Users: </p>", render("p Users: #{null}")
 		assert.equal "<p>Users: </p>", render("p Users: #{undefined}")
@@ -260,20 +260,20 @@ module.exports =
 		assert.equal "<p>Users: 0</p>", render("p Users: #{0}")
 		assert.equal "<p>Users: false</p>", render("p Users: #{false}")
 
-	"test html 5 mode": ->
+	it "should test html 5 mode", ->
 		assert.equal "<!DOCTYPE html><input type=\"checkbox\" checked>", render("!!! 5\ninput(type=\"checkbox\", checked)")
 		assert.equal "<!DOCTYPE html><input type=\"checkbox\" checked>", render("!!! 5\ninput(type=\"checkbox\", checked=true)")
 		assert.equal "<!DOCTYPE html><input type=\"checkbox\">", render("!!! 5\ninput(type=\"checkbox\", checked= false)")
 
-	"test colons option": ->
+	it "should test colons option", ->
 		assert.equal "<a href=\"/bar\"></a>", render("a(href:\"/bar\")",
 			colons: true
 		)
 
-	"test class attr array": ->
+	it "should test class attr array", ->
 		assert.equal "<body class=\"foo bar baz\"></body>", render("body(class=[\"foo\", \"bar\", \"baz\"])")
 
-	"test attr interpolation": ->
+	it "should test attr interpolation", ->
 		
 		# Test single quote interpolation
 		assert.equal "<a href=\"/user/12\">tj</a>", render("a(href='/user/#{id}') #{name}",
@@ -303,10 +303,10 @@ module.exports =
 			id: "<script>"
 		)
 
-	"test attr parens": ->
+	it "should test attr parens", ->
 		assert.equal "<p foo=\"bar\">baz</p>", render("p(foo=(((\"bar\"))))= (((\"baz\")))")
 
-	"test code attrs": ->
+	it "should test code attrs", ->
 		assert.equal "<p></p>", render("p(id= name)",
 			name: undefined
 		)
@@ -334,7 +334,7 @@ module.exports =
 		assert.equal "<p id=\"foo\"></p>", render("p(id= (true ? 'foo' : 'bar'))")
 		assert.equal "<option value=\"\">Foo</option>", render("option(value='') Foo")
 
-	"test code attrs class": ->
+	it "should test code attrs class", ->
 		assert.equal "<p class=\"tj\"></p>", render("p(class= name)",
 			name: "tj"
 		)
@@ -356,18 +356,18 @@ module.exports =
 		assert.equal "<p id=\"user-1\"></p>", render("p(id = \"user-\" + 1)")
 		assert.equal "<p class=\"user-1\"></p>", render("p(class = \"user-\" + 1)")
 
-	"test code buffering": ->
+	it "should test code buffering", ->
 		assert.equal "<p></p>", render("p= null")
 		assert.equal "<p></p>", render("p= undefined")
 		assert.equal "<p>0</p>", render("p= 0")
 		assert.equal "<p>false</p>", render("p= false")
 
-	"test script text": ->
+	it "should test script text", ->
 		str = ["script", "  p foo", "", "script(type=\"text/template\")", "  p foo", "", "script(type=\"text/template\").", "  p foo"].join("\n")
 		html = ["<script>p foo\n\n</script>", "<script type=\"text/template\"><p>foo</p></script>", "<script type=\"text/template\">p foo\n</script>"].join("")
 		assert.equal html, render(str)
 
-	"test comments": ->
+	it "should test comments", ->
 		
 		# Regular
 		str = ["//foo", "p bar"].join("\n")
@@ -389,7 +389,7 @@ module.exports =
 		js = "// script(src: '/js/validate.js') "
 		assert.equal str, render(js)
 
-	"test unbuffered comments": ->
+	it "should test unbuffered comments", ->
 		str = ["//- foo", "p bar"].join("\n")
 		html = ["<p>bar</p>"].join("")
 		assert.equal html, render(str)
@@ -397,10 +397,10 @@ module.exports =
 		html = ["<p>foo</p>", "<p>baz</p>"].join("")
 		assert.equal html, render(str)
 
-	"test literal html": ->
+	it "should test literal html", ->
 		assert.equal "<!--[if IE lt 9]>weeee<![endif]-->\n", render("<!--[if IE lt 9]>weeee<![endif]-->")
 
-	"test code": ->
+	it "should test code", ->
 		assert.equal "test", render("!= \"test\"")
 		assert.equal "test", render("= \"test\"")
 		assert.equal "test", render("- var foo = \"test\"\n=foo")
@@ -431,7 +431,7 @@ module.exports =
 		html = ["<foo>", "<bar>bar", "<baz>baz</baz>", "</bar>", "</foo>"].join("")
 		assert.equal html, render(str)
 
-	"test - each": ->
+	it "should test - each", ->
 		
 		# Array
 		str = ["- var items = [\"one\", \"two\", \"three\"];", "- each item in items", "  li= item"].join("\n")
@@ -473,32 +473,32 @@ module.exports =
 		html = ["<li>tobi</li>", "<li>loki</li>", "<li>jane</li>"].join("")
 		assert.equal html, render(str)
 
-	"test if": ->
+	it "should test if", ->
 		str = ["- var users = [\"tobi\", \"loki\", \"jane\"]", "if users.length", "  p users: #{users.length}"].join("\n")
 		assert.equal "<p>users: 3</p>", render(str)
 		assert.equal "<iframe foo=\"bar\"></iframe>", render("iframe(foo=\"bar\")")
 
-	"test unless": ->
+	it "should test unless", ->
 		str = ["- var users = [\"tobi\", \"loki\", \"jane\"]", "unless users.length", "  p no users"].join("\n")
 		assert.equal "", render(str)
 		str = ["- var users = []", "unless users.length", "  p no users"].join("\n")
 		assert.equal "<p>no users</p>", render(str)
 
-	"test else": ->
+	it "should test else", ->
 		str = ["- var users = []", "if users.length", "  p users: #{users.length}", "else", "  p users: none"].join("\n")
 		assert.equal "<p>users: none</p>", render(str)
 
-	"test else if": ->
+	it "should test else if", ->
 		str = ["- var users = [\"tobi\", \"jane\", \"loki\"]", "for user in users", "  if user == \"tobi\"", "    p awesome #{user}", "  else if user == \"jane\"", "    p lame #{user}", "  else", "    p #{user}"].join("\n")
 		assert.equal "<p>awesome tobi</p><p>lame jane</p><p>loki</p>", render(str)
 
-	"test mixins": ->
+	it "should test mixins", ->
 		assert.render "mixins.jade", "mixins.html"
 
-	"test conditional comments": ->
+	it "should test conditional comments", ->
 		assert.render "conditional-comment.jade", "conditional-comment.html"
 
-	"test inheritance": ->
+	it "should test inheritance", ->
 		assert.render "users.jade", "users.html",
 			users: ["tobi", "loki", "jane"]
 
@@ -515,31 +515,31 @@ module.exports =
 			species: "ferret"
 
 
-	"test block append": ->
+	it "should test block append", ->
 		assert.render "append/page.jade", "append/page.html"
 		assert.render "append-without-block/page.jade", "append/page.html"
 
-	"test block prepend": ->
+	it "should test block prepend", ->
 		assert.render "prepend/page.jade", "prepend/page.html"
 		assert.render "prepend-without-block/page.jade", "prepend/page.html"
 
-	"test include literal": ->
+	it "should test include literal", ->
 		assert.render "include-html.jade", "include-html.html"
 		assert.render "include-only-text.jade", "include-only-text.html"
 		assert.render "include-with-text.jade", "include-with-text.html"
 
-	"test yield": ->
+	it "should test yield", ->
 		assert.render "yield.jade", "yield.html"
 		assert.render "yield-title.jade", "yield-title.html"
 		assert.render "yield-before-conditional.jade", "yield-before-conditional.html"
 
-	"test include": ->
+	it "should test include", ->
 		str = ["html", "  head", "    include fixtures/test.css"].join("\n")
 		assert.equal "<html><head>body {\n  color: black;\n}</head></html>", render(str,
 			filename: __dirname + "/jade.test.js"
 		)
 
-	"test include block": ->
+	it "should test include block", ->
 		str = ["html", "  head", "    include fixtures/scripts", "      scripts(src=\"/app.js\")"].join("\n")
 		assert.equal(
 			'<html><head><script src="/jquery.js"></script><script src="/caustic.js"></script><scripts src="/app.js"></scripts></head></html>',
@@ -549,13 +549,13 @@ module.exports =
 			)
 		)
 
-	"test .render(str, fn)": ->
+	it "should test .render(str, fn)", ->
 		jade.render "p foo bar", (err, str) ->
 			assert.ok not err
 			assert.equal "<p>foo bar</p>", str
 
 
-	"test .render(str, options, fn)": ->
+	it "should test .render(str, options, fn)", ->
 		jade.render "p #{foo}",
 			foo: "bar"
 		, (err, str) ->
@@ -563,7 +563,7 @@ module.exports =
 			assert.equal "<p>bar</p>", str
 
 
-	"test .render(str, options, fn) cache": ->
+	it "should test .render(str, options, fn) cache", ->
 		jade.render "p bar",
 			cache: true
 		, (err, str) ->
@@ -577,28 +577,28 @@ module.exports =
 			assert.equal "<p>foo bar</p>", str
 
 
-	"test .compile()": ->
+	it "should test .compile()", ->
 		fn = jade.compile("p foo")
 		assert.equal "<p>foo</p>", fn()
 
-	"test .compile() locals": ->
+	it "should test .compile() locals", ->
 		fn = jade.compile("p= foo")
 		assert.equal "<p>bar</p>", fn(foo: "bar")
 
-	"test .compile() no debug": ->
+	it "should test .compile() no debug", ->
 		fn = jade.compile("p foo\np #{bar}",
 			compileDebug: false
 		)
 		assert.equal "<p>foo</p><p>baz</p>", fn(bar: "baz")
 
-	"test .compile() no debug and global helpers": ->
+	it "should test .compile() no debug and global helpers", ->
 		fn = jade.compile("p foo\np #{bar}",
 			compileDebug: false
 			helpers: "global"
 		)
 		assert.equal "<p>foo</p><p>baz</p>", fn(bar: "baz")
 
-	"test null attrs on tag": ->
+	it "should test null attrs on tag", ->
 		tag = new jade.nodes.Tag("a")
 		name = "href"
 		val = "\"/\""
@@ -607,7 +607,7 @@ module.exports =
 		tag.removeAttribute name
 		assert.ok not tag.getAttribute(name)
 
-	"test assignment": ->
+	it "should test assignment", ->
 		assert.equal "<div>5</div>", render("a = 5;\ndiv= a")
 		assert.equal "<div>5</div>", render("a = 5\ndiv= a")
 		assert.equal "<div>foo bar baz</div>", render("a = \"foo bar baz\"\ndiv= a")
