@@ -181,7 +181,7 @@ class Compiler
 				# Pretty print text
 				@prettyIndent 1, false
 
-			@visit block.nodes[i]
+			@visitNode block.nodes[i]
 
 			if block.nodes[i + 1] and block.nodes[i].isText and block.nodes[i + 1].isText
 				# Multiple text nodes are separated by newlines
@@ -295,7 +295,7 @@ class Compiler
 
 			@visitCode tag.code if tag.code
 			@escape = 'pre' is tag.name  # TODO: make pre tag into mixin... more semantic
-			@visit tag.block
+			@visitNode tag.block
 			
 			# pretty print
 			if @pp and not tag.isInline() and 'pre' isnt tag.name and not tag.canInline()
@@ -337,7 +337,7 @@ class Compiler
 		# detect IE 'if' filters
 		if 0 is comment.val.trim().indexOf('if')
 			@buffer "<!--[#{comment.val.trim()}]>"
-			@visit comment.block
+			@visitNode comment.block
 			@buffer '<![endif]-->'
 		else
 			@buffer "<!--#{comment.val}"
@@ -367,7 +367,7 @@ class Compiler
 		# Block support
 		if code.block
 			@code_indents++
-			@visit code.block
+			@visitNode code.block
 			@flush_buffer()
 			@code_indents--
 
