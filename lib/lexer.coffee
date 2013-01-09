@@ -238,7 +238,7 @@ class Lexer
 	attrs: ->
 		if '(' isnt @input[0]
 			return
-		str = utils.balance_string @input, ')'
+		str = utils.match_delimiters(@input, '(', [')'])[0]
 		@consume str.length
 		str = str[1...-1].trim()
 
@@ -248,7 +248,6 @@ class Lexer
 
 		attrs = {}
 		escape = {}
-		# TODO: remove that escaped attr thing... not used
 		value = 'true'
 		key = ''
 
@@ -257,7 +256,7 @@ class Lexer
 			str += ','
 
 		while str isnt ''
-			matches = utils.match_delimiters(str, '', [',', '\n', '='])
+			matches = utils.match_delimiters(str)
 			str = str.substr(matches[0].length).trim() #consume
 			matches[1] = matches[1].trim()
 
@@ -271,6 +270,7 @@ class Lexer
 
 				if /^".+"$/.exec(key) or /^'.+'$/.exec(key)
 					#remove 1 set of wrapping quotes if they are put around a key
+					#CONSIDER: depricate this
 					key = key[1...-1]
 
 				attrs[key] = value

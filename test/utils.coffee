@@ -18,11 +18,20 @@ describe 'utils.match_delimiters()', ->
 			])
 		)
 
+		stringify(utils.match_delimiters(
+			'\'((foo))\', bar="#{if 1 then 1 else 0}")'
+		)).should.equal(
+			stringify([
+				"'((foo))',",
+				"'((foo))'"
+			])
+		)
+
+
 describe 'utils.balance_string()', ->
 	it 'should handle matching brackets', ->
 		utils.balance_string(
 			'{\'fo}o\':\'ba{r\', \'ba}z\': 42}blah{meh}',
-			'}',
 		).should.equal(
 			'{\'fo}o\':\'ba{r\', \'ba}z\': 42}'
 		)
@@ -30,7 +39,6 @@ describe 'utils.balance_string()', ->
 	it 'should deal with interpolation', ->
 		utils.balance_string(
 			'{"blah } meh"} blah blah',
-			'}',
 		).should.equal(
 			'{"blah } meh"}'
 		)

@@ -25,7 +25,7 @@ HEREGEX = /// ^ /{3} ([\s\S]+?) /{3} ([imgy]{0,4}) (?!\w) ///
  * @return {String} The balanced string with both delimiters still wrapping it
  * @private
 ###
-exports.balance_string = balance_string = (str, end) ->
+exports.balance_string = balance_string = (str, end='}') ->
 	continueCount = 0
 	stack = [end]
 	for i in [1...str.length]
@@ -92,7 +92,7 @@ exports.process_str = (str) ->
 			return output
 
 		if match
-			interp_part = balance_string str[1..], '}'
+			interp_part = balance_string str[1..]
 			# remove the interpolated_part from the rest of the string
 			str = str[interp_part.length + 1..]
 		
@@ -134,7 +134,7 @@ exports.merge = (a, b) ->
  * @private
  * @deprecated mostly replaced with balance_string()
 ###
-exports.match_delimiters = match_delimiters = (str, start_delimiter, end_delimiters) ->
+exports.match_delimiters = match_delimiters = (str, start_delimiter='', end_delimiters=[',', '\n', '=']) ->
 	startpos = -1
 	while str[++startpos] is ' '
 		continue # consume whitespace at start of string
