@@ -108,7 +108,7 @@ class Compiler
 	###
 	prettyIndent: (offset, newline) ->
 		offset = offset or 0
-		newline = (if newline then '\\n' else '')
+		newline = (if newline then '\n' else '')
 		@buffer newline + Array(@indents + offset).join(@INDENT)
 		@push 'buf.push.apply(buf, __indent)' if @parent_indents
 
@@ -147,14 +147,22 @@ class Compiler
 		name = node.constructor.name or node.constructor.toString().match(/function ([^(\s]+)()/)[1]
 		@["visit#{name}"] node
 
-	###
-	Visit literal `node`.
-
-	@param {Literal} node
-	@public
+	###*
+	 * Visit literal `node`.
+	 * @param {Literal} node
+	 * @public
 	###
 	visitLiteral: (node) ->
-		@buffer node.str.replace(/\n/g, "\\\\n")
+		@buffer node.str
+
+	###*
+	 * Visit `text` node.
+	 * @param {Text} text
+	 * @deprecated use literal, it does the same thing
+	 * @public
+	###
+	visitText: (text) ->
+		@buffer text.val
 
 	###
 	Visit all nodes in `block`.
@@ -185,7 +193,7 @@ class Compiler
 
 			if block.nodes[i + 1] and block.nodes[i].isText and block.nodes[i + 1].isText
 				# Multiple text nodes are separated by newlines
-				@buffer '\\n'
+				@buffer '\n'
 
 	###
 	Visit `doctype`. Sets terse mode to `true` when html 5
@@ -293,7 +301,8 @@ class Compiler
 		else
 			@buffer '>'
 
-			@visitCode tag.code if tag.code
+			if tag.code
+				@visitCode tag.code
 			@escape = 'pre' is tag.name  # TODO: make pre tag into mixin... more semantic
 			@visitNode tag.block
 			
@@ -305,14 +314,6 @@ class Compiler
 		@indents--
 
 
-	###
-	Visit `text` node.
-
-	@param {Text} text
-	@public
-	###
-	visitText: (text) ->
-		@buffer text.val
 
 	###
 	Visit a `comment`, only buffering when the buffer flag is set.

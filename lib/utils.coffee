@@ -80,7 +80,12 @@ exports.process_str = (str) ->
 			#nothing found, escape the rest of the string
 			i = str.length
 
-		output += str[0...i].replace /"/g, '\\"'
+		output += str[0...i]
+			.replace(/\\/g, '\\\\')
+			.replace(/"/g, '\\"')
+			.replace(/\n/g,'\\n')
+			.replace(/\t/g,'\\t')
+
 		str = str[i..] # cut off outputted part
 
 		if str is ''
@@ -98,6 +103,8 @@ exports.process_str = (str) ->
 			output += '#' + interp_part
 
 			if str is ''
+				#replace with literal versions to prevent indentation of code
+				#from mixing w/ multi-line strings
 				return output
 
 ###*

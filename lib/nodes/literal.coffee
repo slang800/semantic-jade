@@ -9,6 +9,6 @@ Initialize a `Literal` node with the given `str`.
 ###
 class Literal extends Node
 	constructor: (str) ->
-		@str = str.replace(/\\/g, '\\\\').replace(/\n|\r\n/g, '\\n').replace(/'/g, "\\'")
+		@str = str
 
 module.exports = Literal
