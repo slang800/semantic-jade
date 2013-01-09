@@ -275,7 +275,7 @@ class Compiler
 	visitTag: (tag) ->
 		@indents++
 		name = tag.name
-		name = '#{' + name + '}' if tag.buffer
+
 		unless @hasCompiledTag
 			if not @hasCompiledDoctype and name is 'html'
 				@visitDoctype()
@@ -287,9 +287,9 @@ class Compiler
 		@visitAttributes tag.attrs
 		if not @xml and (tag.selfClosing or name in selfClosing)
 			if @terse
-				@buffer('>')
+				@buffer '>'
 			else
-				@buffer('/>')
+				@buffer '/>'
 		else
 			@buffer '>'
 
@@ -353,16 +353,17 @@ class Compiler
 	@public
 	###
 	visitCode: (code) ->
+		val = code.val.trimLeft() # TODO: what does this line do?
+		
 		# Buffer code
 		if code.buffer
-			val = code.val.trimLeft() # TODO: what does this line do?
 			@push "__val__ = #{val}" # so it is only evaluated once
 			val = 'if __val__ is null or not __val__? then \'\' else __val__'
 			if code.escape
 				val = "escape(#{val})"
-			@push "buf.push(#{val})"
-		else
-			@push code.val
+			val = "buf.push(#{val})"
+
+		@push val
 
 		# Block support
 		if code.block
