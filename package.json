@@ -25,5 +25,8 @@
       "jade": "runtime.js"
     }
   },
-  "scripts" : { "prepublish" : "npm prune" }
+  "scripts" : {
+    "prepublish" : "npm prune",
+    "test": "mocha",
+  }
 }
