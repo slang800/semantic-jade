@@ -32,24 +32,22 @@ exports.balance_string = balance_string = (str, end='}') ->
 		if continueCount
 			--continueCount
 			continue
-		switch letter = str.charAt i
-			when '\\'
-				++continueCount
-				continue
-			when end
-				stack.pop()
-				unless stack.length
-					return str[0..i]
-				end = stack[stack.length - 1]
-				continue
-		if end is '}' and letter in ['"', "'"]
-			stack.push end = letter
-		else if end is '}' and letter is '/' and match = (HEREGEX.exec(str[i..]) or REGEX.exec(str[i..]))
-			continueCount += match[0].length - 1
-		else if end is '}' and letter is '{'
-			stack.push end = '}'
-		else if end is '"' and prev in ['#','!'] and letter is '{'
-			stack.push end = '}'
+		letter = str.charAt i
+		if letter is '\\'
+			++continueCount
+			continue
+		if letter is end
+			stack.pop()
+			unless stack.length
+				return str[0..i]
+			end = stack[stack.length - 1]
+			continue
+
+		if end in [']', '}', ')']
+			if letter in ['\"', '\'', '[', '{', '(']
+				stack.push end = letter
+			else if letter is '/' and match = (HEREGEX.exec(str[i..]) or REGEX.exec(str[i..]))
+				continueCount += match[0].length - 1
 		prev = letter
 	throw new Error "missing #{ stack.pop() }, starting"
 
