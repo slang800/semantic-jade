@@ -18,7 +18,8 @@
     "uubench": "*",
     "should": "*",
     "less": "*",
-    "uglify-js": "*"
+    "uglify-js": "*",
+    "coffee-script":"*"
   },
   "component": {
     "scripts": {
