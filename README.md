@@ -1,3 +1,4 @@
+ [![Build Status](https://secure.travis-ci.org/slang800/semantic-jade.png)](http://travis-ci.org/visionmedia/jade)
 
 # Semantic Jade
 
