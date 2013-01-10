@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/slang800/semantic-jade.png?branch=semantic-jade)](http://travis-ci.org/visionmedia/jade)
+[![Build Status](https://travis-ci.org/slang800/semantic-jade.png?branch=semantic-jade)](https://travis-ci.org/slang800/semantic-jade)
 
 # Semantic Jade
 
