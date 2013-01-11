@@ -283,7 +283,11 @@ class Compiler
 		# pretty print
 		@prettyIndent 0, true if @pp and not tag.isInline()
 		@buffer "<#{name}"
-		@visitAttributes tag.attrs
+
+		compiled_attrs = attrs tag.attrs, @terse
+		if compiled_attrs isnt '{}'
+			@push "buf.push(attrs(#{compiled_attrs}))"
+
 		if not @xml and (tag.selfClosing or name in selfClosing)
 			if @terse
 				@buffer '>'
@@ -364,24 +368,14 @@ class Compiler
 			@flush_buffer()
 			@code_indents--
 
-	###
-	Visit `attrs`.
 
-	@param {Array} attrs
-	@public
-	###
-	visitAttributes: (raw_attrs) ->
-		compiled_attrs = attrs(raw_attrs)
-		if compiled_attrs isnt '{}'
-			@push "buf.push(attrs(#{compiled_attrs}))"
-
-attrs = (raw_attrs) ->
+attrs = (raw_attrs, terse=false) ->
 	if raw_attrs.length is 0
 		return '{}'
 
 	compiled_attrs = ''
 
-	if @terse
+	if terse
 		compiled_attrs += 'terse: true,'
 
 	for attr in raw_attrs
