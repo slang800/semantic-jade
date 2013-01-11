@@ -56,13 +56,11 @@ nulls = (val) ->
 	val?
 
 
-###
-Render the given attributes object.
-
-@param {Object} obj
-@param {Object} escaped
-@return {String}
-@private
+###*
+ * Render the given attributes object.
+ * @param {Object} obj
+ * @return {String}
+ * @private
 ###
 exports.attrs = (obj) ->
 	buf = ['']

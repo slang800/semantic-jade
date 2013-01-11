@@ -256,7 +256,7 @@ class Compiler
 		else
 			@push "#{name} = (#{args}) ->"
 			@code_indents++
-			@push 'block = @block; attributes = @attributes or {};'
+			@push 'block = @block; attributes = if @attributes? then @attributes.attrs else {};'
 			@parent_indents++
 			@visit block
 			@parent_indents--
