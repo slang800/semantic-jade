@@ -9,7 +9,7 @@ render = (str, options) ->
 
 describe 'attributes', ->
 	it "should support multi-line attrs w/ odd formatting", ->
-		output = '<a foo="bar" bar="baz" checked="checked">foo</a>'
+		output = '<a checked="checked" foo="bar" bar="baz">foo</a>'
 
 		render('''
 			a(foo="bar"
@@ -46,7 +46,7 @@ describe 'attributes', ->
 
 
 	it "should support shorthands for checkboxes", ->
-		output = '<input type="checkbox" checked="checked"/>'
+		output = '<input checked="checked" type="checkbox"/>'
 
 		render('input(type="checkbox", checked)')
 			.should.equal(output)
@@ -205,7 +205,7 @@ describe 'attributes', ->
 		render(
 			'p(\'class\'= "name", \'data-dynamic\'= "true", yay)'
 		).should.equal(
-			'<p class="name" data-dynamic="true" yay="yay"></p>'
+			'<p yay="yay" class="name" data-dynamic="true"></p>'
 		)
 
 

@@ -65,29 +65,35 @@ Render the given attributes object.
 @private
 ###
 exports.attrs = (obj) ->
-	buf = []
-	terse = obj.terse
-	delete obj.terse
+	buf = ['']
 
-	buf.push('')
-
-	for key, val of obj
+	attrs = {}
+	for attr in obj.attrs
+		val = attr.val
+		key = attr.name
 		if typeof val is 'boolean' or val is null or not val?
 			if val
-				if terse
+				if obj.terse
 					buf.push(key)
 				else
 					buf.push("#{key}=\"#{key}\"")
 		else
-			if 'class' is key and Array.isArray(val)
-				value = val.join(' ')
-			else if 'string' isnt typeof val
-				value = JSON.stringify(val)
-			else
-				value = val
+			if 'class' is key
+				if Array.isArray(val)
+					val = val.join ' '
 
-			if value isnt ''
-				buf.push("#{key}=\"#{utils.escape(value)}\"")
+				if attrs['class']?
+					attrs['class'] = attrs['class'] + ' ' + val
+				else
+					attrs['class'] = val
+			else
+				if 'string' isnt typeof val
+					val = JSON.stringify(val)
+				attrs[key] = val
+
+	for key, value of attrs
+		if val isnt ''
+			buf.push("#{key}=\"#{utils.escape(value)}\"")
 
 	return buf.join " "
 

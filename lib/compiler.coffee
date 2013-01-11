@@ -373,20 +373,14 @@ attrs = (raw_attrs, terse=false) ->
 	if raw_attrs.length is 0
 		return '{}'
 
-	compiled_attrs = ''
-
-	if terse
-		compiled_attrs += 'terse: true,'
-
+	attr_list = ''
 	for attr in raw_attrs
 		if attr.name is 'attributes'
 			inherits = true
 		else
-			attr.name = utils.process_str attr.name
+			attr_list += "{name:\"#{utils.process_str attr.name}\",val:#{attr.val}},"
 
-			compiled_attrs += "\"#{attr.name}\":#{attr.val},"
-
-	compiled_attrs = "{#{compiled_attrs}}"
+	compiled_attrs = "{terse:#{terse},attrs:[#{attr_list}]}"
 
 	if inherits
 		# wrap with a merge function
