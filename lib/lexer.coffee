@@ -205,7 +205,7 @@ class Lexer
 				tok = @tok('call', captures[1])
 
 				if @input[0] is '('
-					str = utils.balance_string @input, ')'
+					str = utils.balance_string @input
 					unless /^ *[-\w]+ *=|^ *attributes *(?:,|$)/.test str[1...-1]
 						@consume str.length
 						tok.args = str[1...-1]
@@ -218,7 +218,7 @@ class Lexer
 			(captures) =>
 				tok = @tok('mixin', captures[1])
 				if @input[0] is '('
-					str = utils.balance_string(@input, ')')
+					str = utils.balance_string @input
 					@consume str.length
 					tok.args = str[1...-1]
 				tok
@@ -238,7 +238,7 @@ class Lexer
 	attrs: ->
 		if '(' isnt @input[0]
 			return
-		str = utils.match_delimiters(@input, '(', [')'])[0]
+		str = utils.balance_string @input
 		@consume str.length
 		str = str[1...-1].trim()
 
@@ -282,9 +282,8 @@ class Lexer
 				key = matches[1]
 
 		tok = @tok(
-			'attrs',
-			attrs: attrs
-			escape: escape
+			'attrs'
+			{attrs: attrs, escape: escape}
 		)
 		#TODO: make self-closing get detected while parsing tag
 		if '/' is @input.charAt(0)

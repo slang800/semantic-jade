@@ -27,6 +27,14 @@ describe 'utils.match_delimiters()', ->
 			])
 		)
 
+		stringify(utils.match_delimiters(
+			'{test: \'abcdefg\'}.test.substr(3,[0,3][1]),',
+		)).should.equal(
+			stringify([
+				
+			])
+		)
+
 
 describe 'utils.balance_string()', ->
 	it 'should handle matching brackets', ->
@@ -42,6 +50,20 @@ describe 'utils.balance_string()', ->
 		).should.equal(
 			'{"blah } meh"}'
 		)
+
+	it 'should be able to match parenthesis', ->
+		utils.balance_string(
+			'(class=[\'foo\', \'bar\', \'baz\'])'
+		).should.equal(
+			'(class=[\'foo\', \'bar\', \'baz\'])'
+		)
+
+		utils.balance_string(
+			'("#{")}" + \')}\' + (")")} )")'
+		).should.equal(
+			'("#{")}" + \')}\' + (")")} )")'
+		)
+
 
 merge = runtime.merge
 

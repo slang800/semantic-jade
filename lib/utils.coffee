@@ -15,6 +15,14 @@ REGEX = /// ^
 
 HEREGEX = /// ^ /{3} ([\s\S]+?) /{3} ([imgy]{0,4}) (?!\w) ///
 
+MATCHING_DELIMITER = {
+	'{': '}',
+	'[': ']',
+	'(': ')',
+	'\"': '\"',
+	'\'': '\'',
+}
+
 ###*
  * Matches a balanced group such as a single or double-quoted string. Pass in
  * a series of delimiters, all of which must be nested correctly within the
@@ -25,8 +33,9 @@ HEREGEX = /// ^ /{3} ([\s\S]+?) /{3} ([imgy]{0,4}) (?!\w) ///
  * @return {String} The balanced string with both delimiters still wrapping it
  * @private
 ###
-exports.balance_string = balance_string = (str, end='}') ->
+exports.balance_string = balance_string = (str) ->
 	continueCount = 0
+	end = MATCHING_DELIMITER[str[0]]
 	stack = [end]
 	for i in [1...str.length]
 		if continueCount
@@ -44,10 +53,14 @@ exports.balance_string = balance_string = (str, end='}') ->
 			continue
 
 		if end in [']', '}', ')']
-			if letter in ['\"', '\'', '[', '{', '(']
+			if letter in ['\"', '\'']
 				stack.push end = letter
+			else if letter in ['[', '{', '('] and end is MATCHING_DELIMITER[letter]
+				stack.push end
 			else if letter is '/' and match = (HEREGEX.exec(str[i..]) or REGEX.exec(str[i..]))
 				continueCount += match[0].length - 1
+		else if end is '"' and prev in ['#','!'] and letter is '{'
+			stack.push end = '}'
 		prev = letter
 	throw new Error "missing #{ stack.pop() }, starting"
 
