@@ -13,7 +13,7 @@ resolve = path.resolve
 exists = fs.existsSync or path.existsSync
 join = path.join
 mkdirp = require "mkdirp"
-jade = require "../"
+jade = require "../src/"
 
 ###
 Compile from stdin.

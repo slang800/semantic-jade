@@ -1,7 +1,0 @@
-.DS_Store
-lib-cov
-testing
-node_modules
-coverage.html
-/*.sublime-project
-/*.sublime-workspace
