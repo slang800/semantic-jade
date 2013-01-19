@@ -232,7 +232,7 @@ class Lexer
 			str += ','
 
 		while str isnt ''
-			matches = utils.match_delimiters(str)
+			matches = match_delimiters(str)
 			str = str.substr(matches[0].length).trim() #consume
 			matches[1] = matches[1].trim()
 
@@ -360,3 +360,54 @@ class Lexer
 		@text()
 
 exports = module.exports = Lexer
+
+###*
+ * Match everything in parentheses.
+ * We do not include matched delimiters like `()` or `{}` (depending on the
+   specified delimiter) or delimiters contained in quotation marks `"("`. We
+   also ignore newlines. Otherwise, this is similar to using
+   `/\((.*)\)/.exec()`
+ * This can also be called with start_delimeter as null to get the next
+   occurrence of an end_delimiter while excluding the cases mentioned above
+ * @param {String} str
+ * @param {String} start_delimiter
+ * @param {Array} end_delimiters
+ * @return {Array} similar to the output of a regex
+ * @private
+ * @deprecated mostly replaced with balance_string()
+###
+match_delimiters = (str, start_delimiter='', end_delimiters=[',', '\n', '=']) ->
+	startpos = -1
+	while str[++startpos] is ' '
+		continue # consume whitespace at start of string
+	if str[startpos...startpos + start_delimiter.length] isnt start_delimiter
+		return null
+	else
+		startpos += start_delimiter.length - 1
+		endpos = startpos
+
+	ctr = 1
+	chr = quot = ''
+	len = str.length - 1
+	while (ctr > 0) and (endpos < len)
+		chr = str[++endpos]
+		if chr is '\\'
+			++endpos # skip next char
+		else if chr in ['\'', '\"', '[', ']', '{', '}']
+			if chr is quot or (quot is '[' and chr is ']') or (quot is '{' and chr is '}')
+				quot = ''
+			else if quot is '' and chr not in [']', '}']
+				quot = chr
+			#ignore if it's already inside quotes
+		else if str[endpos...start_delimiter.length - 1] is start_delimiter
+			endpos += start_delimiter.length
+			++ctr unless quot
+		else if chr in end_delimiters
+			--ctr unless quot
+	
+	if startpos < 0 then startpos = 0
+	#chr will be the end_delimiter that ended the string
+	[
+		str[...endpos + chr.length]
+		str[startpos + start_delimiter.length...endpos]
+	]
