@@ -378,7 +378,7 @@ attrs = (raw_attrs, terse=false) ->
 		if attr.name is 'attributes'
 			inherits = true
 		else
-			attr_list += "{name:\"#{utils.process_str attr.name}\",val:#{attr.val}},"
+			attr_list += "{name:\"#{utils.process_str attr.name}\",val:#{attr.val},escape:#{attr.escape}},"
 
 	compiled_attrs = "{terse:#{terse},attrs:[#{attr_list}]}"
 

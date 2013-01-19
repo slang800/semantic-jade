@@ -80,6 +80,9 @@ exports.attrs = (obj) ->
 				if Array.isArray(val)
 					val = val.join ' '
 
+				if attr.escape
+					val = utils.escape(val)
+
 				if attrs['class']?
 					attrs['class'] = attrs['class'] + ' ' + val
 				else
@@ -87,11 +90,15 @@ exports.attrs = (obj) ->
 			else
 				if 'string' isnt typeof val
 					val = JSON.stringify(val)
+
+				if attr.escape
+					val = utils.escape(val)
+
 				attrs[key] = val
 
-	for key, value of attrs
+	for key, val of attrs
 		if val isnt ''
-			buf.push("#{key}=\"#{utils.escape(value)}\"")
+			buf.push("#{key}=\"#{val}\"")
 
 	return buf.join " "
 
