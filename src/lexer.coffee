@@ -244,7 +244,7 @@ class Lexer
 					# key was already specified
 					value = matches[1]
 
-				if /^".+"$/.exec(key) or /^'.+'$/.exec(key)
+				if /^(".+"|'.+')$/.exec(key)
 					#remove 1 set of wrapping quotes if they are put around a key
 					#CONSIDER: depricate this
 					key = key[1...-1]
