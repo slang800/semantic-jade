@@ -27,14 +27,6 @@ describe 'utils.match_delimiters()', ->
 			])
 		)
 
-		stringify(utils.match_delimiters(
-			'{test: \'abcdefg\'}.test.substr(3,[0,3][1]),',
-		)).should.equal(
-			stringify([
-				
-			])
-		)
-
 
 describe 'utils.balance_string()', ->
 	it 'should handle matching brackets', ->
