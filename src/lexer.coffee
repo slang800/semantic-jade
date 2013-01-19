@@ -154,40 +154,16 @@ class Lexer
 	extends: ->
 		@scan /^extends? +([^\n]+)/, "extends"
 
-	
-	#Block prepend
-	prepend: ->
-		@capture(
-			/^prepend +([^\n]+)/,
-			(captures) =>
-				mode = 'prepend'
-				name = captures[1]
-				tok = @tok('block', name)
-				tok.mode = mode
-				tok
-		)
-
-	
-	#Block append
-	append: ->
-		@capture(
-			/^append +([^\n]+)/,
-			(captures) =>
-				mode = 'append'
-				name = captures[1]
-				tok = @tok('block', name)
-				tok.mode = mode
-				tok
-		)
-
 	block: ->
 		@capture(
-			/^block\b *(?:(prepend|append) +)?([^\n]*)/,
+			/^(block|prepend|append)\b *([^\n]*)/,
 			(captures) =>
-				mode = captures[1] or 'replace'
+				if captures[1] is 'block'
+					captures[1] = 'replace' # block really means replace
+
 				name = captures[2]
 				tok = @tok('block', name)
-				tok.mode = mode
+				tok.mode = captures[1]
 				tok
 		)
 
@@ -369,8 +345,6 @@ class Lexer
 		@yield() or
 		@doctype() or
 		@extends() or
-		@append() or
-		@prepend() or
 		@block() or
 		@include() or
 		@mixin() or
