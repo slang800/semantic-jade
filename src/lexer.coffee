@@ -149,7 +149,7 @@ class Lexer
 		@scan /^\.([\w-]+)/, "class"
 
 	text: ->
-		@scan /^(?:\| ?| ?)?([^\n]+)/, "text"
+		@scan /^\|? ?([^\n]+)/, "text"
 
 	extends: ->
 		@scan /^extends? +([^\n]+)/, "extends"
@@ -226,7 +226,7 @@ class Lexer
 
 	code: ->
 		@capture(
-			/^(!?=|-)([^\n]+)/,
+			/^(!?=|-(?: )?)([^\n]+)/,
 			(captures) =>
 				flags = captures[1]
 				tok = @tok("code", captures[2])

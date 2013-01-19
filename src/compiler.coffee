@@ -349,7 +349,7 @@ class Compiler
 	@public
 	###
 	visitCode: (code) ->
-		val = code.val.trimLeft() # TODO: what does this line do?
+		val = code.val
 		
 		# Buffer code
 		if code.buffer
