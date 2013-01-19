@@ -1,5 +1,4 @@
-#Module dependencies
-Node = require("./node")
+Node = require './node'
 
 ###
 Initialize a `BlockComment` with the given `block`.

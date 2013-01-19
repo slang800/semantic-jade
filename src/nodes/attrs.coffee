@@ -1,6 +1,5 @@
-#Module dependencies
-Node = require("./node")
-Block = require("./block")
+Node = require './node'
+Block = require './block'
 
 ###
 Initialize a `Attrs` node.

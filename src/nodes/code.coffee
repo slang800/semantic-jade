@@ -1,5 +1,4 @@
-#Module dependencies
-Node = require("./node")
+Node = require './node'
 
 ###
 Initialize a `Code` node with the given code `val`.

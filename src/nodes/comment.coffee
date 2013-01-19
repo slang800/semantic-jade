@@ -1,5 +1,4 @@
-#Module dependencies
-Node = require("./node")
+Node = require './node'
 
 ###
 Initialize a `Comment` with the given `val`, optionally `buffer`,

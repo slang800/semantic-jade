@@ -1,5 +1,4 @@
-#Module dependencies
-Attrs = require("./attrs")
+Attrs = require './attrs'
 
 ###
 Initialize a new `Mixin` with `name` and `block`.

@@ -1,5 +1,4 @@
-#Module dependencies
-Node = require("./node")
+Node = require './node'
 
 ###
 Initialize a new `Block` with an optional `node`.
@@ -28,7 +27,7 @@ class Block extends Node
 
 
 	###
-	Pust the given `node`.
+	Push the given `node`.
 
 	@param {Node} node
 	@return {Number}
@@ -67,13 +66,18 @@ class Block extends Node
 	###
 	includeBlock: ->
 		ret = @
-
 		for node in @nodes
-			if node.yield_tok then return node
-			else if node.textOnly then continue
-			else if node.includeBlock then ret = node.includeBlock()
-			else if node.block and not node.block.isEmpty() then ret = node.block.includeBlock()
-			if ret.yield_tok then return ret
+			if node.yield_tok
+				return node
+			else if node.textOnly
+				continue
+			else if node.includeBlock
+				ret = node.includeBlock()
+			else if node.block and not node.block.isEmpty()
+				ret = node.block.includeBlock()
+
+			if ret.yield_tok
+				return ret
 
 		ret
 
@@ -86,7 +90,6 @@ class Block extends Node
 	###
 	clone: ->
 		clone = new Block
-
 		for node in @nodes
 			clone.push node.clone()
 

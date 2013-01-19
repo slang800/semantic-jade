@@ -1,7 +1,6 @@
-#Module dependencies
-Attrs = require("./attrs")
-Block = require("./block")
-inlineTags = require("../inline-tags")
+Attrs = require './attrs'
+Block = require './block'
+inlineTags = require '../inline-tags'
 
 ###
 Initialize a `Tag` node with the given tag `name` and optional `block`.
@@ -63,7 +62,7 @@ class Tag extends Attrs
 		
 		# Multi-line inline-only tag
 		if @block.nodes.every(isInline)
-			for i in [1..nodes.length]
+			for i in [1...nodes.length]
 				return false if nodes[i - 1].isText and nodes[i].isText
 			return true
 		
