@@ -5,29 +5,6 @@ runtime = require '../lib/runtime' # probably should be in its own file
 stringify = (variable) ->
 	JSON.stringify(variable, null, '\t')
 
-describe 'utils.match_delimiters()', ->
-	it 'should handle matching brackets', ->
-		stringify(utils.match_delimiters(
-			'(class=[\'foo\', \'bar\', \'baz\'])\n\n',
-			'(',
-			')',
-		)).should.equal(
-			stringify([
-				'(class=[\'foo\', \'bar\', \'baz\'])'
-				'class=[\'foo\', \'bar\', \'baz\']'
-			])
-		)
-
-		stringify(utils.match_delimiters(
-			'\'((foo))\', bar="#{if 1 then 1 else 0}")'
-		)).should.equal(
-			stringify([
-				"'((foo))',",
-				"'((foo))'"
-			])
-		)
-
-
 describe 'utils.balance_string()', ->
 	it 'should handle matching brackets', ->
 		utils.balance_string(
