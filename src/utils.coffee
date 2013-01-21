@@ -83,6 +83,7 @@ search = (str, ends) ->
 
 		if str[i] in Object.keys(MATCHING_DELIMITER)
 			i += balance_string(str[i..]).length
+			continue
 
 		i++
 

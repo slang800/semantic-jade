@@ -83,6 +83,15 @@ describe 'search', ->
 			' foo)'
 		)
 
+	it 'should ignore delimiters in balanced groups (strings)', ->
+		search(
+			'src=\'/jquery.js\', foo',
+			[',']
+		).should.equal(
+			'src=\'/jquery.js\','
+		)
+
+
 
 describe 'process_str', ->
 	process_str = utils.process_str
