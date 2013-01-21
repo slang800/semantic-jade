@@ -376,7 +376,9 @@ exports = module.exports = Lexer
  * @private
  * @deprecated mostly replaced with balance_string()
 ###
-match_delimiters = (str, start_delimiter='', end_delimiters=[',', '\n', '=']) ->
+match_delimiters = (str) ->
+	start_delimiter = ''
+	end_delimiters = [',', '\n', '=']
 	startpos = -1
 	while str[++startpos] is ' '
 		continue # consume whitespace at start of string
