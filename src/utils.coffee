@@ -33,9 +33,8 @@ MATCHING_DELIMITER = {
  * @return {String} The balanced string with both delimiters still wrapping it
  * @private
 ###
-exports.balance_string = balance_string = (str) ->
+balance_string = (str, end=MATCHING_DELIMITER[str[0]]) ->
 	continueCount = 0
-	end = MATCHING_DELIMITER[str[0]]
 	stack = [end]
 	for i in [1...str.length]
 		if continueCount
@@ -63,6 +62,8 @@ exports.balance_string = balance_string = (str) ->
 			stack.push end = '}'
 		prev = letter
 	throw new Error "missing #{ stack.pop() }, starting"
+
+exports.balance_string = balance_string
 
 ###*
  * Indent a string by adding indents before each newline in the string
