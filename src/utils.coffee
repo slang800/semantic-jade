@@ -61,9 +61,35 @@ balance_string = (str, end=MATCHING_DELIMITER[str[0]]) ->
 		else if end is '"' and prev in ['#','!'] and letter is '{'
 			stack.push end = '}'
 		prev = letter
-	throw new Error "missing #{ stack.pop() }, starting"
+	throw new Error "missing #{stack.pop()}, starting"
 
 exports.balance_string = balance_string
+
+###*
+ * Search through a string until an end delimiter is found, but ignore
+   characters within balanced groups, like quoted strings within the string
+   being matched.
+ * @param {String} str The string to search in.
+ * @param {Array} end The end delimiters to look for
+ * @return {String} All of the characters from the beginning of the string to
+   the first valid end delimiter that is found (including the end delimiter).
+   Each delimiter must have a length > 0
+###
+search = (str, end) ->
+	while i < str.length
+		for delimiter in end
+			if str[i...i + delimiter.length] is delimiter
+				return str[0...i + delimiter.length]
+
+	if end.length > 1
+		searched_for = end[0...-1].join('", "') + '", or "' + end[-1..]
+	else
+		searched_for = end[0]
+	searched_for = "\"#{searched_for}\""
+
+	throw new Error "could not find #{searched_for}"
+
+exports.search = search
 
 ###*
  * Indent a string by adding indents before each newline in the string
