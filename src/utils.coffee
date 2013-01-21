@@ -70,21 +70,26 @@ exports.balance_string = balance_string
    characters within balanced groups, like quoted strings within the string
    being matched.
  * @param {String} str The string to search in.
- * @param {Array} end The end delimiters to look for
+ * @param {Array} ends The end delimiters to look for
  * @return {String} All of the characters from the beginning of the string to
    the first valid end delimiter that is found (including the end delimiter).
-   Each delimiter must have a length > 0
+   Each delimiter must be 1 character.
 ###
-search = (str, end) ->
+search = (str, ends) ->
+	i = 0
 	while i < str.length
-		for delimiter in end
-			if str[i...i + delimiter.length] is delimiter
-				return str[0...i + delimiter.length]
+		if str[i] in ends
+			return str[0..i]
 
-	if end.length > 1
-		searched_for = end[0...-1].join('", "') + '", or "' + end[-1..]
+		if str[i] in Object.keys(MATCHING_DELIMITER)
+			i += balance_string(str[i..]).length
+
+		i++
+
+	if ends.length > 1
+		searched_for = ends[0...-1].join('", "') + '", or "' + ends[-1..]
 	else
-		searched_for = end[0]
+		searched_for = ends[0]
 	searched_for = "\"#{searched_for}\""
 
 	throw new Error "could not find #{searched_for}"
