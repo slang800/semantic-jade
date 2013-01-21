@@ -54,6 +54,37 @@ describe 'search', ->
 			'foo, foo:'
 		)
 
+		search(
+			str,
+			['f']
+		).should.equal(
+			'f'
+		)
+
+	it 'should ignore delimiters in balanced groups', ->
+		search(
+			'style= [\'foo\', \'bar\'][1], foo) Foo',
+			['=', ',', ')']
+		).should.equal(
+			'style='
+		)
+		console.log '1'
+
+		search(
+			' [\'foo\', \'bar\'][1], foo) Foo',
+			['=', ',', ')']
+		).should.equal(
+			' [\'foo\', \'bar\'][1],'
+		)
+		console.log '2'
+
+		search(
+			' foo) Foo',
+			['=', ',', ')']
+		).should.equal(
+			' foo)'
+		)
+
 
 describe 'process_str', ->
 	process_str = utils.process_str
