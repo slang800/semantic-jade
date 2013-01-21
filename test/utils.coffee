@@ -68,7 +68,6 @@ describe 'search', ->
 		).should.equal(
 			'style='
 		)
-		console.log '1'
 
 		search(
 			' [\'foo\', \'bar\'][1], foo) Foo',
@@ -76,7 +75,6 @@ describe 'search', ->
 		).should.equal(
 			' [\'foo\', \'bar\'][1],'
 		)
-		console.log '2'
 
 		search(
 			' foo) Foo',
