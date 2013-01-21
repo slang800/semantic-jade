@@ -29,11 +29,11 @@ MATCHING_DELIMITER = {
  * contents of the string. This method allows us to have strings within
  * interpolations within strings, ad infinitum.
  * @param {String} str The string to balance
- * @param {String} end The character that ends the balanced string
  * @return {String} The balanced string with both delimiters still wrapping it
  * @private
 ###
-balance_string = (str, end=MATCHING_DELIMITER[str[0]]) ->
+balance_string = (str) ->
+	end = MATCHING_DELIMITER[str[0]]
 	continueCount = 0
 	stack = [end]
 	for i in [1...str.length]
