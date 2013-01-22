@@ -278,7 +278,8 @@ class Parser
 		path = require('path')
 		fs = require('fs')
 
-		throw new Error('the \"filename\" option is required to use includes') unless @filename
+		unless @filename
+			throw new Error('the \"filename\" option is required to use includes')
 		dir = path.dirname(@filename)
 
 		include_filename = @expect('include').val.trim()

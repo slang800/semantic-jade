@@ -161,8 +161,7 @@ class Lexer
 				if captures[1] is 'block'
 					captures[1] = 'replace' # block really means replace
 
-				name = captures[2]
-				tok = @tok('block', name)
+				tok = @tok('block', captures[2])
 				tok.mode = captures[1]
 				tok
 		)
