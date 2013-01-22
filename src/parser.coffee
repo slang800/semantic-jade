@@ -295,14 +295,26 @@ class Parser
 		if '.jade' isnt extname # non-jade
 			return new nodes.Literal(str)
 
+		block = undefined
+		parentBlocks = @blocks
 		parser = new Parser(str, include_filepath, @options)
-		parser.blocks = utils.merge({}, @blocks)
+
+		if 'indent' is @peek().type
+			block = new nodes.Block()
+			@blocks = block.blocks = {}
+			block.push @block().prune()
+
+		parser.blocks = utils.merge {}, @blocks
 		parser.mixins = @mixins
+
 		@context parser
 		ast = parser.parse()
 		@context()
 		ast.filename = include_filepath
-		ast.includeBlock().push @block() if 'indent' is @peek().type
+
+		if block
+			ast.includeBlock().push block
+		@blocks = parentBlocks
 		return ast
  
 	

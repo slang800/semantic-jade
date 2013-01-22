@@ -81,6 +81,19 @@ class Block extends Node
 
 		ret
 
+	###
+	 * Prune any extends blocks and return this node.
+	 *
+	 * @return {Block}
+	 * @api private
+	###
+
+	prune: ->
+		@nodes = @nodes.filter(
+			(node) ->
+				return not node.mode
+		)
+		return @
 
 	###
 	Return a clone of this block.
