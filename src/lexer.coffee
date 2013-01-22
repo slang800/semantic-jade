@@ -235,21 +235,18 @@ class Lexer
 		# a ',' will always be the last thing in this string
 		while str isnt ''
 			current_chunk = utils.search(str, [',', '\n', '='])
-			matches = [
-				current_chunk,
-				current_chunk[...current_chunk.length - 1],
-			]
+			end_delimiter = current_chunk[current_chunk.length - 1]
+			matched_text = current_chunk[...current_chunk.length - 1].trim()
 
-			str = str.substr(matches[0].length).trim() #consume
-			matches[1] = matches[1].trim()
+			str = str.substr(current_chunk.length).trim() #consume
 
-			if matches[0][matches[0].length - 1] in [',', '\n']
+			if end_delimiter in [',', '\n']
 				if key is ''
 					# if a key is not followed by a value
-					key = matches[1]
+					key = matched_text
 				else
 					# key was already specified
-					value = matches[1]
+					value = matched_text
 
 				if /^(".+"|'.+')$/.exec(key)
 					#remove 1 set of wrapping quotes if they are put around a key
@@ -262,7 +259,7 @@ class Lexer
 				key = ''
 			else
 				# ends in a `=`. store key and wait for value
-				key = matches[1]
+				key = matched_text
 
 		tok = @tok(
 			'attrs'
