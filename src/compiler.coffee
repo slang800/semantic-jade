@@ -9,8 +9,8 @@ utils = require './utils'
 class Compiler
 	###*
 	 * Initialize `Compiler` with the given `node`
-	 * @param  {Node}   node    [description]
-	 * @param  {Object} options [description]
+	 * @param {Node} node [description]
+	 * @param {Object} options [description]
 	 * @private
 	###
 	constructor: (node, options) ->
@@ -46,7 +46,7 @@ class Compiler
 		return @buf.join '\n'
 
 	###*
-	 * add elements to the array (@buf) holding the compiled SJ code (which is
+	 * Add elements to the array (@buf) holding the compiled SJ code (which is
        actually CoffeeScript). this function also adds indentation to the
        lines that are added based on the value of @code_indents
 	 * @param {[type]} args... elements to be added to @buf
@@ -92,19 +92,18 @@ class Compiler
 		@lastBufferedIdx = @buf.length
 
 	###*
-	 * prevent additional strings from being added to the current buffer
+	 * Prevent additional strings from being added to the current buffer
 	 * @return {[type]} [description]
 	###
 	flush_buffer: ->
 		@lastBufferedIdx = -1
 
-	###
-	Buffer an indent based on the current `indent`
-	property and an additional `offset`.
-
-	@param {Number} offset
-	@param {Boolean} newline
-	@public
+	###*
+	 * Buffer an indent based on the current `indent` property and an
+       additional `offset`.
+	 * @param {Number} offset
+	 * @param {Boolean} newline
+	 * @public
 	###
 	prettyIndent: (offset, newline) ->
 		offset = offset or 0
@@ -112,13 +111,11 @@ class Compiler
 		@buffer newline + Array(@indents + offset).join(@INDENT)
 		@push 'buf.push.apply(buf, __indent)' if @parent_indents
 
+	###*
+	 * Visit `node`.
+	 * @param {Node} node
+	 * @public
 	###
-	Visit `node`.
-
-	@param {Node} node
-	@public
-	###
-
 	visit: (node) ->
 		if @debug
 			@push """
@@ -136,11 +133,10 @@ class Compiler
 		@visitNode node
 		@push '__jade.shift()' if @debug
 
-	###
-	Visit `node`.
-
-	@param {Node} node
-	@public
+	###*
+	 * Visit `node`.
+	 * @param {Node} node
+	 * @public
 	###
 	visitNode: (node) ->
 		#fix way this is done... make less hackish
@@ -164,11 +160,10 @@ class Compiler
 	visitText: (text) ->
 		@buffer text.val
 
-	###
-	Visit all nodes in `block`.
-
-	@param {Block} block
-	@public
+	###*
+	 * Visit all nodes in `block`.
+	 * @param {Block} block
+	 * @public
 	###
 	visitBlock: (block) ->
 		# Block keyword has a special meaning in mixins
@@ -195,13 +190,12 @@ class Compiler
 				# Multiple text nodes are separated by newlines
 				@buffer '\n'
 
-	###
-	Visit `doctype`. Sets terse mode to `true` when html 5
-	is used, causing self-closing tags to end with '>' vs "/>",
-	and boolean attributes are not mirrored.
-
-	@param {Doctype} doctype
-	@public
+	###*
+	 * Visit `doctype`. Sets terse mode to `true` when html 5 is used, causing
+       self-closing tags to end with '>' vs "/>", and boolean attributes are
+       not mirrored.
+	 * @param {Doctype} doctype
+	 * @public
 	###
 	visitDoctype: (doctype) ->
 		if doctype and (doctype.val or not @doctype)
@@ -210,12 +204,11 @@ class Compiler
 			@buffer @doctype
 		@hasCompiledDoctype = true
 
-	###
-	Visit `mixin`, generating a function that
-	may be called within the template.
-
-	@param {Mixin} mixin
-	@public
+	###*
+	 * Visit `mixin`, generating a function that may be called within the
+       template.
+	 * @param {Mixin} mixin
+	 * @public
 	###
 	visitMixin: (mixin) ->
 		name = mixin.name
@@ -263,13 +256,11 @@ class Compiler
 			@flush_buffer()
 			@code_indents--
 
-
-	###
-	Visit `tag` buffering tag markup, generating
-	attributes, visiting the `tag`'s code and block.
-
-	@param {Tag} tag
-	@public
+	###*
+	 * Visit `tag` buffering tag markup, generating attributes, visiting the
+       `tag`'s code and block.
+	 * @param {Tag} tag
+	 * @public
 	###
 	visitTag: (tag) ->
 		@indents++
@@ -308,24 +299,20 @@ class Compiler
 			@buffer "</#{name}>"
 		@indents--
 
-
-
-	###
-	Visit a `comment`, only buffering when the buffer flag is set.
-
-	@param {Comment} comment
-	@public
+	###*
+	 * Visit a `comment`, only buffering when the buffer flag is set.
+	 * @param {Comment} comment
+	 * @public
 	###
 	visitComment: (comment) ->
 		return unless comment.buffer
 		@prettyIndent 1, true if @pp
 		@buffer "<!--#{comment.val}-->"
 
-	###
-	Visit a `BlockComment`.
-
-	@param {Comment} comment
-	@public
+	###*
+	 * Visit a `BlockComment`.
+	 * @param {Comment} comment
+	 * @public
 	###
 	visitBlockComment: (comment) ->
 		return unless comment.buffer
@@ -340,13 +327,11 @@ class Compiler
 			@visit comment.block
 			@buffer '-->'
 
-	###
-	Visit `code`, respecting buffer / escape flags.
-	If the code is followed by a block, wrap it in
-	a self-calling function.
-
-	@param {Code} code
-	@public
+	###*
+	 * Visit `code`, respecting buffer / escape flags. If the code is followed
+       by a block, wrap it in a self-calling function.
+	 * @param {Code} code
+	 * @public
 	###
 	visitCode: (code) ->
 		val = code.val
