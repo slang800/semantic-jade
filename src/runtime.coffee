@@ -1,4 +1,4 @@
-utils = require('./utils')
+utils = require './utils'
 
 exports.escape = utils.escape
 
@@ -19,16 +19,14 @@ unless Object.keys
 			arr.push key if obj.hasOwnProperty(key)
 		arr
 
-###
-Merge two attribute objects giving precedence
-to values in object `b`. Classes are special-cased
-allowing for arrays and merging/joining appropriately
-resulting in a string.
-
-@param {Object} a
-@param {Object} b
-@return {Object} a
-@private
+###*
+ * Merge two attribute objects giving precedence to values in object `b`.
+   Classes are special-cased allowing for arrays and merging/joining
+   appropriately resulting in a string.
+ * @param {Object} a
+ * @param {Object} b
+ * @return {Object} a
+ * @private
 ###
 exports.merge = (a, b) ->
 	ac = a['class']
@@ -45,16 +43,14 @@ exports.merge = (a, b) ->
 		a[key] = b[key] unless key is 'class'
 	a
 
-###
-Filter null `val`s. ==
-
-@param {Mixed} val
-@return {Mixed}
-@private
+###*
+ * Filter null `val`s. ==
+ * @param {Mixed} val
+ * @return {Mixed}
+ * @private
 ###
 nulls = (val) ->
 	val?
-
 
 ###*
  * Render the given attributes object.
@@ -102,14 +98,13 @@ exports.attrs = (obj) ->
 
 	return buf.join " "
 
-###
-Re-throw the given `err` in context to the
-the jade in `filename` at the given `lineno`.
-
-@param {Error} err
-@param {String} filename
-@param {String} lineno
-@private
+###*
+ * Re-throw the given `err` in context to the the jade in `filename` at the
+   given `lineno`.
+ * @param {Error} err
+ * @param {String} filename
+ * @param {String} lineno
+ * @private
 ###
 exports.rethrow = (err, filename, lineno) ->
 	throw err unless filename

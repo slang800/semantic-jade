@@ -25,9 +25,9 @@ MATCHING_DELIMITER = {
 
 ###*
  * Matches a balanced group such as a single or double-quoted string. Pass in
- * a series of delimiters, all of which must be nested correctly within the
- * contents of the string. This method allows us to have strings within
- * interpolations within strings, ad infinitum.
+   a series of delimiters, all of which must be nested correctly within the
+   contents of the string. This method allows us to have strings within
+   interpolations within strings, ad infinitum.
  * @param {String} str The string to balance
  * @return {String} The balanced string with both delimiters still wrapping it
  * @private
@@ -163,12 +163,11 @@ exports.merge = (a, b) ->
 		a[key] = b[key]
 	a
 
-###
-Escape the given string of `html`.
-
-@param {String} html
-@return {String}
-@private
+###*
+ * Escape the given string of `html`.
+ * @param {String} html
+ * @return {String}
+ * @private
 ###
 exports.escape = (html) ->
 	if typeof html is 'string'

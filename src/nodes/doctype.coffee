@@ -4,7 +4,7 @@ Node = require './node'
 Initialize a `Doctype` with the given `val`.
 
 @param {String} val
-@api public
+@private
 ###
 class Doctype extends Node
 	constructor: (val) ->

@@ -4,7 +4,7 @@ Node = require './node'
 Initialize a `Literal` node with the given `str`.
 
 @param {String} str
-@api public
+@private
 ###
 class Literal extends Node
 	constructor: (str) ->

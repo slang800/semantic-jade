@@ -1,14 +1,14 @@
 ###
 Initialize a `Node`.
 
-@api public
+@private
 ###
 class Node
 	###
 	Clone this node (return itself)
 
 	@return {Node}
-	@api private
+	@private
 	###
 	clone = ->
 		@

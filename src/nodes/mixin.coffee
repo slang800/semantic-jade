@@ -6,7 +6,7 @@ Initialize a new `Mixin` with `name` and `block`.
 @param {String} name
 @param {String} args
 @param {Block} block
-@api public
+@private
 ###
 class Mixin extends Attrs
 	constructor: (name, args, block, call) ->

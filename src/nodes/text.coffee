@@ -3,7 +3,7 @@ Node = require './node'
 ###*
  * Initialize a `Text` node with optional `line`.
  * @param {String} line
- * @api public
+ * @private
 ###
 class Text extends Node
 	constructor: (line) ->

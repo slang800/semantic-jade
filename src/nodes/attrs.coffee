@@ -4,7 +4,7 @@ Block = require './block'
 ###
 Initialize a `Attrs` node.
 
-@api public
+@private
 ###
 class Attrs extends Node
 	constructor: ->
@@ -20,7 +20,7 @@ class Attrs extends Node
 	@param {String} val
 	@param {Boolean} escaped
 	@return {Tag} for chaining
-	@api public
+	@private
 	###
 	setAttribute: (name, val, escape) ->
 		@attrs.push
@@ -35,7 +35,7 @@ class Attrs extends Node
 	Remove attribute `name` when present.
 
 	@param {String} name
-	@api public
+	@private
 	###
 	removeAttribute: (name) ->
 		for i in [0..@attrs.length]
@@ -47,7 +47,7 @@ class Attrs extends Node
 
 	@param {String} name
 	@return {String}
-	@api public
+	@private
 	###
 	getAttribute: (name) ->
 		for i in [0..@attrs.length]

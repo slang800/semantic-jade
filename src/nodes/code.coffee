@@ -7,7 +7,7 @@ Code may also be optionally buffered and escaped.
 @param {String} val
 @param {Boolean} buffer
 @param {Boolean} escape
-@api public
+@private
 ###
 class Code extends Node
 	constructor: (val, buffer, escape) ->

@@ -7,7 +7,7 @@ Initialize a `Tag` node with the given tag `name` and optional `block`.
 
 @param {String} name
 @param {Block} block
-@api public
+@private
 ###
 class Tag extends Attrs
 	constructor: (name, block) ->
@@ -20,7 +20,7 @@ class Tag extends Attrs
 	Clone this tag.
 
 	@return {Tag}
-	@api private
+	@private
 	###
 	clone: ->
 		clone = new Tag(@name, @block.clone())
@@ -34,7 +34,7 @@ class Tag extends Attrs
 	Check if this tag is an inline tag.
 
 	@return {Boolean}
-	@api private
+	@private
 	###
 	isInline: ->
 		~inlineTags.indexOf(@name)
@@ -44,7 +44,7 @@ class Tag extends Attrs
 	Check if this tag's contents can be inlined. Used for pretty printing.
 
 	@return {Boolean}
-	@api private
+	@private
 	###
 	canInline: ->
 		isInline = (node) ->

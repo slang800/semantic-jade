@@ -4,7 +4,7 @@ Node = require './node'
 Initialize a new `Block` with an optional `node`.
 
 @param {Node} node
-@api public
+@private
 ###
 class Block extends Node
 	constructor: (node) ->
@@ -20,7 +20,7 @@ class Block extends Node
 	in `this` block.
 
 	@param {Block} other
-	@api private
+	@private
 	###
 	replace: (other) ->
 		other.nodes = @nodes
@@ -31,7 +31,7 @@ class Block extends Node
 
 	@param {Node} node
 	@return {Number}
-	@api public
+	@private
 	###
 	push: (node) ->
 		@nodes.push node
@@ -41,7 +41,7 @@ class Block extends Node
 	Check if this block is empty.
 
 	@return {Boolean}
-	@api public
+	@private
 	###
 	isEmpty: ->
 		@nodes.length is 0
@@ -52,7 +52,7 @@ class Block extends Node
 
 	@param {Node} node
 	@return {Number}
-	@api public
+	@private
 	###
 	unshift: (node) ->
 		@nodes.unshift node
@@ -62,7 +62,7 @@ class Block extends Node
 	Return the "last" block, or the first `yield` node.
 
 	@return {Block}
-	@api private
+	@private
 	###
 	includeBlock: ->
 		ret = @
@@ -85,7 +85,7 @@ class Block extends Node
 	 * Prune any extends blocks and return this node.
 	 *
 	 * @return {Block}
-	 * @api private
+	 * @private
 	###
 
 	prune: ->
@@ -99,7 +99,7 @@ class Block extends Node
 	Return a clone of this block.
 
 	@return {Block}
-	@api private
+	@private
 	###
 	clone: ->
 		clone = new Block

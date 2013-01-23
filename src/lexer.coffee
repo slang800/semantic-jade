@@ -28,13 +28,11 @@ class Lexer
 		type: type
 		line: @lineno
 		val: val
-
 	
-	###
-	Consume the given `len` of input.
-	
-	@param {Number} len
-	@private
+	###*
+	 * Consume the given `len` of input.
+	 * @param {Number} len
+	 * @private
 	###
 	consume: (len) ->
 		@input = @input.substr(len)
@@ -54,14 +52,12 @@ class Lexer
 			return callback(captures)
 		return null
 
-	###
-	Scan for `type` with the given `regexp`.
-	Return a token
-	
-	@param {String} type
-	@param {RegExp} regexp
-	@return {Object}
-	@private
+	###*
+	 * Scan for `type` with the given `regexp`.
+	 * @param {String} type
+	 * @param {RegExp} regexp
+	 * @return {Object} a token
+	 * @private
 	###
 	scan: (regexp, type) ->
 		@capture(
@@ -70,11 +66,10 @@ class Lexer
 				@tok type, captures[1]
 		)
 
-	###
-	Defer the given `tok`.
-	
-	@param {Object} tok
-	@private
+	###*
+	 * Defer the given `tok`.
+	 * @param {Object} tok
+	 * @private
 	###
 	defer: (tok) ->
 		@deferredTokens.push tok
@@ -82,12 +77,11 @@ class Lexer
 	deferred: ->
 		@deferredTokens.length and @deferredTokens.shift()
 
-	###
-	Lookahead `n` tokens and stash results
-	
-	@param {Number} n
-	@return {Object}
-	@private
+	###*
+	 * Lookahead `n` tokens and stash results
+	 * @param {Number} n
+	 * @return {Object}
+	 * @private
 	###
 	lookahead: (n) ->
 		fetch = n - @stash.length
@@ -333,11 +327,10 @@ class Lexer
 	colon: ->
 		@scan /^: */, ':'
 
-	###
-	Return the next token object.
-
-	@return {Object}
-	@private
+	###*
+	 * Return the next token object.
+	 * @return {Object}
+	 * @private
 	###
 	next: ->
 		@stashed() or

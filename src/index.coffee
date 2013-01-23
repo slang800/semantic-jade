@@ -1,44 +1,22 @@
-#Module dependencies
 coffee_compile = require("coffee-script").compile
 fs = require "fs"
 
-#Expose self closing tags
 exports.selfClosing = require "./self-closing"
-
-#Default supported doctypes
 exports.doctypes = require "./doctypes"
-
-#Text filters
-exports.filters = require "./filters"
-
-#Utilities
 exports.utils = utils = require "./utils"
-
-#Expose `Compiler`
 exports.Compiler = Compiler = require "./compiler"
-
-#Expose `Parser`
 exports.Parser = Parser = require "./parser"
-
-#Expose `Lexer`
 exports.Lexer = Lexer = require "./lexer"
-
-#Nodes
 exports.nodes = require "./nodes"
-
-#Jade runtime helpers
 exports.runtime = runtime = require "./runtime"
+exports.cache = {} #Template function cache
 
-#Template function cache
-exports.cache = {}
-
-###
-Parse the given `str` of jade and return a function body.
-
-@param {String} str
-@param {Object} options
-@return {String}
-@api private
+###*
+ * Parse the given `str` of jade and return a function body.
+ * @param {String} str
+ * @param {Object} options
+ * @return {String}
+ * @private
 ###
 parse = (str, options) ->
 	try
@@ -54,7 +32,12 @@ parse = (str, options) ->
 		js = utils.indent compiler.compile()
 		
 		# Debug compiler
-		console.error "\nCompiled Function:\n\n\u001b[90m%s\u001b[0m", js.replace(/^/g, "  ")  if options.debug
+		if options.debug
+			console.error(
+				"\nCompiled Function:\n\n\u001b[90m%s\u001b[0m",
+				js.replace(/^/g, "  ")
+			)
+
 		return """
 		buf = []
 		_with = (object, block) -> block.call object
@@ -70,34 +53,37 @@ parse = (str, options) ->
 		parser = parser.context()
 		runtime.rethrow err, parser.filename, parser.lexer.lineno
 
-###
-Strip any UTF-8 BOM off of the start of `str`, if it exists.
-
-@param {String} str
-@return {String}
-@api private
+###*
+ * Strip any UTF-8 BOM off of the start of `str`, if it exists.
+ * @param {String} str
+ * @return {String}
+ * @private
 ###
 stripBOM = (str) ->
 	if 0xFEFF is str.charCodeAt(0) then str[1..] else str
 
-###
-Compile a `Function` representation of the given jade `str`.
-
-Options:
-
-- `compileDebug` when `false` debugging code is stripped from the compiled template
-- `client` when `true` the helper functions `escape()` etc will reference `jade.escape()`
-for use with the Jade client-side runtime.js
-
-@param {String} str
-@param {Options} options
-@return {Function}
-@api public
+###*
+ * Compile a `Function` representation of the given jade `str`.
+ * Options:
+ *     - `compileDebug` when `false` debugging code is stripped from the
+       compiled template
+ *     - `client` when `true` the helper functions `escape()` etc will
+       reference `jade.escape()`
+ * for use with the Jade client-side runtime.js
+ * @param {String} str
+ * @param {Options} options
+ * @return {Function}
+ * @private
 ###
 exports.compile = (str, options) ->
 	options = options or {}
 	client = options.client
-	filename = (if options.filename then JSON.stringify(options.filename) else 'undefined')
+	filename = (
+		if options.filename
+			JSON.stringify(options.filename)
+		else
+			'undefined'
+	)
 
 	str = stripBOM(String(str))
 	fn = parse(str, options)
@@ -121,13 +107,9 @@ exports.compile = (str, options) ->
 		#{fn}
 		"""
 
-
-	fs.writeFileSync("test_out.coffee", fn)
-
-
+	fs.writeFileSync("test_out.coffee", fn) # remove
 	fn = coffee_compile fn, {bare: true}
-
-	fs.writeFileSync("test_out.js", fn)
+	fs.writeFileSync("test_out.js", fn) # remove
 
 	fn = new Function('locals, attrs, escape, rethrow, merge', fn)
 	return fn if client
@@ -135,19 +117,15 @@ exports.compile = (str, options) ->
 	(locals) ->
 		fn locals, runtime.attrs, runtime.escape, runtime.rethrow, runtime.merge
 
-###
-Render the given `str` of jade and invoke
-the callback `fn(err, str)`.
-
-Options:
-
-- `cache` enable template caching
-- `filename` filename required for `include` / `extends` and caching
-
-@param {String} str
-@param {Object|Function} options or fn
-@param {Function} fn
-@api public
+###*
+ * Render the given `str` of jade and invoke the callback `fn(err, str)`.
+ * Options:
+ *    - `cache` enable template caching
+ *    - `filename` filename required for `include` / `extends` and caching
+ * @param {String} str
+ * @param {Object|Function} options or fn
+ * @param {Function} fn
+ * @private
 ###
 exports.render = (str, options, fn) ->
 	# swap args
@@ -156,21 +134,26 @@ exports.render = (str, options, fn) ->
 		options = {}
 	
 	# cache requires .filename
-	return fn(new Error('the "filename" option is required for caching')) if options.cache and not options.filename
+	if options.cache and not options.filename
+		return fn(new Error('the "filename" option is required for caching'))
 	try
 		path = options.filename
-		tmpl = (if options.cache then exports.cache[path] or (exports.cache[path] = exports.compile(str, options)) else exports.compile(str, options))
+		tmpl = (
+			if options.cache
+				exports.cache[path] or (exports.cache[path] = exports.compile(str, options))
+			else
+				exports.compile(str, options)
+		)
 		fn null, tmpl(options)
 	catch err
 		fn err
 
-###
-Render a Jade file at the given `path` and callback `fn(err, str)`.
-
-@param {String} path
-@param {Object|Function} options or callback
-@param {Function} fn
-@api public
+###*
+ * Render a Jade file at the given `path` and callback `fn(err, str)`.
+ * @param {String} path
+ * @param {Object|Function} options or callback
+ * @param {Function} fn
+ * @private
 ###
 exports.renderFile = (path, options, fn) ->
 	key = path + ":string"

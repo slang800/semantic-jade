@@ -6,7 +6,7 @@ Initialize a `BlockComment` with the given `block`.
 @param {String} val
 @param {Block} block
 @param {Boolean} buffer
-@api public
+@private
 ###
 class BlockComment extends Node
 	constructor: (val, block, buffer) ->

@@ -3,13 +3,12 @@ nodes = require './nodes'
 utils = require './utils'
 
 class Parser
-	###
-	Initialize `Parser` with the given input `str` and `filename`.
-
-	@param {String} str
-	@param {String} filename
-	@param {Object} options
-	@api public
+	###*
+	 * Initialize `Parser` with the given input `str` and `filename`.
+	 * @param {String} str
+	 * @param {String} filename
+	 * @param {Object} options
+	 * @private
 	###
 	constructor: (str, filename, options) ->
 		@input = str
@@ -20,9 +19,10 @@ class Parser
 		@options = options
 		@contexts = [this]
 
-	###
-	Push `parser` onto the context stack,
-	or pop and return a `Parser`.
+	###*
+	 * Push `parser` onto the context stack, or pop and return a `Parser`.
+	 * @param {[type]} parser [description]
+	 * @return {[type]} [description]
 	###
 	context: (parser) ->
 		if parser
@@ -30,57 +30,51 @@ class Parser
 		else
 			@contexts.pop()
 
-	###
-	Return the next token object.
-	
-	@return {Object}
-	@api private
+	###*
+	 * Return the next token object.
+	 * @return {Object}
+	 * @private
 	###
 	advance: ->
 		@lexer.next()
 
-	###
-	Skip `n` tokens.
-	
-	@param {Number} n
-	@api private
+	###*
+	 * Skip `n` tokens.
+	 * @param {Number} n
+	 * @private
 	###
 	skip: (n) ->
 		@advance() while n--
 
-	###
-	Single token lookahead.
-	
-	@return {Object}
-	@api private
+	###*
+	 * Single token lookahead.
+	 * @return {Object}
+	 * @private
 	###
 	peek: ->
 		@lookahead 1
 
-	###
-	Return lexer lineno.
-	
-	@return {Number}
-	@api private
+	###*
+	 * Return lexer lineno.
+	 * @return {Number}
+	 * @private
 	###
 	line: ->
 		@lexer.lineno
 
-	###
-	`n` token lookahead.
-	
-	@param {Number} n
-	@return {Object}
-	@api private
+	###*
+	 * `n` token lookahead.
+	 * @param {Number} n
+	 * @return {Object}
+	 * @private
 	###
 	lookahead: (n) ->
 		@lexer.lookahead n
 
-	###
-	Parse input returning a string of CoffeeScript for evaluation.
-	
-	@return {String}
-	@api public
+	###*
+	 * Parse input returning a string of CoffeeScript for evaluation.
+	 * @return {String}
+	 * @private
 	###
 	parse: ->
 		block = new nodes.Block
@@ -101,11 +95,10 @@ class Parser
 			return ast
 		block
 
-	###
-	Expect the given type, or throw an exception.
-	
-	@param {String} type
-	@api private
+	###*
+	 * Expect the given type, or throw an exception.
+	 * @param {String} type
+	 * @private
 	###
 	expect: (type) ->
 		if @peek().type is type
@@ -113,28 +106,14 @@ class Parser
 		else
 			throw new Error("expected \"#{type}\", but got \"#{@peek().type}\"")
 
-	###
-	Accept the given `type`.
-	
-	@param {String} type
-	@api private
+	###*
+	 * Accept the given `type`.
+	 * @param {String} type
+	 * @private
 	###
 	accept: (type) ->
 		@advance() if @peek().type is type
 
-	###
-	tag
-	| doctype
-	| mixin
-	| include
-	| comment
-	| text
-	| each
-	| code
-	| yield
-	| id
-	| class
-	###
 	parseExpr: ->
 		switch @peek().type
 			when 'tag'
@@ -170,9 +149,6 @@ class Parser
 			else
 				throw new Error("unexpected token \"#{@peek().type}\"")
 
-	###
-	Text
-	###
 	parseText: ->
 		tok = @expect('text')
 		node = new nodes.Text(tok.val)
@@ -190,9 +166,6 @@ class Parser
 		else
 			@block()
 
-	###
-	code
-	###
 	parseCode: ->
 		tok = @expect('code')
 		node = new nodes.Code(tok.val, tok.buffer, tok.escape)
@@ -208,9 +181,6 @@ class Parser
 			node.block = @block()
 		node
 
-	###
-	comment
-	###
 	parseComment: ->
 		tok = @expect('comment')
 		if 'indent' is @peek().type
@@ -220,25 +190,20 @@ class Parser
 		node.line = @line()
 		node
 
-	###
-	doctype
-	###
 	parseDoctype: ->
 		tok = @expect('doctype')
 		node = new nodes.Doctype(tok.val)
 		node.line = @line()
 		node
 
-	###
-	'extends' name
-	###
 	parseExtends: ->
 		path = require('path')
 		fs = require('fs')
 		dirname = path.dirname
 		basename = path.basename
 		join = path.join
-		throw new Error('the \"filename\" option is required to extend templates') unless @filename
+		unless @filename
+			throw new Error('the \"filename\" option is required to extend templates')
 		path = @expect('extends').val.trim()
 		dir = dirname(@filename)
 		path = join(dir, "#{path}.jade")
@@ -258,7 +223,12 @@ class Parser
 		block = @expect('block')
 		mode = block.mode
 		name = block.val.trim()
-		block = (if 'indent' is @peek().type then @block() else new nodes.Block(new nodes.Literal('')))
+		block = (
+			if 'indent' is @peek().type
+				@block()
+			else
+				new nodes.Block(new nodes.Literal(''))
+		)
 		prev = @blocks[name]
 		if prev
 			switch prev.mode
@@ -316,8 +286,7 @@ class Parser
 			ast.includeBlock().push block
 		@blocks = parentBlocks
 		return ast
- 
-	
+
 	###
 	call indent block
 	###

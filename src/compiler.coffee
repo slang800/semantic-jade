@@ -1,6 +1,5 @@
 #Module dependencies
 nodes = require './nodes'
-filters = require('./filters').filters
 doctypes = require './doctypes'
 selfClosing = require './self-closing'
 runtime = require './runtime'

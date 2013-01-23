@@ -6,7 +6,7 @@ otherwise the comment may render in the output.
 
 @param {String} val
 @param {Boolean} buffer
-@api public
+@private
 ###
 class Comment extends Node
 	constructor: (val, buffer) ->
