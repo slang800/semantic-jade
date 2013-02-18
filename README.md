@@ -14,15 +14,15 @@ The semantic-jade template engine for node.js
 
 translate jade the templates dir
 
-	$ jade templates
+	$ sj templates
 
 create {foo,bar}.html
 
-	$ jade {foo,bar}.jade
+	$ sj {foo,bar}.jade
 
 jade over stdio
 
-	$ jade < my.jade > my.html
+	$ sj < my.jade > my.html
 
 jade over s
 
@@ -30,14 +30,14 @@ jade over s
 
 foo, bar dirs rendering to /tmp
 
-	$ jade foo bar --out /tmp
+	$ sj foo bar --out /tmp
 
 compile client-side templates without debugging
 instrumentation, making the output javascript
 very light-weight. This requires runtime.js
 in your projects.
 
-	 $ jade --client --no-debug < my.jade
+	 $ sj --client --no-debug < my.jade
 
 ## Tags
 
