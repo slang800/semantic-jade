@@ -1,12 +1,11 @@
 Node = require './node'
 
-###
-Initialize a `Doctype` with the given `val`.
-
-@param {String} val
-@private
-###
 class Doctype extends Node
+	###*
+	 * Initialize a `Doctype` with the given `val`.
+	 * @param {String} val
+	 * @private
+	###
 	constructor: (val) ->
 		@val = val
 

@@ -2,25 +2,22 @@ Attrs = require './attrs'
 Block = require './block'
 inlineTags = require '../inline-tags'
 
-###
-Initialize a `Tag` node with the given tag `name` and optional `block`.
-
-@param {String} name
-@param {Block} block
-@private
-###
 class Tag extends Attrs
+	###*
+	 * Initialize a `Tag` node with the given tag `name` and optional `block`.
+	 * @param {String} name
+	 * @param {Block} block
+	 * @private
+	###
 	constructor: (name, block) ->
 		@name = name
 		@attrs = []
 		@block = block or new Block
 
-
-	###
-	Clone this tag.
-
-	@return {Tag}
-	@private
+	###*
+	 * Clone this tag.
+	 * @return {Tag}
+	 * @private
 	###
 	clone: ->
 		clone = new Tag(@name, @block.clone())
@@ -29,22 +26,18 @@ class Tag extends Attrs
 		clone.textOnly = @textOnly
 		clone
 
-
-	###
-	Check if this tag is an inline tag.
-
-	@return {Boolean}
-	@private
+	###*
+	 * Check if this tag is an inline tag.
+	 * @return {Boolean}
+	 * @private
 	###
 	isInline: ->
 		~inlineTags.indexOf(@name)
 
-
-	###
-	Check if this tag's contents can be inlined. Used for pretty printing.
-
-	@return {Boolean}
-	@private
+	###*
+	 * Check if this tag's contents can be inlined. Used for pretty printing.
+	 * @return {Boolean}
+	 * @private
 	###
 	canInline: ->
 		isInline = (node) ->

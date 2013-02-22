@@ -1,14 +1,12 @@
-###
-Initialize a `Node`.
-
-@private
+###*
+ * A `Node`.
+ * @private
 ###
 class Node
-	###
-	Clone this node (return itself)
-
-	@return {Node}
-	@private
+	###*
+	 * Clone this node (return itself).
+	 * @return {Node}
+	 * @private
 	###
 	clone = ->
 		@

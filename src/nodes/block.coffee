@@ -1,12 +1,11 @@
 Node = require './node'
 
-###
-Initialize a new `Block` with an optional `node`.
-
-@param {Node} node
-@private
-###
 class Block extends Node
+	###*
+	 * Initialize a new `Block` with an optional `node`.
+	 * @param {Node} node
+	 * @private
+	###
 	constructor: (node) ->
 		@nodes = []
 		@push node if node
@@ -14,55 +13,44 @@ class Block extends Node
 		#Block flag
 		@isBlock = true
 
-
-	###
-	Replace the nodes in `other` with the nodes
-	in `this` block.
-
-	@param {Block} other
-	@private
+	###*
+	 * Replace the nodes in `other` with the nodes in `this` block.
+	 * @param {Block} other
+	 * @private
 	###
 	replace: (other) ->
 		other.nodes = @nodes
 
-
-	###
-	Push the given `node`.
-
-	@param {Node} node
-	@return {Number}
-	@private
+	###*
+	 * Push the given `node`.
+	 * @param {Node} node
+	 * @return {Number}
+	 * @private
 	###
 	push: (node) ->
 		@nodes.push node
 
-
-	###
-	Check if this block is empty.
-
-	@return {Boolean}
-	@private
+	###*
+	 * Check if this block is empty.
+	 * @return {Boolean}
+	 * @private
 	###
 	isEmpty: ->
 		@nodes.length is 0
 
-
-	###
-	Unshift the given `node`.
-
-	@param {Node} node
-	@return {Number}
-	@private
+	###*
+	 * Unshift the given `node`.
+	 * @param {Node} node
+	 * @return {Number}
+	 * @private
 	###
 	unshift: (node) ->
 		@nodes.unshift node
 
-
-	###
-	Return the "last" block, or the first `yield` node.
-
-	@return {Block}
-	@private
+	###*
+	 * Return the "last" block, or the first `yield` node.
+	 * @return {Block}
+	 * @private
 	###
 	includeBlock: ->
 		ret = @
@@ -83,11 +71,9 @@ class Block extends Node
 
 	###
 	 * Prune any extends blocks and return this node.
-	 *
 	 * @return {Block}
 	 * @private
 	###
-
 	prune: ->
 		@nodes = @nodes.filter(
 			(node) ->
@@ -95,11 +81,10 @@ class Block extends Node
 		)
 		return @
 
-	###
-	Return a clone of this block.
-
-	@return {Block}
-	@private
+	###*
+	 * Return a clone of this block.
+	 * @return {Block}
+	 * @private
 	###
 	clone: ->
 		clone = new Block
