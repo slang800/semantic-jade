@@ -9,7 +9,6 @@ class Attrs extends Node
 	constructor: ->
 		@attrs = []
 
-
 	###
 	 * Set attribute `name` to `val`, keep in mind these become part of a raw
        js object literal, so to quote a value you must '"quote me"', otherwise
@@ -26,8 +25,7 @@ class Attrs extends Node
 			val: val
 			escape: escape
 
-		this
-
+		return @
 
 	###*
 	 * Remove attribute `name` when present.
@@ -38,7 +36,6 @@ class Attrs extends Node
 		for i in [0..@attrs.length]
 			delete @attrs[i] if @attrs[i] and @attrs[i].name is name
 
-
 	###*
 	 * Get attribute value by `name`.
 	 * @param {String} name
@@ -48,5 +45,6 @@ class Attrs extends Node
 	getAttribute: (name) ->
 		for i in [0..@attrs.length]
 			return @attrs[i].val if @attrs[i] and @attrs[i].name is name
+
 
 module.exports = Attrs
