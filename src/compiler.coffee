@@ -338,7 +338,7 @@ class Compiler
 		# Buffer code
 		if code.buffer
 			@push "__val__ = #{val}" # so it is only evaluated once
-			val = 'if __val__ is null or not __val__? then \'\' else __val__'
+			val = 'if __val__ is null or not __val__? then \'\' else "" + __val__'
 			if code.escape
 				val = "escape(#{val})"
 			val = "buf.push(#{val})"
