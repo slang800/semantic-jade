@@ -1,703 +1,646 @@
-'use strict';
+nodes = require './nodes'
+filters = require './filters'
+doctypes = require './doctypes'
+runtime = require './runtime'
+utils = require './utils'
+selfClosing = require './self-closing'
+parseJSExpression = require('character-parser').parseMax
+constantinople = require 'constantinople'
 
-var nodes = require('./nodes');
-var filters = require('./filters');
-var doctypes = require('./doctypes');
-var runtime = require('./runtime');
-var utils = require('./utils');
-var selfClosing = require('./self-closing');
-var parseJSExpression = require('character-parser').parseMax;
-var constantinople = require('constantinople');
+isConstant = (src) ->
+  constantinople src,
+    jade: runtime
+    jade_interp: undefined
 
-function isConstant(src) {
-  return constantinople(src, {jade: runtime, 'jade_interp': undefined});
-}
-function toConstant(src) {
-  return constantinople.toConstant(src, {jade: runtime, 'jade_interp': undefined});
-}
-function errorAtNode(node, error) {
-  error.line = node.line;
-  error.filename = node.filename;
-  return error;
-}
+toConstant = (src) ->
+  constantinople.toConstant src,
+    jade: runtime
+    jade_interp: undefined
 
-/**
+errorAtNode = (node, error) ->
+  error.line = node.line
+  error.filename = node.filename
+  error
+
+###
  * Initialize `Compiler` with the given `node`.
- *
  * @param {Node} node
  * @param {Object} options
  * @api public
- */
+###
+Compiler = module.exports = Compiler = (node, options) ->
+  @options = options = options or {}
+  @node = node
+  @hasCompiledDoctype = false
+  @hasCompiledTag = false
+  @pp = options.pretty or false
+  @debug = false isnt options.compileDebug
+  @indents = 0
+  @parentIndents = 0
+  @terse = false
+  @mixins = {}
+  @dynamicMixins = false
+  @setDoctype options.doctype if options.doctype
+  return
 
-var Compiler = module.exports = function Compiler(node, options) {
-  this.options = options = options || {};
-  this.node = node;
-  this.hasCompiledDoctype = false;
-  this.hasCompiledTag = false;
-  this.pp = options.pretty || false;
-  this.debug = false !== options.compileDebug;
-  this.indents = 0;
-  this.parentIndents = 0;
-  this.terse = false;
-  this.mixins = {};
-  this.dynamicMixins = false;
-  if (options.doctype) this.setDoctype(options.doctype);
-};
-
-/**
+###
  * Compiler prototype.
- */
-
-Compiler.prototype = {
-
-  /**
+###
+Compiler:: =
+  ###
    * Compile parse tree to JavaScript.
-   *
    * @api public
-   */
+  ###
+  compile: ->
+    @buf = []
+    @buf.push 'var jade_indent = [];'  if @pp
+    @lastBufferedIdx = -1
+    @visit @node
+    unless @dynamicMixins
 
-  compile: function(){
-    this.buf = [];
-    if (this.pp) this.buf.push("var jade_indent = [];");
-    this.lastBufferedIdx = -1;
-    this.visit(this.node);
-    if (!this.dynamicMixins) {
-      // if there are no dynamic mixins we can remove any un-used mixins
-      var mixinNames = Object.keys(this.mixins);
-      for (var i = 0; i < mixinNames.length; i++) {
-        var mixin = this.mixins[mixinNames[i]];
-        if (!mixin.used) {
-          for (var x = 0; x < mixin.instances.length; x++) {
-            for (var y = mixin.instances[x].start; y < mixin.instances[x].end; y++) {
-              this.buf[y] = '';
-            }
-          }
-        }
-      }
-    }
-    return this.buf.join('\n');
-  },
+      # if there are no dynamic mixins we can remove any un-used mixins
+      mixinNames = Object.keys(@mixins)
+      i = 0
 
-  /**
-   * Sets the default doctype `name`. Sets terse mode to `true` when
-   * html 5 is used, causing self-closing tags to end with ">" vs "/>",
-   * and boolean attributes are not mirrored.
-   *
+      while i < mixinNames.length
+        mixin = @mixins[mixinNames[i]]
+        unless mixin.used
+          x = 0
+
+          while x < mixin.instances.length
+            y = mixin.instances[x].start
+
+            while y < mixin.instances[x].end
+              @buf[y] = ''
+              y++
+            x++
+        i++
+    @buf.join '\n'
+
+
+  ###
+  Sets the default doctype `name`. Sets terse mode to `true` when
+  html 5 is used, causing self-closing tags to end with ">" vs "/>",
+  and boolean attributes are not mirrored.
+
    * @param {string} name
    * @api public
-   */
+  ###
+  setDoctype: (name) ->
+    @doctype = doctypes[name.toLowerCase()] or "<!DOCTYPE #{name}>"
+    @terse = @doctype.toLowerCase() is '<!doctype html>'
+    @xml = 0 is @doctype.indexOf('<?xml')
+    return
 
-  setDoctype: function(name){
-    this.doctype = doctypes[name.toLowerCase()] || '<!DOCTYPE ' + name + '>';
-    this.terse = this.doctype.toLowerCase() == '<!doctype html>';
-    this.xml = 0 == this.doctype.indexOf('<?xml');
-  },
 
-  /**
-   * Buffer the given `str` exactly as is or with interpolation
-   *
+  ###
+  Buffer the given `str` exactly as is or with interpolation
+
    * @param {String} str
    * @param {Boolean} interpolate
    * @api public
-   */
+  ###
+  buffer: (str, interpolate) ->
+    self = this
+    if interpolate
+      match = /(\\)?([#!]){((?:.|\n)*)$/.exec(str)
+      if match
+        @buffer str.substr(0, match.index), false
+        if match[1] # escape
+          @buffer match[2] + '{', false
+          @buffer match[3], true
+          return
+        else
+          rest = match[3]
+          range = parseJSExpression(rest)
+          code = (if '!' is match[2] then '' else 'jade.escape') + "((jade_interp = #{range.src}) == null ? '' : jade_interp)"
+          @bufferExpression code
+          @buffer rest.substr(range.end + 1), true
+          return
+    str = JSON.stringify(str)
+    str = str.substr(1, str.length - 2)
+    if @lastBufferedIdx is @buf.length
+      @lastBuffered += " + \""  if @lastBufferedType is 'code'
+      @lastBufferedType = 'text'
+      @lastBuffered += str
+      @buf[@lastBufferedIdx - 1] = "buf.push(#{@bufferStartChar}#{@lastBuffered}\");"
+    else
+      @buf.push "buf.push(\"#{str}\");"
+      @lastBufferedType = 'text'
+      @bufferStartChar = "\""
+      @lastBuffered = str
+      @lastBufferedIdx = @buf.length
+    return
 
-  buffer: function (str, interpolate) {
-    var self = this;
-    if (interpolate) {
-      var match = /(\\)?([#!]){((?:.|\n)*)$/.exec(str);
-      if (match) {
-        this.buffer(str.substr(0, match.index), false);
-        if (match[1]) { // escape
-          this.buffer(match[2] + '{', false);
-          this.buffer(match[3], true);
-          return;
-        } else {
-          var rest = match[3];
-          var range = parseJSExpression(rest);
-          var code = ('!' == match[2] ? '' : 'jade.escape') + "((jade_interp = " + range.src + ") == null ? '' : jade_interp)";
-          this.bufferExpression(code);
-          this.buffer(rest.substr(range.end + 1), true);
-          return;
-        }
-      }
-    }
 
-    str = JSON.stringify(str);
-    str = str.substr(1, str.length - 2);
-
-    if (this.lastBufferedIdx == this.buf.length) {
-      if (this.lastBufferedType === 'code') this.lastBuffered += ' + "';
-      this.lastBufferedType = 'text';
-      this.lastBuffered += str;
-      this.buf[this.lastBufferedIdx - 1] = 'buf.push(' + this.bufferStartChar + this.lastBuffered + '");'
-    } else {
-      this.buf.push('buf.push("' + str + '");');
-      this.lastBufferedType = 'text';
-      this.bufferStartChar = '"';
-      this.lastBuffered = str;
-      this.lastBufferedIdx = this.buf.length;
-    }
-  },
-
-  /**
+  ###
    * Buffer the given `src` so it is evaluated at run time
-   *
    * @param {String} src
    * @api public
-   */
+  ###
+  bufferExpression: (src) ->
+    if isConstant(src)
+      return @buffer(toConstant(src) + '', false)
+    if @lastBufferedIdx is @buf.length
+      @lastBuffered += "\"" if @lastBufferedType is 'text'
+      @lastBufferedType = 'code'
+      @lastBuffered += " + (#{src})"
+      @buf[@lastBufferedIdx - 1] = "buf.push(#{@bufferStartChar}#{@lastBuffered});"
+    else
+      @buf.push "buf.push(#{src});"
+      @lastBufferedType = 'code'
+      @bufferStartChar = ''
+      @lastBuffered = "(#{src})"
+      @lastBufferedIdx = @buf.length
+    return
 
-  bufferExpression: function (src) {
-    if (isConstant(src)) {
-      return this.buffer(toConstant(src) + '', false)
-    }
-    if (this.lastBufferedIdx == this.buf.length) {
-      if (this.lastBufferedType === 'text') this.lastBuffered += '"';
-      this.lastBufferedType = 'code';
-      this.lastBuffered += ' + (' + src + ')';
-      this.buf[this.lastBufferedIdx - 1] = 'buf.push(' + this.bufferStartChar + this.lastBuffered + ');'
-    } else {
-      this.buf.push('buf.push(' + src + ');');
-      this.lastBufferedType = 'code';
-      this.bufferStartChar = '';
-      this.lastBuffered = '(' + src + ')';
-      this.lastBufferedIdx = this.buf.length;
-    }
-  },
 
-  /**
-   * Buffer an indent based on the current `indent`
-   * property and an additional `offset`.
-   *
+  ###
+   * Buffer an indent based on the current `indent` property and an additional `offset`.
    * @param {Number} offset
    * @param {Boolean} newline
    * @api public
-   */
+  ###
+  prettyIndent: (offset, newline) ->
+    offset = offset or 0
+    newline = (if newline then '\n' else '')
+    @buffer newline + Array(@indents + offset).join("  ")
+    @buf.push "buf.push.apply(buf, jade_indent);"  if @parentIndents
+    return
 
-  prettyIndent: function(offset, newline){
-    offset = offset || 0;
-    newline = newline ? '\n' : '';
-    this.buffer(newline + Array(this.indents + offset).join('  '));
-    if (this.parentIndents)
-      this.buf.push("buf.push.apply(buf, jade_indent);");
-  },
 
-  /**
+  ###
    * Visit `node`.
-   *
    * @param {Node} node
    * @api public
-   */
+  ###
+  visit: (node) ->
+    debug = @debug
+    if debug
+      @buf.push """
+        jade_debug.unshift({
+          lineno: #{node.line},
+          filename: #{
+            if node.filename
+              JSON.stringify(node.filename)
+            else
+              'jade_debug[0].filename'
+          }
+        });
+      """
 
-  visit: function(node){
-    var debug = this.debug;
+    # Massive hack to fix our context
+    # stack for - else[ if] etc
+    if false is node.debug and @debug
+      @buf.pop()
+      @buf.pop()
+    @visitNode node
+    @buf.push "jade_debug.shift();"  if debug
+    return
 
-    if (debug) {
-      this.buf.push('jade_debug.unshift({ lineno: ' + node.line
-        + ', filename: ' + (node.filename
-          ? JSON.stringify(node.filename)
-          : 'jade_debug[0].filename')
-        + ' });');
-    }
 
-    // Massive hack to fix our context
-    // stack for - else[ if] etc
-    if (false === node.debug && this.debug) {
-      this.buf.pop();
-      this.buf.pop();
-    }
-
-    this.visitNode(node);
-
-    if (debug) this.buf.push('jade_debug.shift();');
-  },
-
-  /**
+  ###
    * Visit `node`.
-   *
    * @param {Node} node
    * @api public
-   */
+  ###
+  visitNode: (node) ->
+    this['visit' + node.type] node
 
-  visitNode: function(node){
-    return this['visit' + node.type](node);
-  },
 
-  /**
+  ###
    * Visit case `node`.
-   *
    * @param {Literal} node
    * @api public
-   */
+  ###
+  visitCase: (node) ->
+    _ = @withinCase
+    @withinCase = true
+    @buf.push "switch (#{node.expr}){"
+    @visit node.block
+    @buf.push '}'
+    @withinCase = _
+    return
 
-  visitCase: function(node){
-    var _ = this.withinCase;
-    this.withinCase = true;
-    this.buf.push('switch (' + node.expr + '){');
-    this.visit(node.block);
-    this.buf.push('}');
-    this.withinCase = _;
-  },
 
-  /**
+  ###
    * Visit when `node`.
-   *
    * @param {Literal} node
    * @api public
-   */
+  ###
+  visitWhen: (node) ->
+    if 'default' is node.expr
+      @buf.push 'default:'
+    else
+      @buf.push "case #{node.expr}:"
+    if node.block
+      @visit node.block
+      @buf.push "  break;"
+    return
 
-  visitWhen: function(node){
-    if ('default' == node.expr) {
-      this.buf.push('default:');
-    } else {
-      this.buf.push('case ' + node.expr + ':');
-    }
-    if (node.block) {
-      this.visit(node.block);
-      this.buf.push('  break;');
-    }
-  },
 
-  /**
+  ###
    * Visit literal `node`.
-   *
    * @param {Literal} node
    * @api public
-   */
+  ###
+  visitLiteral: (node) ->
+    @buffer node.str
+    return
 
-  visitLiteral: function(node){
-    this.buffer(node.str);
-  },
 
-  /**
+  ###
    * Visit all nodes in `block`.
-   *
    * @param {Block} block
    * @api public
-   */
+  ###
+  visitBlock: (block) ->
+    len = block.nodes.length
 
-  visitBlock: function(block){
-    var len = block.nodes.length
-      , escape = this.escape
-      , pp = this.pp
+    # Pretty print multi-line text
+    if @pp and len > 1 and not @escape and block.nodes[0].isText and block.nodes[1].isText
+      @prettyIndent 1, true
 
-    // Pretty print multi-line text
-    if (pp && len > 1 && !escape && block.nodes[0].isText && block.nodes[1].isText)
-      this.prettyIndent(1, true);
+    for i in [0...len]
+      # Pretty print text
+      if @pp and i > 0 and not @escape and block.nodes[i].isText and block.nodes[i - 1].isText
+        @prettyIndent 1, false
+      @visit block.nodes[i]
 
-    for (var i = 0; i < len; ++i) {
-      // Pretty print text
-      if (pp && i > 0 && !escape && block.nodes[i].isText && block.nodes[i-1].isText)
-        this.prettyIndent(1, false);
+      # Multiple text nodes are separated by newlines
+      if block.nodes[i + 1] and block.nodes[i].isText and block.nodes[i + 1].isText
+        @buffer '\n'
+    return
 
-      this.visit(block.nodes[i]);
-      // Multiple text nodes are separated by newlines
-      if (block.nodes[i+1] && block.nodes[i].isText && block.nodes[i+1].isText)
-        this.buffer('\n');
-    }
-  },
 
-  /**
+  ###
    * Visit a mixin's `block` keyword.
-   *
    * @param {MixinBlock} block
    * @api public
-   */
+  ###
+  visitMixinBlock: (block) ->
+    if @pp
+      @buf.push "jade_indent.push('#{Array(@indents + 1).join('  ')}');"
+    @buf.push 'block && block();'
+    if @pp
+      @buf.push 'jade_indent.pop();'
+    return
 
-  visitMixinBlock: function(block){
-    if (this.pp) this.buf.push("jade_indent.push('" + Array(this.indents + 1).join('  ') + "');");
-    this.buf.push('block && block();');
-    if (this.pp) this.buf.push("jade_indent.pop();");
-  },
 
-  /**
-   * Visit `doctype`. Sets terse mode to `true` when html 5
-   * is used, causing self-closing tags to end with ">" vs "/>",
-   * and boolean attributes are not mirrored.
-   *
+  ###
+   * Visit `doctype`. Sets terse mode to `true` when html 5 is used, causing self-closing tags to end with ">" vs "/>", and boolean attributes are not mirrored.
    * @param {Doctype} doctype
    * @api public
-   */
+  ###
+  visitDoctype: (doctype) ->
+    @setDoctype doctype.val or 'default'  if doctype and (doctype.val or not @doctype)
+    @buffer @doctype if @doctype
+    @hasCompiledDoctype = true
+    return
 
-  visitDoctype: function(doctype){
-    if (doctype && (doctype.val || !this.doctype)) {
-      this.setDoctype(doctype.val || 'default');
-    }
 
-    if (this.doctype) this.buffer(this.doctype);
-    this.hasCompiledDoctype = true;
-  },
-
-  /**
-   * Visit `mixin`, generating a function that
-   * may be called within the template.
-   *
+  ###
+   * Visit `mixin`, generating a function that may be called within the template.
    * @param {Mixin} mixin
    * @api public
-   */
+  ###
+  visitMixin: (mixin) ->
+    name = 'jade_mixins['
+    args = mixin.args or ''
+    block = mixin.block
+    attrs = mixin.attrs
+    attrsBlocks = mixin.attributeBlocks
+    dynamic = mixin.name[0] is '#'
+    key = mixin.name
+    @dynamicMixins = true if dynamic
+    name += (
+      if dynamic
+        mixin.name.substr(2, mixin.name.length - 3)
+      else
+        "\"#{mixin.name}\""
+    ) + ']'
+    @mixins[key] = @mixins[key] or
+      used: false
+      instances: []
 
-  visitMixin: function(mixin){
-    var name = 'jade_mixins[';
-    var args = mixin.args || '';
-    var block = mixin.block;
-    var attrs = mixin.attrs;
-    var attrsBlocks = mixin.attributeBlocks;
-    var pp = this.pp;
-    var dynamic = mixin.name[0]==='#';
-    var key = mixin.name;
-    if (dynamic) this.dynamicMixins = true;
-    name += (dynamic ? mixin.name.substr(2,mixin.name.length-3):'"'+mixin.name+'"')+']';
+    if mixin.call
+      @mixins[key].used = true
+      if @pp
+        @buf.push "jade_indent.push('#{Array(@indents + 1).join('  ')}');"
+      if block or attrs.length or attrsBlocks.length
+        @buf.push name + '.call({'
+        if block
+          @buf.push 'block: function(){'
 
-    this.mixins[key] = this.mixins[key] || {used: false, instances: []};
-    if (mixin.call) {
-      this.mixins[key].used = true;
-      if (pp) this.buf.push("jade_indent.push('" + Array(this.indents + 1).join('  ') + "');")
-      if (block || attrs.length || attrsBlocks.length) {
+          # Render block with no indents, dynamically added when rendered
+          @parentIndents++
+          _indents = @indents
+          @indents = 0
+          @visit mixin.block
+          @indents = _indents
+          @parentIndents--
+          if attrs.length or attrsBlocks.length
+            @buf.push '},'
+          else
+            @buf.push '}'
+        if attrsBlocks.length
+          if attrs.length
+            val = @attrs(attrs)
+            attrsBlocks.unshift val
+          @buf.push "attributes: jade.merge([#{attrsBlocks.join(",")}])"
+        else if attrs.length
+          val = @attrs(attrs)
+          @buf.push "attributes: #{val}"
+        if args
+          @buf.push "}, #{args});"
+        else
+          @buf.push '});'
+      else
+        @buf.push name + "(#{args});"
+      if @pp
+        @buf.push 'jade_indent.pop();'
+    else
+      mixin_start = @buf.length
+      @buf.push "#{name} = function(#{args}){"
+      @buf.push 'var block = (this && this.block), attributes = (this && this.attributes) || {};'
+      @parentIndents++
+      @visit block
+      @parentIndents--
+      @buf.push "};"
+      mixin_end = @buf.length
+      @mixins[key].instances.push
+        start: mixin_start
+        end: mixin_end
 
-        this.buf.push(name + '.call({');
+    return
 
-        if (block) {
-          this.buf.push('block: function(){');
 
-          // Render block with no indents, dynamically added when rendered
-          this.parentIndents++;
-          var _indents = this.indents;
-          this.indents = 0;
-          this.visit(mixin.block);
-          this.indents = _indents;
-          this.parentIndents--;
-
-          if (attrs.length || attrsBlocks.length) {
-            this.buf.push('},');
-          } else {
-            this.buf.push('}');
-          }
-        }
-
-        if (attrsBlocks.length) {
-          if (attrs.length) {
-            var val = this.attrs(attrs);
-            attrsBlocks.unshift(val);
-          }
-          this.buf.push('attributes: jade.merge([' + attrsBlocks.join(',') + '])');
-        } else if (attrs.length) {
-          var val = this.attrs(attrs);
-          this.buf.push('attributes: ' + val);
-        }
-
-        if (args) {
-          this.buf.push('}, ' + args + ');');
-        } else {
-          this.buf.push('});');
-        }
-
-      } else {
-        this.buf.push(name + '(' + args + ');');
-      }
-      if (pp) this.buf.push("jade_indent.pop();")
-    } else {
-      var mixin_start = this.buf.length;
-      this.buf.push(name + ' = function(' + args + '){');
-      this.buf.push('var block = (this && this.block), attributes = (this && this.attributes) || {};');
-      this.parentIndents++;
-      this.visit(block);
-      this.parentIndents--;
-      this.buf.push('};');
-      var mixin_end = this.buf.length;
-      this.mixins[key].instances.push({start: mixin_start, end: mixin_end});
-    }
-  },
-
-  /**
-   * Visit `tag` buffering tag markup, generating
-   * attributes, visiting the `tag`'s code and block.
-   *
+  ###
+   * Visit `tag` buffering tag markup, generating attributes, visiting the `tag`'s code and block.
    * @param {Tag} tag
    * @api public
-   */
+  ###
+  visitTag: (tag) ->
+    bufferName = ->
+      if tag.buffer
+        self.bufferExpression name
+      else
+        self.buffer name
+      return
+    @indents++
+    name = tag.name
+    pp = @pp
+    self = this
+    @escape = true if 'pre' is tag.name
+    unless @hasCompiledTag
+      @visitDoctype()  if not @hasCompiledDoctype and 'html' is name
+      @hasCompiledTag = true
 
-  visitTag: function(tag){
-    this.indents++;
-    var name = tag.name
-      , pp = this.pp
-      , self = this;
+    # pretty print
+    @prettyIndent 0, true if pp and not tag.isInline()
+    if tag.selfClosing or (not @xml and selfClosing.indexOf(tag.name) isnt -1)
+      @buffer '<'
+      bufferName()
+      @visitAttributes tag.attrs, tag.attributeBlocks
+      (if @terse then @buffer('>') else @buffer('/>'))
 
-    function bufferName() {
-      if (tag.buffer) self.bufferExpression(name);
-      else self.buffer(name);
-    }
+      # if it is non-empty throw an error
+      if tag.block and
+         not (tag.block.type is 'Block' and tag.block.nodes.length is 0) and
+         tag.block.nodes.some((tag) ->
+          tag.type isnt 'Text' or not /^\s*$/.test(tag.val)
+         )
+        throw errorAtNode(tag, new Error("#{name} is self closing and should not have content."))
+    else
 
-    if ('pre' == tag.name) this.escape = true;
+      # Optimize attributes buffering
+      @buffer '<'
+      bufferName()
+      @visitAttributes tag.attrs, tag.attributeBlocks
+      @buffer '>'
+      @visitCode tag.code if tag.code
+      @visit tag.block
 
-    if (!this.hasCompiledTag) {
-      if (!this.hasCompiledDoctype && 'html' == name) {
-        this.visitDoctype();
-      }
-      this.hasCompiledTag = true;
-    }
+      # pretty print
+      @prettyIndent 0, true if pp and not tag.isInline() and 'pre' isnt tag.name and not tag.canInline()
+      @buffer '</'
+      bufferName()
+      @buffer '>'
+    @escape = false if 'pre' is tag.name
+    @indents--
+    return
 
-    // pretty print
-    if (pp && !tag.isInline())
-      this.prettyIndent(0, true);
 
-    if (tag.selfClosing || (!this.xml && selfClosing.indexOf(tag.name) !== -1)) {
-      this.buffer('<');
-      bufferName();
-      this.visitAttributes(tag.attrs, tag.attributeBlocks);
-      this.terse
-        ? this.buffer('>')
-        : this.buffer('/>');
-      // if it is non-empty throw an error
-      if (tag.block &&
-          !(tag.block.type === 'Block' && tag.block.nodes.length === 0) &&
-          tag.block.nodes.some(function (tag) {
-            return tag.type !== 'Text' || !/^\s*$/.test(tag.val)
-          })) {
-        throw errorAtNode(tag, new Error(name + ' is self closing and should not have content.'));
-      }
-    } else {
-      // Optimize attributes buffering
-      this.buffer('<');
-      bufferName();
-      this.visitAttributes(tag.attrs, tag.attributeBlocks);
-      this.buffer('>');
-      if (tag.code) this.visitCode(tag.code);
-      this.visit(tag.block);
+  ###
+  Visit `filter`, throwing when the filter does not exist.
 
-      // pretty print
-      if (pp && !tag.isInline() && 'pre' != tag.name && !tag.canInline())
-        this.prettyIndent(0, true);
-
-      this.buffer('</');
-      bufferName();
-      this.buffer('>');
-    }
-
-    if ('pre' == tag.name) this.escape = false;
-
-    this.indents--;
-  },
-
-  /**
-   * Visit `filter`, throwing when the filter does not exist.
-   *
    * @param {Filter} filter
    * @api public
-   */
+  ###
+  visitFilter: (filter) ->
+    text = filter.block.nodes.map((node) ->
+      node.val
+    ).join('\n')
+    filter.attrs.filename = @options.filename
+    try
+      @buffer filters(filter.name, text, filter.attrs), true
+    catch err
+      throw errorAtNode(filter, err)
+    return
 
-  visitFilter: function(filter){
-    var text = filter.block.nodes.map(
-      function(node){ return node.val; }
-    ).join('\n');
-    filter.attrs.filename = this.options.filename;
-    try {
-      this.buffer(filters(filter.name, text, filter.attrs), true);
-    } catch (err) {
-      throw errorAtNode(filter, err);
-    }
-  },
 
-  /**
-   * Visit `text` node.
-   *
+  ###
+  Visit `text` node.
+
    * @param {Text} text
    * @api public
-   */
+  ###
+  visitText: (text) ->
+    @buffer text.val, true
+    return
 
-  visitText: function(text){
-    this.buffer(text.val, true);
-  },
 
-  /**
-   * Visit a `comment`, only buffering when the buffer flag is set.
-   *
+  ###
+  Visit a `comment`, only buffering when the buffer flag is set.
+
    * @param {Comment} comment
    * @api public
-   */
+  ###
+  visitComment: (comment) ->
+    return  unless comment.buffer
+    @prettyIndent 1, true if @pp
+    @buffer "<!--#{comment.val}-->"
+    return
 
-  visitComment: function(comment){
-    if (!comment.buffer) return;
-    if (this.pp) this.prettyIndent(1, true);
-    this.buffer('<!--' + comment.val + '-->');
-  },
 
-  /**
-   * Visit a `BlockComment`.
-   *
+  ###
+  Visit a `BlockComment`.
+
    * @param {Comment} comment
    * @api public
-   */
+  ###
+  visitBlockComment: (comment) ->
+    return  unless comment.buffer
+    @prettyIndent 1, true if @pp
+    @buffer "<!--#{comment.val}"
+    @visit comment.block
+    @prettyIndent 1, true if @pp
+    @buffer '-->'
+    return
 
-  visitBlockComment: function(comment){
-    if (!comment.buffer) return;
-    if (this.pp) this.prettyIndent(1, true);
-    this.buffer('<!--' + comment.val);
-    this.visit(comment.block);
-    if (this.pp) this.prettyIndent(1, true);
-    this.buffer('-->');
-  },
 
-  /**
-   * Visit `code`, respecting buffer / escape flags.
-   * If the code is followed by a block, wrap it in
-   * a self-calling function.
-   *
+  ###
+   * Visit `code`, respecting buffer / escape flags. If the code is followed by
+     a block, wrap it in a self-calling function.
    * @param {Code} code
    * @api public
-   */
+  ###
+  visitCode: (code) ->
 
-  visitCode: function(code){
-    // Wrap code blocks with {}.
-    // we only wrap unbuffered code blocks ATM
-    // since they are usually flow control
+    # Wrap code blocks with {}.
+    # we only wrap unbuffered code blocks ATM
+    # since they are usually flow control
 
-    // Buffer code
-    if (code.buffer) {
-      var val = code.val.trimLeft();
-      val = 'null == (jade_interp = '+val+') ? "" : jade_interp';
-      if (code.escape) val = 'jade.escape(' + val + ')';
-      this.bufferExpression(val);
-    } else {
-      this.buf.push(code.val);
-    }
+    # Buffer code
+    if code.buffer
+      val = code.val.trimLeft()
+      val = "null == (jade_interp = #{val}) ? \"\" : jade_interp"
+      if code.escape
+        val = "jade.escape(#{val})"
+      @bufferExpression val
+    else
+      @buf.push code.val
 
-    // Block support
-    if (code.block) {
-      if (!code.buffer) this.buf.push('{');
-      this.visit(code.block);
-      if (!code.buffer) this.buf.push('}');
-    }
-  },
+    # Block support
+    if code.block
+      unless code.buffer
+        @buf.push '{'
+      @visit code.block
+      unless code.buffer
+        @buf.push '}'
+    return
 
-  /**
+
+  ###
    * Visit `each` block.
-   *
    * @param {Each} each
    * @api public
-   */
+  ###
+  visitEach: (each) ->
+    @buf.push """
+      // iterate #{each.obj}
+      ;(function(){
+        var $$obj = #{each.obj};
+        if ('number' == typeof $$obj.length) {
+      """
+    if each.alternative
+      @buf.push '  if ($$obj.length) {'
+    @buf.push """
+          for (var #{each.key} = 0, $$l = $$obj.length; #{each.key} < $$l; #{each.key}++) {
+            var #{each.val} = $$obj[#{each.key}];
+      """
+    @visit each.block
+    @buf.push '    }\n'
+    if each.alternative
+      @buf.push '  } else {'
+      @visit each.alternative
+      @buf.push '  }'
+    @buf.push """
+        } else {
+          var $$l = 0;
+          for (var #{each.key} in $$obj) {
+            $$l++;
+            var #{each.val} = $$obj[#{each.key}];
+      """
+    @visit each.block
+    @buf.push '    }\n'
+    if each.alternative
+      @buf.push '    if ($$l === 0) {'
+      @visit each.alternative
+      @buf.push '    }'
+    @buf.push '  }\n}).call(this);\n'
+    return
 
-  visitEach: function(each){
-    this.buf.push(''
-      + '// iterate ' + each.obj + '\n'
-      + ';(function(){\n'
-      + '  var $$obj = ' + each.obj + ';\n'
-      + '  if (\'number\' == typeof $$obj.length) {\n');
 
-    if (each.alternative) {
-      this.buf.push('  if ($$obj.length) {');
-    }
-
-    this.buf.push(''
-      + '    for (var ' + each.key + ' = 0, $$l = $$obj.length; ' + each.key + ' < $$l; ' + each.key + '++) {\n'
-      + '      var ' + each.val + ' = $$obj[' + each.key + '];\n');
-
-    this.visit(each.block);
-
-    this.buf.push('    }\n');
-
-    if (each.alternative) {
-      this.buf.push('  } else {');
-      this.visit(each.alternative);
-      this.buf.push('  }');
-    }
-
-    this.buf.push(''
-      + '  } else {\n'
-      + '    var $$l = 0;\n'
-      + '    for (var ' + each.key + ' in $$obj) {\n'
-      + '      $$l++;'
-      + '      var ' + each.val + ' = $$obj[' + each.key + '];\n');
-
-    this.visit(each.block);
-
-    this.buf.push('    }\n');
-    if (each.alternative) {
-      this.buf.push('    if ($$l === 0) {');
-      this.visit(each.alternative);
-      this.buf.push('    }');
-    }
-    this.buf.push('  }\n}).call(this);\n');
-  },
-
-  /**
+  ###
    * Visit `attrs`.
-   *
    * @param {Array} attrs
    * @api public
-   */
+  ###
+  visitAttributes: (attrs, attributeBlocks) ->
+    if attributeBlocks.length
+      if attrs.length
+        val = @attrs(attrs)
+        attributeBlocks.unshift val
+      @bufferExpression "jade.attrs(jade.merge([#{attributeBlocks.join(",")}]), #{JSON.stringify(@terse)})"
+    else @attrs attrs, true if attrs.length
+    return
 
-  visitAttributes: function(attrs, attributeBlocks){
-    if (attributeBlocks.length) {
-      if (attrs.length) {
-        var val = this.attrs(attrs);
-        attributeBlocks.unshift(val);
-      }
-      this.bufferExpression('jade.attrs(jade.merge([' + attributeBlocks.join(',') + ']), ' + JSON.stringify(this.terse) + ')');
-    } else if (attrs.length) {
-      this.attrs(attrs, true);
-    }
-  },
 
-  /**
+  ###
    * Compile attributes.
-   */
-
-  attrs: function(attrs, buffer){
-    var buf = [];
-    var classes = [];
-    var classEscaping = [];
-
-    attrs.forEach(function(attr){
-      var key = attr.name;
-      var escaped = attr.escaped;
-
-      if (key === 'class') {
-        classes.push(attr.val);
-        classEscaping.push(attr.escaped);
-      } else if (isConstant(attr.val)) {
-        if (buffer) {
-          this.buffer(runtime.attr(key, toConstant(attr.val), escaped, this.terse));
-        } else {
-          var val = toConstant(attr.val);
-          if (escaped && !(key.indexOf('data') === 0 && typeof val !== 'string')) {
-            val = runtime.escape(val);
-          }
-          buf.push(JSON.stringify(key) + ': ' + JSON.stringify(val));
-        }
-      } else {
-        if (buffer) {
-          this.bufferExpression('jade.attr("' + key + '", ' + attr.val + ', ' + JSON.stringify(escaped) + ', ' + JSON.stringify(this.terse) + ')');
-        } else {
-          var val = attr.val;
-          if (escaped && !(key.indexOf('data') === 0)) {
-            val = 'jade.escape(' + val + ')';
-          } else if (escaped) {
-            val = '(typeof (jade_interp = ' + val + ') == "string" ? jade.escape(jade_interp) : jade_interp)';
-          }
-          buf.push(JSON.stringify(key) + ': ' + val);
-        }
-      }
-    }.bind(this));
-    if (buffer) {
-      if (classes.every(isConstant)) {
-        this.buffer(runtime.cls(classes.map(toConstant), classEscaping));
-      } else {
-        this.bufferExpression('jade.cls([' + classes.join(',') + '], ' + JSON.stringify(classEscaping) + ')');
-      }
-    } else if (classes.length) {
-      if (classes.every(isConstant)) {
-        classes = JSON.stringify(runtime.joinClasses(classes.map(toConstant).map(runtime.joinClasses).map(function (cls, i) {
-          return classEscaping[i] ? runtime.escape(cls) : cls;
-        })));
-      } else {
-        classes = '(jade_interp = ' + JSON.stringify(classEscaping) + ',' +
-          ' jade.joinClasses([' + classes.join(',') + '].map(jade.joinClasses).map(function (cls, i) {' +
-          '   return jade_interp[i] ? jade.escape(cls) : cls' +
-          ' }))' +
-          ')';
-      }
-      if (classes.length)
-        buf.push('"class": ' + classes);
-    }
-    return '{' + buf.join(',') + '}';
-  }
-};
+  ###
+  attrs: (attrs, buffer) ->
+    buf = []
+    classes = []
+    classEscaping = []
+    attrs.forEach ((attr) ->
+      key = attr.name
+      escaped = attr.escaped
+      if key is 'class'
+        classes.push attr.val
+        classEscaping.push attr.escaped
+      else if isConstant(attr.val)
+        if buffer
+          @buffer runtime.attr(key, toConstant(attr.val), escaped, @terse)
+        else
+          val = toConstant(attr.val)
+          if escaped and not (key.indexOf('data') is 0 and typeof val isnt 'string')
+            val = runtime.escape(val)
+          buf.push JSON.stringify(key) + ": " + JSON.stringify(val)
+      else
+        if buffer
+          @bufferExpression """
+            jade.attr(
+              \"#{key}\",
+              #{attr.val},
+              #{JSON.stringify(escaped)},
+              #{JSON.stringify(@terse)}
+            )
+          """
+        else
+          val = attr.val
+          if escaped and (key.indexOf('data') isnt 0)
+            val = "jade.escape(#{val})"
+          else if escaped
+            val = """(
+              typeof (jade_interp = #{val}) == \"string\" ? jade.escape(jade_interp) : jade_interp
+            )"""
+          buf.push "#{JSON.stringify(key)}: #{val}"
+      return
+    ).bind(this)
+    if buffer
+      if classes.every(isConstant)
+        @buffer runtime.cls(classes.map(toConstant), classEscaping)
+      else
+        @bufferExpression """
+          jade.cls([#{classes.join(",")}], #{JSON.stringify(classEscaping)})
+        """
+    else if classes.length
+      if classes.every(isConstant)
+        classes = JSON.stringify(runtime.joinClasses(classes.map(toConstant).map(runtime.joinClasses).map((cls, i) ->
+          (if classEscaping[i] then runtime.escape(cls) else cls)
+        )))
+      else
+        classes = """(
+          jade_interp = #{JSON.stringify(classEscaping)},
+          jade.joinClasses([#{classes.join(",")}]
+            .map(jade.joinClasses)
+            .map(function (cls, i) {
+              return jade_interp[i] ? jade.escape(cls) : cls
+            })
+          )
+        )"""
+      if classes.length
+        buf.push "\"class\": #{classes}"
+    return "{#{buf.join(',')}}"
