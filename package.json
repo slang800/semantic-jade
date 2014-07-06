@@ -10,7 +10,7 @@
   ],
   "license": "MIT",
   "repository": "git://github.com/visionmedia/jade",
-  "main": "./index.js",
+  "main": "lib",
   "bin": {
     "jade": "./bin/jade.js"
   },
