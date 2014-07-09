@@ -1,6 +1,6 @@
 'use strict';
 
-var fs = require('fs');
+var fs = require('graceful-fs');
 var jade = require('../');
 
 describe('examples', function () {

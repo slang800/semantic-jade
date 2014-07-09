@@ -15,10 +15,12 @@
     "jade": "./bin/jade.js"
   },
   "dependencies": {
-    "transformers": "2.1.0",
     "character-parser": "1.2.0",
-    "with": "~3.0.0",
-    "constantinople": "~2.0.0"
+    "constantinople": "~2.0.0",
+    "fobject": "0.0.1",
+    "graceful-fs": "^3.0.2",
+    "transformers": "2.1.0",
+    "with": "~3.0.0"
   },
   "devDependencies": {
     "coffee-script": "*",

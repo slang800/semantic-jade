@@ -5,7 +5,7 @@
 
 var jade = require('../')
   , assert = require('assert')
-  , fs = require('fs');
+  , fs = require('graceful-fs');
 
 // Shortcut
 

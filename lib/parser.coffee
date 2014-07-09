@@ -374,7 +374,7 @@ class Parser
    * 'extends' name
   ###
   parseExtends: ->
-    fs = require('fs')
+    fs = require('graceful-fs')
     path = @resolvePath(@expect('extends').val.trim(), 'extends')
     path += '.jade'  unless '.jade' is path.substr(-5)
     @dependencies.push path
@@ -443,7 +443,7 @@ class Parser
    * include block?
   ###
   parseInclude: ->
-    fs = require 'fs'
+    fs = require 'graceful-fs'
     tok = @expect 'include'
     path = @resolvePath(tok.val.trim(), 'include')
     @dependencies.push path
