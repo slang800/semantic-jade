@@ -11,9 +11,6 @@
   "license": "MIT",
   "repository": "git://github.com/slang800/yade",
   "main": "lib",
-  "bin": {
-    "jade": "./bin/jade.js"
-  },
   "dependencies": {
     "character-parser": "1.2.0",
     "constantinople": "~2.0.0",
