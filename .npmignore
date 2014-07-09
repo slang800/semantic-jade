@@ -2,3 +2,4 @@ test
 lib-cov
 coverage
 .travis.yml
+src
