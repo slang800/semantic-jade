@@ -38,7 +38,8 @@
   },
   "scripts": {
     "test": "mocha -R spec && npm run coverage",
-    "coverage": "istanbul cover node_modules/mocha/bin/_mocha"
+    "coverage": "istanbul cover node_modules/mocha/bin/_mocha",
+    "compile-runtime": "browserify ./lib/runtime.js --standalone jade > runtime.js"
   },
   "browser": {
     "./lib/filters.js": "./lib/filters-client.js"
